@@ -9,6 +9,18 @@ Format: newest entries at the top.
 
 ---
 
+## 2026-08-18 — Login now redirects to /admin; handing off to MacBook
+
+- Login form's submit handler now calls `router.push("/admin")` on success (via `useRouter`
+  from `next/navigation`) instead of `alert()` — verified end-to-end in-browser at
+  `localhost:3001`: correct creds land on the `/admin` dashboard shell.
+- Along the way, fixed a React 19.2.10 deprecation warning: form submit handlers should type
+  the event as `React.SubmitEvent<HTMLFormElement>`, not the now-deprecated `React.FormEvent`.
+- All of the above is pushed to `main` (through commit `e449a3a`).
+- **Session ending here — next work continues from the MacBook.** Pick up with `/admin/properties`
+  next: a list page plus an add-property form (dynamic routes + Server Actions are the next
+  new concepts). `git pull` first before starting.
+
 ## 2026-08-18 — Home page, SEO, and login page (learn-by-building mode)
 
 - User is building this project hands-on to learn React/Next.js/TypeScript — Claude guides
