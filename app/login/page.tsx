@@ -1,20 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
     // TODO: replace with a real call to the ASP.NET API once it exists.
     // Hardcoded for now so we can see the flow work end-to-end.
     if (email === "admin@example.com" && password === "password") {
-      setError("");
-      alert(`Logged in as ${email}`);
+            setError("");
+      router.push("/admin");
     } else {
       setError("Invalid email or password.");
     }
