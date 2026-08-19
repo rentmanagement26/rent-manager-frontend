@@ -7,7 +7,29 @@ made elsewhere; add a short entry whenever something meaningful changes.
 
 Format: newest entries at the top.
 
+## Shared agent handoff protocol
+
+Codex and Claude use this file as the project handoff, across both computers.
+
+- At the start of every session: run `git pull`, then read this file before making changes.
+- Before ending meaningful work: add a dated entry describing what changed, what was verified,
+  the current decision/state, and the exact next step.
+- Keep entries factual and concise; record blockers or questions explicitly rather than guessing.
+- Commit and push the entry with its related work so the other agent and machine can see it.
+- This file is the shared source of truth; conversation memory and local uncommitted changes are
+  not assumed to be available to the other agent.
+
 ---
+
+## 2026-08-19 — Codex/Claude shared handoff established
+
+- Codex pulled this MacBook checkout and confirmed `main` matches `origin/main` with a clean
+  working tree.
+- Both agents will use this `PROGRESS.md` protocol for cross-agent and cross-device context.
+- Learning mode remains in effect: guide the user to write each feature, explaining the file,
+  code, and reason rather than silently building it for them.
+- **Current next step:** guide the `/admin/properties` feature: property list first, then the
+  add-property form; use it to introduce dynamic routes and Server Actions.
 
 ## 2026-08-18 — Login now redirects to /admin; handing off to MacBook
 
