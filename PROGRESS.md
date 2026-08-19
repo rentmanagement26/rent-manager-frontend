@@ -1,9 +1,11 @@
 # Progress Log
 
 This file is the shared record of what's happening on this project, since it's
-tracked in git and syncs across every machine we work from (Windows desktop +
-MacBook). Claude reads this at the start of a session to catch up on decisions
-made elsewhere; add a short entry whenever something meaningful changes.
+tracked in git and syncs across every machine (Windows desktop + MacBook) and
+every AI coding agent (Claude Code, Codex CLI, etc.) we work with. Any agent
+reads this at the start of a session to catch up on decisions made elsewhere —
+see the handoff protocol below. Add a short entry whenever something
+meaningful changes, and note which tool/machine made it.
 
 Format: newest entries at the top.
 
@@ -20,6 +22,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   not assumed to be available to the other agent.
 
 ---
+
+## 2026-08-19 — Claude (MacBook) reconciled handoff docs with Codex's
+
+- Pulled and found Codex had independently just added this same "shared handoff protocol" idea
+  (see entry below) — good convergence, no conflict in actual code.
+- Trimmed `AGENTS.md`'s addition down to a pointer at this file's protocol section, instead of
+  restating the protocol in both files — `PROGRESS.md`'s "Shared agent handoff protocol" section
+  is now the single source of truth for the process; `AGENTS.md` just tells any agent to read it,
+  plus states the guided-coding-mode rule (which belongs in AGENTS.md as a durable rule, not a
+  changelog entry).
+- No code/feature work done this entry — next step is still `/admin/properties` per Codex's note
+  below. Starting that now.
 
 ## 2026-08-19 — Codex/Claude shared handoff established
 

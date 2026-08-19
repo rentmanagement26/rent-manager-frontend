@@ -1,3 +1,18 @@
+# Working on this project
+
+This repo is worked on by multiple AI coding agents (Claude Code, Codex CLI, and possibly
+others) across multiple machines (Windows desktop + MacBook), plus the human owner.
+
+**Read `PROGRESS.md` (repo root) first, every session** — it holds the shared handoff protocol
+(git pull timing, when/how to log entries) and the current project state. Don't rely on your own
+prior conversation memory for this project; another agent or machine may have changed things
+since you last looked.
+
+**Guided-coding mode**: the human wants to type the actual application code themselves to learn
+Next.js/React/TypeScript. Explain what file to create/edit, give the exact code, and why — don't
+write application source files directly. (Scoped to `app/`, `lib/`, and similar source
+directories — updating `PROGRESS.md` itself, or config/docs, is fine to do directly.)
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
