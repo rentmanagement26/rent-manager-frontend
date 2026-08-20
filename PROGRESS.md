@@ -23,6 +23,33 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-19 — Claude (MacBook) built real server-side sessions; /admin now protected
+
+- User typed every file by hand, guided step-by-step, verified in-browser after each piece.
+- `lib/session.ts`: server-side session store — `Map<token, SessionUser>`, globalThis-backed
+  (same survive-hot-reload pattern as `lib/data/store.ts`). `createSession`, `getSessionUser`,
+  `deleteSession`, plus the `SESSION_COOKIE_NAME` constant.
+- `lib/get-session.ts`: reads the cookie, looks up the session via the store above.
+- `app/login/actions.ts` (new): `loginAction`, a Server Action — checks hardcoded credentials
+  (`admin@example.com`/`password`, still no real backend), creates a session, sets an **httpOnly
+  cookie holding only the random token** (not the user data — deliberate improvement over the
+  old `rentmanagementclient` monorepo attempt, which base64-encoded the whole user into the
+  cookie). Redirects to `/admin` on success, `/login?error=1` on failure.
+- `app/login/page.tsx`: rewritten back to a plain server-rendered form (dropped `"use client"`,
+  `useState`, `useRouter`, `onSubmit` entirely) using `<form action={loginAction}>` — same shape
+  as the `/admin/properties` add-form pattern from the previous entry.
+- `app/admin/layout.tsx`: now `async`, calls `getSession()`, redirects to `/login` if there isn't
+  one — protects everything under `/admin/*` in one place. Also added a working "Sign out" button.
+- `app/admin/actions.ts` (new): `logoutAction` — deletes both the server-side session entry and
+  the cookie.
+- Verified end-to-end in-browser: `/admin/properties` while logged out → redirects to `/login`;
+  correct login → lands on `/admin`; sign out → blocked from `/admin` again. No console/server
+  errors at any step.
+- Not yet done: still hardcoded credentials, no real backend call; no session expiry cleanup
+  (tokens live in the `Map` until the dev server restarts); `/admin/tenants` nav link still 404s.
+- **Next step:** not yet decided — options are `/admin/tenants` (repeats the CRUD pattern) or
+  wiring the login/property data to a real backend. Ask the user before picking.
+
 ## 2026-08-19 — Claude (MacBook) built /admin/properties (list, add form, detail page)
 
 - User typed every file by hand, Claude guided step-by-step and verified in-browser after each
