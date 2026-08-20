@@ -23,6 +23,32 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-20 — Claude (Windows) built the public landing page
+
+- User typed every file by hand, guided step-by-step, verified in-browser after each piece.
+- `components/site-header.tsx` / `components/site-footer.tsx` (new top-level `components/`
+  folder, sibling to `app/`/`lib/`): sticky/blurred nav bar with a `#features` anchor link and a
+  "Log in" link, plus a simple footer.
+- `app/(marketing)/` route group added, containing `layout.tsx` (wraps children with the header
+  and footer) and `page.tsx` (moved from the old `app/page.tsx`). Route groups don't add a URL
+  segment, so this still serves at `/` — the point was to scope the header/footer to public
+  pages only, leaving `/login` and `/admin` (outside the group) untouched.
+- `app/(marketing)/page.tsx` rewritten with a real hero section (headline/subhead/CTA linking to
+  `/login`) and a features grid built from a `features` array via `.map()` (four cards:
+  property/unit management, tenant portal, digital leases, online rent payments).
+- **Bug hit and fixed during this work:** two file-placement mistakes broke the page after the
+  route-group step — (1) the old `app/page.tsx` wasn't deleted, so it silently won the routing
+  conflict against `app/(marketing)/page.tsx` (both resolve to `/`), serving stale content; (2)
+  the header/footer components were created at `app/components/...` instead of the intended
+  top-level `components/...`, breaking the `@/components/...` import (`@/*` maps to project root
+  per `tsconfig.json`). Fixed by deleting the stray `app/page.tsx` and moving the components up
+  out of `app/`. Verified via `curl` against the running dev server (port 3000) that the correct
+  `(marketing)/page.tsx` route now renders, before trusting the fix.
+- Dev server note: port can vary between sessions/machines (seen on 3000 and 3001) — check what's
+  actually listening rather than assuming a fixed port.
+- **Next step:** not yet decided — options are `/admin/tenants` (repeats the CRUD pattern) or
+  wiring the login/property data to a real backend. Ask the user before picking.
+
 ## 2026-08-19 — Claude (MacBook) built real server-side sessions; /admin now protected
 
 - User typed every file by hand, guided step-by-step, verified in-browser after each piece.
