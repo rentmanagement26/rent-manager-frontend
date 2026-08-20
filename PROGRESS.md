@@ -23,6 +23,28 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-19 — Claude (MacBook) built /admin/properties (list, add form, detail page)
+
+- User typed every file by hand, Claude guided step-by-step and verified in-browser after each
+  piece (per the guided-coding-mode rule in `AGENTS.md`).
+- `lib/types.ts`: added `Property { id, address, city, rentAmount }` — deliberately minimal,
+  more fields (units, province, etc.) can be added once the basic flow is proven out.
+- `lib/data/store.ts`: new file, same `globalThis`-backed in-memory array pattern as the old
+  monorepo attempt's `store.ts` — `listProperties`, `createProperty`, `getProperty`.
+- `app/admin/properties/page.tsx`: list page (Server Component, no client JS).
+- `app/admin/properties/new/page.tsx` + `actions.ts`: add-property form using a **Server Action**
+  (`"use server"`, `<form action={fn}>`) — first Server Action in this rebuild.
+- `app/admin/properties/[id]/page.tsx`: property detail page — first **dynamic route** in this
+  rebuild; `params` is a `Promise` in this Next.js version, same pattern as `searchParams`
+  elsewhere.
+- Verified end-to-end in-browser at `localhost:3000`: add a property → redirects to list → shows
+  up → click through → correct detail page renders. No server/console errors.
+- Not yet done: edit/delete a property, and no session/auth guard on `/admin/*` yet (still true
+  from earlier entries — login doesn't set any real session).
+- **Next step:** decide the next feature — `/admin/tenants` (same CRUD pattern, less new
+  concept-wise) or wiring up real server-side sessions (a stated user preference, not yet built)
+  before adding more admin pages behind an unguarded route. Not yet decided — ask the user.
+
 ## 2026-08-19 — Claude (MacBook) reconciled handoff docs with Codex's
 
 - Pulled and found Codex had independently just added this same "shared handoff protocol" idea
