@@ -23,6 +23,46 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-23 — Claude (MacBook) wired login to the real backend, replacing hardcoded credentials
+
+- User typed every file by hand, guided step-by-step; tested the real `/api/auth/login` endpoint
+  with `curl` first (wrong password, unverified account, then a real verified account) to learn
+  its actual shapes before writing any code.
+- `lib/types.ts`: `AppRole` changed from placeholder `"admin" | "tenant"` to the backend's real
+  roles, `"Admin" | "Landlord" | "Contractor"` (`Admin` isn't reachable via public registration,
+  per register's own validation, but a login response could still return it for a manually
+  provisioned account). `SessionUser.name` dropped — login's response doesn't include a name and
+  nothing in the app was reading it, so kept the type honest rather than carrying a field that's
+  always empty in practice.
+- `lib/api-error.ts` (new): pulled `extractErrorMessage` out of `app/register/actions.ts` into a
+  shared helper, and improved it — login's 401s come back as **plain text**
+  (`"Invalid email or password."` / `"Please confirm your email before logging in."`), not JSON
+  like register's errors were. The shared version now returns that raw text directly when JSON
+  parsing fails, instead of a generic fallback, since it's already a good user-facing message.
+  `register/actions.ts` updated to import this instead of keeping its own copy.
+- `app/login/actions.ts` rewritten: real `fetch` to `/api/auth/login`, builds a `SessionUser` from
+  the response (`{userId, email, roles: [...]}`, taking `roles[0]`), then creates our **own**
+  server-side session token via `lib/session.ts` and sets that in the cookie — the backend's JWT
+  is used once, server-side, to build the session, and is never sent to the browser. Consistent
+  with the server-side-session decision from 2026-08-19.
+- `app/login/page.tsx`: error display fixed to show the actual `{error}` message instead of a
+  hardcoded "Invalid email or password." string that used to show regardless of the real cause.
+- Hit and fixed a confusing but harmless issue while testing: after saving the Step 3/4 file edits,
+  the running dev server kept showing two *stale* compile errors from earlier, already-fixed edits
+  (a malformed JSX line, a duplicate function) — file contents on disk were already correct
+  (verified with `cat`/`lsof`, right project directory, right process). A full dev-server restart
+  (stop + start, not just a page reload) cleared it. Worth remembering as a class of issue:
+  Turbopack's dev error overlay can stick on a stale error after a fix is saved; if a browser
+  reload doesn't clear an error you're sure you fixed, restart the dev server before assuming the
+  fix is wrong.
+- Verified end-to-end in-browser against the real backend: wrong password → shows real "Invalid
+  email or password." message; correct real credentials (`hardeep2792@gmail.com`) → real JWT
+  exchanged server-side → lands on protected `/admin` dashboard. No console/server errors.
+- Not yet done: `/admin/properties` still uses the separate local `lib/data/store.ts`, not the
+  real backend; register's success flow untested for the "Admin" role (not registerable publicly).
+- **Next step:** not yet decided — options are wiring `/admin/properties` to the real backend (now
+  that the pattern is proven twice), or `/admin/tenants`. Ask the user.
+
 ## 2026-08-23 — Claude (MacBook) built real user registration against the live ASP.NET backend
 
 - User typed every file by hand, guided step-by-step, verified against the real hosted API

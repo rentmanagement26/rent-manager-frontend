@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { extractErrorMessage } from "@/lib/api-error";
 
 export async function registerAction(formData: FormData)  {
     const email = String(formData.get("email")?? "");
@@ -25,27 +26,4 @@ export async function registerAction(formData: FormData)  {
     }
 
     redirect("/login?registered=1");
-}
-
- async function extractErrorMessage(response: Response): Promise<string> {
-     const text = await response.text();
-     if (!text) {
-    return "Something went wrong. Please try again.";
-  }
-    
-    try {
-        const data = JSON.parse(text);
-        if(Array.isArray(data)) {
-            return data.join(" ");
-        }
-
-        if (data.errors) {
-          return Object.values(data.errors).flat().join(" ");
-        }
-    }
-     catch (error) {
-       
-    }
-
-     return "Something went wrong. Please try again.";
 }

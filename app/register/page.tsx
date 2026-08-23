@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { registerAction } from "./actions";
 
 export default async function RegisterPage({
@@ -10,8 +11,10 @@ export default async function RegisterPage({
   return (
     <main className="flex flex-1 flex-col items-center justify-center p-8">
       <div className="w-full max-w-sm">
-        <h1 className="mb-6 text-2xl font-bold">Create an account</h1>
-
+        <h1 className="mb-4 text-2xl font-bold">Create an account</h1>
+        <Link href="/login" className="mb-3 block text-sm text-gray-500">
+          Already have an account? Log in
+        </Link>
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
         <form action={registerAction} className="flex flex-col gap-4">

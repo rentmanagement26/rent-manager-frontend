@@ -20,7 +20,7 @@ export default async function LoginPage({
         )}
 
         {error && (
-          <p className="mb-4 text-sm text-red-600">Invalid email or password.</p>
+          <p className="mb-4 text-sm text-red-600">{error}</p>
         )}
 
         <form action={loginAction} className="flex flex-col gap-4">
