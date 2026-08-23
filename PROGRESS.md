@@ -23,6 +23,38 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-23 — Claude (MacBook) built real user registration against the live ASP.NET backend
+
+- User typed every file by hand, guided step-by-step, verified against the real hosted API
+  (not a mock) at each stage.
+- `.env.local` created with `BACKEND_API_URL` pointing at the real Azure-hosted backend:
+  `https://rentmanagement-fbbpf2afgjb7gee4.canadaeast-01.azurewebsites.net`.
+- Probed `POST /api/auth/register` directly with `curl` before writing any code, to get the real
+  request/response shapes rather than guessing: requires `Email`, `FullName`, `Password`,
+  `UserType` (capitalized, ASP.NET-style JSON), and `UserType` must be exactly `"Landlord"` or
+  `"Contractor"`.
+- **Bug found and worked around, then confirmed fixed on the backend during this session:**
+  a fully valid register request initially returned a 500 with an empty body (twice, with
+  different emails, so not a fluke) — an unhandled backend exception, not a frontend issue.
+  `app/register/actions.ts`'s `extractErrorMessage` helper was written defensively to handle this
+  (falls back to a generic message on an empty/unparseable body) specifically because of that bug.
+  Re-tested directly with `curl` later in the same session and the backend now returns a proper
+  200 with `{message, userId, email}` — bug appears to have been fixed elsewhere (not by this
+  session) while work was in progress. The defensive error handling stays regardless, since the
+  backend can return two different error shapes for different validation failures (a field-level
+  `errors` object, or a plain string array) and should degrade gracefully either way.
+- `app/register/page.tsx` + `actions.ts`: registration form (first `<select>` dropdown in this
+  rebuild) using a Server Action that calls the real backend directly with `fetch` (no mock, no
+  Beeceptor this time — this project now talks to the actual planned backend).
+- `app/login/page.tsx`: added a `registered` searchParam → green "Registration successful. Please
+  verify your email and log in again." message, plus a "Sign up" link to `/register`.
+- Verified end-to-end in-browser: fill out register form → real Azure API call → redirect to
+  `/login` → success message displays correctly. No console/server errors.
+- Not yet done: actually logging in after registering (needs email verification per the backend's
+  own message — no way to test that path without a real inbox); backend field validation beyond
+  what was probed (e.g. password strength rules, if any) is unverified.
+- **Next step:** not yet decided.
+
 ## 2026-08-20 — Claude (Windows) built the public landing page
 
 - User typed every file by hand, guided step-by-step, verified in-browser after each piece.
