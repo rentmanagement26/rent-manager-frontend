@@ -23,6 +23,33 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-23 — Claude (MacBook) built email confirmation page + fixed a production env-var bug
+
+- User typed every file by hand, guided step-by-step.
+- **Production bug found and fixed:** login/register crashed on the live Vercel deployment
+  (`https://rentmanagement-liard.vercel.app/`) with a generic server error. Root cause:
+  `BACKEND_API_URL` only existed in local `.env.local` (gitignored), never set in Vercel's project
+  environment variables — `process.env.BACKEND_API_URL` was `undefined` in production, so the
+  fetch URL became the literal string `"undefined/api/auth/login"`, which Next.js's server fetch
+  resolved against the app's own origin, hitting this app's own 404 page and displaying its raw
+  HTML as the "error message." Fixed by the user adding `BACKEND_API_URL` in Vercel → Settings →
+  Environment Variables (Production checked) and redeploying. **Lesson for next time:** any new
+  `process.env.*` variable added locally must also be added in Vercel's dashboard and the site
+  redeployed — local `.env.local` never reaches production automatically.
+- `app/confirm-email/page.tsx` (new): the page a user lands on from the registration confirmation
+  email (`/confirm-email?userId=...&token=...`). First use of a Server Component doing its own
+  `fetch` directly during render, rather than through a Server Action — appropriate here since
+  there's no form/user input, the confirmation should just happen automatically on page load.
+  Discovered the real endpoint by testing with `curl` first (a dummy token) before writing code:
+  `POST /api/auth/confirm-email` with body `{UserId, Token}` (capitalized, same convention as the
+  rest of this backend), plain-text error body on failure (reuses `lib/api-error.ts`).
+- Verified end-to-end with a **real, previously-unused confirmation link** (tested against
+  `localhost:3000` with the same query params rather than deploying first, to avoid needing a
+  commit for testing) — real backend call, account genuinely marked confirmed, matching login
+  success afterward.
+- Per user request, commit messages in this project no longer include a `Co-Authored-By` trailer.
+- **Next step:** not yet decided.
+
 ## 2026-08-23 — Claude (MacBook) wired login to the real backend, replacing hardcoded credentials
 
 - User typed every file by hand, guided step-by-step; tested the real `/api/auth/login` endpoint
