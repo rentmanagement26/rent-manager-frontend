@@ -13,3 +13,10 @@ export interface Property {
   city: string;
   rentAmount: number;
 }
+
+export interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  phonenumber: number;
+}
