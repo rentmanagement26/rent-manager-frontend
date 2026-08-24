@@ -3,22 +3,29 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSession, SESSION_COOKIE_NAME } from "@/lib/session";
+import { extractErrorMessage } from "@/lib/api-error";
 import type { SessionUser } from "@/lib/types";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 
-  // TODO: replace with a real backend call once it exists.
-  if (email !== "admin@example.com" || password !== "password") {
-    redirect("/login?error=1");
+  const response = await fetch(`${process.env.BACKEND_API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ Email: email, Password: password }),
+  });
+
+  if (!response.ok) {
+    const message = await extractErrorMessage(response);
+    redirect(`/login?error=${encodeURIComponent(message)}`);
   }
 
+  const data = await response.json();
   const user: SessionUser = {
-    id: "1",
-    email,
-    name: "Alex Landlord",
-    role: "admin",
+    id: data.userId,
+    email: data.email,
+    role: data.roles[0],
   };
 
   const token = createSession(user);
@@ -29,7 +36,7 @@ export async function loginAction(formData: FormData) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 8, // 8 hours
+    maxAge: 60 * 60 * 8,
   });
 
   redirect("/admin");

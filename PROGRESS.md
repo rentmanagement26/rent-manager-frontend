@@ -23,6 +23,105 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-23 — Claude (MacBook) built email confirmation page + fixed a production env-var bug
+
+- User typed every file by hand, guided step-by-step.
+- **Production bug found and fixed:** login/register crashed on the live Vercel deployment
+  (`https://rentmanagement-liard.vercel.app/`) with a generic server error. Root cause:
+  `BACKEND_API_URL` only existed in local `.env.local` (gitignored), never set in Vercel's project
+  environment variables — `process.env.BACKEND_API_URL` was `undefined` in production, so the
+  fetch URL became the literal string `"undefined/api/auth/login"`, which Next.js's server fetch
+  resolved against the app's own origin, hitting this app's own 404 page and displaying its raw
+  HTML as the "error message." Fixed by the user adding `BACKEND_API_URL` in Vercel → Settings →
+  Environment Variables (Production checked) and redeploying. **Lesson for next time:** any new
+  `process.env.*` variable added locally must also be added in Vercel's dashboard and the site
+  redeployed — local `.env.local` never reaches production automatically.
+- `app/confirm-email/page.tsx` (new): the page a user lands on from the registration confirmation
+  email (`/confirm-email?userId=...&token=...`). First use of a Server Component doing its own
+  `fetch` directly during render, rather than through a Server Action — appropriate here since
+  there's no form/user input, the confirmation should just happen automatically on page load.
+  Discovered the real endpoint by testing with `curl` first (a dummy token) before writing code:
+  `POST /api/auth/confirm-email` with body `{UserId, Token}` (capitalized, same convention as the
+  rest of this backend), plain-text error body on failure (reuses `lib/api-error.ts`).
+- Verified end-to-end with a **real, previously-unused confirmation link** (tested against
+  `localhost:3000` with the same query params rather than deploying first, to avoid needing a
+  commit for testing) — real backend call, account genuinely marked confirmed, matching login
+  success afterward.
+- Per user request, commit messages in this project no longer include a `Co-Authored-By` trailer.
+- **Next step:** not yet decided.
+
+## 2026-08-23 — Claude (MacBook) wired login to the real backend, replacing hardcoded credentials
+
+- User typed every file by hand, guided step-by-step; tested the real `/api/auth/login` endpoint
+  with `curl` first (wrong password, unverified account, then a real verified account) to learn
+  its actual shapes before writing any code.
+- `lib/types.ts`: `AppRole` changed from placeholder `"admin" | "tenant"` to the backend's real
+  roles, `"Admin" | "Landlord" | "Contractor"` (`Admin` isn't reachable via public registration,
+  per register's own validation, but a login response could still return it for a manually
+  provisioned account). `SessionUser.name` dropped — login's response doesn't include a name and
+  nothing in the app was reading it, so kept the type honest rather than carrying a field that's
+  always empty in practice.
+- `lib/api-error.ts` (new): pulled `extractErrorMessage` out of `app/register/actions.ts` into a
+  shared helper, and improved it — login's 401s come back as **plain text**
+  (`"Invalid email or password."` / `"Please confirm your email before logging in."`), not JSON
+  like register's errors were. The shared version now returns that raw text directly when JSON
+  parsing fails, instead of a generic fallback, since it's already a good user-facing message.
+  `register/actions.ts` updated to import this instead of keeping its own copy.
+- `app/login/actions.ts` rewritten: real `fetch` to `/api/auth/login`, builds a `SessionUser` from
+  the response (`{userId, email, roles: [...]}`, taking `roles[0]`), then creates our **own**
+  server-side session token via `lib/session.ts` and sets that in the cookie — the backend's JWT
+  is used once, server-side, to build the session, and is never sent to the browser. Consistent
+  with the server-side-session decision from 2026-08-19.
+- `app/login/page.tsx`: error display fixed to show the actual `{error}` message instead of a
+  hardcoded "Invalid email or password." string that used to show regardless of the real cause.
+- Hit and fixed a confusing but harmless issue while testing: after saving the Step 3/4 file edits,
+  the running dev server kept showing two *stale* compile errors from earlier, already-fixed edits
+  (a malformed JSX line, a duplicate function) — file contents on disk were already correct
+  (verified with `cat`/`lsof`, right project directory, right process). A full dev-server restart
+  (stop + start, not just a page reload) cleared it. Worth remembering as a class of issue:
+  Turbopack's dev error overlay can stick on a stale error after a fix is saved; if a browser
+  reload doesn't clear an error you're sure you fixed, restart the dev server before assuming the
+  fix is wrong.
+- Verified end-to-end in-browser against the real backend: wrong password → shows real "Invalid
+  email or password." message; correct real credentials (`hardeep2792@gmail.com`) → real JWT
+  exchanged server-side → lands on protected `/admin` dashboard. No console/server errors.
+- Not yet done: `/admin/properties` still uses the separate local `lib/data/store.ts`, not the
+  real backend; register's success flow untested for the "Admin" role (not registerable publicly).
+- **Next step:** not yet decided — options are wiring `/admin/properties` to the real backend (now
+  that the pattern is proven twice), or `/admin/tenants`. Ask the user.
+
+## 2026-08-23 — Claude (MacBook) built real user registration against the live ASP.NET backend
+
+- User typed every file by hand, guided step-by-step, verified against the real hosted API
+  (not a mock) at each stage.
+- `.env.local` created with `BACKEND_API_URL` pointing at the real Azure-hosted backend:
+  `https://rentmanagement-fbbpf2afgjb7gee4.canadaeast-01.azurewebsites.net`.
+- Probed `POST /api/auth/register` directly with `curl` before writing any code, to get the real
+  request/response shapes rather than guessing: requires `Email`, `FullName`, `Password`,
+  `UserType` (capitalized, ASP.NET-style JSON), and `UserType` must be exactly `"Landlord"` or
+  `"Contractor"`.
+- **Bug found and worked around, then confirmed fixed on the backend during this session:**
+  a fully valid register request initially returned a 500 with an empty body (twice, with
+  different emails, so not a fluke) — an unhandled backend exception, not a frontend issue.
+  `app/register/actions.ts`'s `extractErrorMessage` helper was written defensively to handle this
+  (falls back to a generic message on an empty/unparseable body) specifically because of that bug.
+  Re-tested directly with `curl` later in the same session and the backend now returns a proper
+  200 with `{message, userId, email}` — bug appears to have been fixed elsewhere (not by this
+  session) while work was in progress. The defensive error handling stays regardless, since the
+  backend can return two different error shapes for different validation failures (a field-level
+  `errors` object, or a plain string array) and should degrade gracefully either way.
+- `app/register/page.tsx` + `actions.ts`: registration form (first `<select>` dropdown in this
+  rebuild) using a Server Action that calls the real backend directly with `fetch` (no mock, no
+  Beeceptor this time — this project now talks to the actual planned backend).
+- `app/login/page.tsx`: added a `registered` searchParam → green "Registration successful. Please
+  verify your email and log in again." message, plus a "Sign up" link to `/register`.
+- Verified end-to-end in-browser: fill out register form → real Azure API call → redirect to
+  `/login` → success message displays correctly. No console/server errors.
+- Not yet done: actually logging in after registering (needs email verification per the backend's
+  own message — no way to test that path without a real inbox); backend field validation beyond
+  what was probed (e.g. password strength rules, if any) is unverified.
+- **Next step:** not yet decided.
+
 ## 2026-08-20 — Claude (Windows) built the public landing page
 
 - User typed every file by hand, guided step-by-step, verified in-browser after each piece.

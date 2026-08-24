@@ -1,9 +1,8 @@
-export type AppRole = "admin" | "tenant";
+export type AppRole = "Admin" | "Landlord" | "Contractor";
 
 export interface SessionUser {
   id: string;
   email: string;
-  name: string;
   role: AppRole;
 }
 
