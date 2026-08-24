@@ -30,6 +30,6 @@
 
 body {
   background: var(--bg);
-  color: var(--ink-heading);
+  color: var(--heading);
   font-family: var(--font-body), system-ui, sans-serif;
 }

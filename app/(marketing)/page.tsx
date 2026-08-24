@@ -55,10 +55,10 @@ export default function Home() {
           Built for landlords &amp; tenants
         </span>
         <h1 className="max-w-2xl font-head text-3xl font-extrabold tracking-tight text-heading sm:text-5xl">
-          Manage your rentals without the chaos.
+           Professional Home & Property Management
         </h1>
         <p className="max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-          Rent Manager brings properties, tenants, leases, and payments
+          DomusPRO brings properties, tenants, leases, and payments
           together in one simple platform — for landlords and tenants alike.
         </p>
         <Link

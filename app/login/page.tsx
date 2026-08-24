@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { loginAction } from "@/app/login/actions";
+import Image from "next/image";
 
 export default async function LoginPage({
   searchParams,
@@ -12,7 +13,9 @@ export default async function LoginPage({
     <main className="flex flex-1 flex-col md:flex-row">
       <div className="relative flex flex-col justify-between gap-6 overflow-hidden bg-linear-to-br from-accent to-accent-dark p-8 text-white md:w-[420px] md:flex-shrink-0 md:gap-14 md:p-14">
         <div className="pointer-events-none absolute -right-20 -top-40 h-72 w-72 rounded-full border border-white/15" />
-        <span className="font-head text-lg font-bold">Rent Manager</span>
+        <Link href="/" className="flex items-center">
+          <Image src="/logo.png" alt="DomusPRO" width={99} height={28} priority />
+        </Link>
         <h1 className="max-w-xs font-head text-2xl font-extrabold leading-tight md:text-3xl">
           Manage your rentals without the chaos.
         </h1>

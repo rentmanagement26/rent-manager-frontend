@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <path d="M3 11l9-7 9 7" />
             <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
           </svg>
-          <span className="font-head text-base font-bold text-heading">Rent Manager</span>
+          <span className="font-head text-base font-bold text-heading">DomusPRO</span>
         </Link>
 
         <Link href="/admin" className="rounded-lg px-3 py-2 text-sm font-medium text-body hover:bg-subtle">

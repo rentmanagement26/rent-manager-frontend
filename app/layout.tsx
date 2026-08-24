@@ -17,18 +17,18 @@ const plexSans = IBM_Plex_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://rentmanagement-liard.vercel.app/"), // ** swap for your real domain once deployed
   title: {
-    default: "Rent Manager",
-    template: "%s | Rent Manager",
+    default: "DomusPRO",
+    template: "%s | DomusPRO",
   },
   description: "Manage properties, tenants, and rent payments in one place.",
   openGraph: {
-    title: "Rent Manager",
+    title: "DomusPRO",
     description: "Manage properties, tenants, and rent payments in one place.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rent Manager",
+    title: "DomusPRO",
     description: "Manage properties, tenants, and rent payments in one place.",
   },
   robots: {

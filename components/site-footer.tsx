@@ -6,7 +6,7 @@ export default function SiteFooter() {
           <path d="M3 11l9-7 9 7" />
           <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
         </svg>
-        <p>&copy; {new Date().getFullYear()} Rent Manager. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} DomusPRO. All rights reserved.</p>
       </div>
     </footer>
   );

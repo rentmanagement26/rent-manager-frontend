@@ -23,6 +23,53 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-24 — Claude (Windows) shipped the DomusPRO visual redesign + fixed a broken production build
+
+- User typed every file by hand, guided step-by-step; design direction was mocked up first as a
+  Claude Design canvas (landing/login/admin dashboard, desktop + mobile) before any real code
+  changed, then implemented against the actual Tailwind v4 app.
+- **Design system** added in `app/globals.css`: a 5-step semantic gray scale (`heading`, `body`,
+  `muted`, `default`, `subtle` — purpose-named, not `ink-900`-style numbers, after the first
+  naming pass proved confusing) plus `accent`/`accent-dark`/`accent-tint` (blue), registered via
+  Tailwind v4's `@theme inline` so they're usable as `text-heading`, `border-default`, `bg-accent`,
+  etc. Fonts switched from Geist to Sora (headings, `font-head`) + IBM Plex Sans (body) via
+  `next/font/google` in `app/layout.tsx`.
+- Restyled with the new system: `components/site-header.tsx`, `components/site-footer.tsx`,
+  `app/(marketing)/page.tsx` (landing), `app/login/page.tsx` and `app/register/page.tsx` (both
+  redone as a split brand-panel + form layout for visual parity), `app/admin/layout.tsx` (sidebar),
+  `app/admin/properties/page.tsx` (card-style list — no status badges, since `Property` has no
+  `status` field). Real logo (`public/logo.png`, a DomusPRO wordmark) wired into the header via
+  `next/image`; footer and admin sidebar still show the old icon+text instead of the image logo —
+  not yet done. `public/logo.jpg` is an unused duplicate still sitting in `public/`, not deleted
+  (unresolved — ask before removing).
+- **Project renamed to DomusPRO** throughout: `app/layout.tsx` metadata (title/OpenGraph/Twitter),
+  header/footer/admin-sidebar text, login/register brand-panel copy.
+- **Critical bug found and fixed:** `app/tenant/page.tsx` had been committed completely empty back
+  in `99210b6` ("Tenant folder and type added lib/types.ts") — a scaffold placeholder for the
+  future tenant portal that never got real content. An empty file has no exports, which fails
+  Next.js's build-time typed-route validation (`error TS2306: File '.../app/tenant/page.tsx' is
+  not a module`) — this was silently breaking **every Vercel production deployment since that
+  commit**, so none of the work after it (email confirmation, tenant type, and this whole
+  redesign) had actually reached production despite pushing successfully each time. Root-caused by
+  reading the real Vercel build log the user pasted, not by guessing. Fixed in commit `8d4394a`
+  with a minimal real placeholder page; production should catch up on the next deploy after this
+  entry's commit.
+- Also fixed a leftover typo bug in `app/globals.css` (`color: var(--ink-heading)` — referenced a
+  variable that was never defined, from the mid-rename state) → `var(--heading)`.
+- Local `.env.local` (`BACKEND_API_URL`) was missing on this machine — expected, since it's
+  gitignored and never synced; user has since created it.
+- Verified landing/login rendered correctly (accent color, fonts) against the real local dev
+  server via direct browser inspection (computed styles, not just visual guess) before assuming
+  the code was right — worth doing again for `/register` and `/admin/properties` once the dev
+  server's back up, and for production once this push's deploy finishes.
+- **Next step:** confirm the next Vercel deployment actually builds and shows the new design now
+  that `app/tenant/page.tsx` is fixed. Then, if wanted: swap the footer/admin-sidebar icon for the
+  real logo image (matching the header), resolve the `public/logo.jpg` duplicate, and continue
+  restyling the pages not yet touched (`app/admin/properties/new`, `app/admin/properties/[id]`,
+  `app/confirm-email` — already done — and `app/admin/tenants`, which doesn't exist yet).
+
+---
+
 **Project name: DomusPRO**
 
 ## 2026-08-24 — Claude (Windows) recorded the project name
