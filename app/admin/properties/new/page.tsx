@@ -13,7 +13,7 @@ export default function NewPropertyPage() {
             id="address"
             name="address"
             required
-            className="rounded border border-gray-300 px-3 py-2"
+            className="rounded border border-ink-300 px-3 py-2"
           />
         </div>
 
@@ -25,7 +25,7 @@ export default function NewPropertyPage() {
             id="city"
             name="city"
             required
-            className="rounded border border-gray-300 px-3 py-2"
+            className="rounded border border-ink-300 px-3 py-2"
           />
         </div>
 
@@ -38,11 +38,11 @@ export default function NewPropertyPage() {
             name="rentAmount"
             type="number"
             required
-            className="rounded border border-gray-300 px-3 py-2"
+            className="rounded border border-ink-300 px-3 py-2"
           />
         </div>
 
-        <button type="submit" className="mt-2 rounded bg-black px-4 py-2 text-white">
+        <button type="submit" className="mt-2 rounded bg-accent px-4 py-2 text-white">
           Add property
         </button>
       </form>

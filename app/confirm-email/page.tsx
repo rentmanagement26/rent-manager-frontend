@@ -11,7 +11,9 @@ export default async function ConfirmEmailPage({
   if (!userId || !token) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <p className="text-red-600">Invalid confirmation link.</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
+          Invalid confirmation link.
+        </p>
       </main>
     );
   }
@@ -26,17 +28,22 @@ export default async function ConfirmEmailPage({
     const message = await extractErrorMessage(response);
     return (
       <main className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <h1 className="mb-4 text-2xl font-bold">Confirmation failed</h1>
-        <p className="text-red-600">{message}</p>
+        <h1 className="mb-4 font-head text-2xl font-bold text-heading">Confirmation failed</h1>
+        <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
+          {message}
+        </p>
       </main>
     );
   }
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-      <h1 className="mb-4 text-2xl font-bold">Email confirmed</h1>
-      <p className="mb-4 text-gray-600">Your account is verified. You can log in now.</p>
-      <Link href="/login" className="rounded bg-black px-4 py-2 text-white">
+      <h1 className="mb-4 font-head text-2xl font-bold text-heading">Email confirmed</h1>
+      <p className="mb-6 text-muted">Your account is verified. You can log in now.</p>
+      <Link
+        href="/login"
+        className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-dark"
+      >
         Go to login
       </Link>
     </main>

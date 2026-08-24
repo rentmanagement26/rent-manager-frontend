@@ -16,7 +16,7 @@ export default async function PropertyDetailPage({
   return (
     <div>
       <h1 className="mb-2 text-2xl font-bold">{property.address}</h1>
-      <p className="text-gray-500">{property.city}</p>
+      <p className="text-muted">{property.city}</p>
       <p className="mt-4 text-lg">${property.rentAmount}/month</p>
     </div>
   );

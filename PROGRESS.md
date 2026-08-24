@@ -23,6 +23,13 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+**Project name: DomusPRO**
+
+## 2026-08-24 — Claude (Windows) recorded the project name
+
+- User named the project **DomusPRO**. No code/branding changes made yet — just recording the
+  name here so it's known across machines/agents.
+
 ## 2026-08-23 — Claude (MacBook) built email confirmation page + fixed a production env-var bug
 
 - User typed every file by hand, guided step-by-step.
