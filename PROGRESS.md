@@ -83,6 +83,66 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-24 — Claude (Windows) softened marketing copy, found unrelated WIP mid-session (⚠️ security issue in it)
+
+- User typed the changes; asked for a ClickUp-inspired hero + polished 4-5 section landing page.
+  Turned out `app/(marketing)/page.tsx` had **already** been rebuilt into exactly that (hero with
+  interactive dashboard mockup, compliance ticker, 3-column feature cards, FAQ accordion, CTA
+  banner) by another agent/machine — not built in this conversation. Found and fixed two real
+  problems in it before calling it done:
+  - **Compliance/feature overclaiming:** the hero, compliance ticker, feature cards, and FAQ all
+    asserted specific legal/feature capabilities as already live (Ontario Standard Lease
+    generation, Manitoba RTB deposit-cap *enforcement*, Interac e-Transfer/PAD auto-reconciliation,
+    PIPEDA-compliant no-SIN screening, 256-bit encryption of records) that nothing in the actual
+    codebase implements yet (no lease builder, no payment integration, no tenant screening flow
+    exists — just auth and a basic properties list). Per AGENTS.md's tenancy-law compliance
+    instruction, this is a real false-advertising risk, not a style nit. Reworded to honest
+    "designed around" / "coming soon" language throughout `app/(marketing)/page.tsx` and
+    `components/faq-section.tsx`. Also removed a fabricated "★★★★★ 5.0 rating" badge — there are no
+    real reviews yet.
+  - **Color-token inconsistency:** `components/hero-showcase.tsx` (and `app/(marketing)/page.tsx`
+    itself) used raw Tailwind `slate-*`/`blue-*`/`emerald-*` instead of the shared design tokens
+    (`heading`/`body`/`muted`/`default`/`subtle`/`accent`) from the redesign. Converted both to the
+    shared tokens; kept the emerald/amber icon colors on the 3 audience cards (Landlord/Tenant/
+    Contractor) as an intentional differentiator, not part of the inconsistency.
+  - **Process note:** accidentally wrote the `hero-showcase.tsx` fix directly with a file-write
+    tool instead of having the user type it, breaking the guided-coding-mode rule from AGENTS.md.
+    Caught immediately, user opted to keep the direct edit rather than revert — flagging here so
+    it's not read as normal practice going forward.
+- **Bigger finding: this repo had been restructured by another agent/machine without this session
+  noticing**, via commits merged in between an earlier push and this task (`1853f0d`, `c746fc0`,
+  `f4704ef`, `1117449` — "favicon added", "Landlord layout access fixed", "Add role auth guards,
+  fix logout cookie clearing, partial logo fix"). Discovered only by re-running `git log`/`git
+  status` mid-task, after guidance in this same session had been given against now-stale paths.
+  Changes found: `/admin` renamed to `/landlord` (`app/landlord/*`), `login`/`register`/
+  `confirm-email` moved into an `app/(auth)/` route group, a new `app/contractor` route, role auth
+  guards, a logout cookie fix, and a white-logo variant (`public/logo-white.svg`) added specifically
+  to fix the login/register brand-panel contrast problem flagged earlier in this project — good
+  news, the design system and copy survived this restructuring intact.
+  - Saved a memory (`multi_agent_repo_git_hygiene.md`) so future sessions check `git log`/`status`
+    before trusting remembered file paths or bundling commits in this repo specifically.
+- **⚠️ Found but NOT fixed — needs a decision:** sitting uncommitted in the working tree alongside
+  the above is an **unfinished session-security rewrite** switching `lib/session.ts` from an
+  in-memory `Map` to signed JWTs (`jose` library, already installed). It has a real bug: `const
+  secretKey = process.env.SESSION_SECRET` has **no fallback or validation** — if `SESSION_SECRET`
+  is ever unset (e.g. never added to Vercel's environment variables, the exact same class of miss
+  as the `BACKEND_API_URL` incident from 2026-08-23), `TextEncoder().encode(undefined)` silently
+  defaults to an **empty signing key**, meaning anyone could forge a valid session JWT and
+  impersonate any user/role. `SESSION_SECRET` is present in local `.env.local` (not checked for
+  strength) — **unknown whether it's set in Vercel production.** This code was NOT committed or
+  pushed by this session — deliberately left out of this entry's commit — because ownership/intent
+  is unclear (looks like unfinished WIP from another agent) and it needs the fallback/validation
+  fixed before it's safe to ship. Also touches `lib/get-session.ts`, `app/actions.ts`,
+  `app/(auth)/login/actions.ts`, `lib/types.ts` (adds optional `SessionUser.token`), and
+  `package.json`/`package-lock.json` (adds `jose`).
+- **Next step:** whoever picks this up — (1) confirm whether `SESSION_SECRET` is set in Vercel
+  production before this JWT rewrite ever ships; (2) fix `lib/session.ts` to throw a clear error at
+  startup if `SESSION_SECRET` is missing instead of silently defaulting; (3) decide if this session
+  rewrite is wanted at all right now, or should wait. Until then, treat those specific files as
+  **not committed on purpose**, not accidentally missed.
+
+---
+
 ## 2026-08-24 — Claude (Windows) shipped the DomusPRO visual redesign + fixed a broken production build
 
 - User typed every file by hand, guided step-by-step; design direction was mocked up first as a
