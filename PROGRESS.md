@@ -20,6 +20,66 @@ Codex and Claude use this file as the project handoff, across both computers.
 - Commit and push the entry with its related work so the other agent and machine can see it.
 - This file is the shared source of truth; conversation memory and local uncommitted changes are
   not assumed to be available to the other agent.
+- **Canadian & Provincial Tenancy Law Compliance (Federal, Ontario, Manitoba)**: Whenever proposing
+  or adding any feature (leases, deposits, rent increases, late fees, notices, tenant screening,
+  privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
+  LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
+
+---
+
+## 2026-08-25 — Claude (MacBook) debugged logout/routing on the new DomusPRO structure; partial logo fix
+
+- First session back on this machine since the DomusPRO rebrand (design system, role folders
+  `app/(auth)/`, `app/landlord/`, `app/contractor/`, `app/tenant/`, `lib/auth-guard.ts`) landed —
+  none of that was built by this machine's Claude session, catching up from `PROGRESS.md` alone.
+- **Bug found and fixed (by the time this session checked):** `app/actions.ts`'s `logoutAction` was
+  calling `cookieStore.set({...})` without the required `value` field, which doesn't properly clear
+  the session cookie. Correct fix is `cookieStore.delete(SESSION_COOKIE_NAME)` — this was proposed
+  and was already applied (by the user or elsewhere) by the next check; confirmed present in the
+  file as of this entry.
+- **Bug found and fixed:** `/contractor` had no session/role guard at all — no `layout.tsx`, and
+  `page.tsx` never called `requireAuth()`/`getSession()`. This is why logout looked broken when
+  tested from `/contractor`: revisiting the page after logout still rendered it, because it was
+  never checking the cookie in the first place, regardless of whether the cookie was actually
+  cleared. Fixed by adding `app/contractor/layout.tsx` (and `app/tenant/layout.tsx`, same gap,
+  same fix, applied proactively) calling `await requireAuth(["Contractor"])` /
+  `requireAuth(["Tenant"])` respectively, mirroring `app/landlord/layout.tsx`'s pattern. **Still
+  worth a look:** `app/landlord/layout.tsx` itself calls
+  `requireAuth(["Admin","Landlord","Tenant","Contractor"])` — that allowed-roles list looks
+  copy-pasted too broad for a route presumably meant to be landlord-only. Also,
+  `app/contractor/actions.ts` is completely empty — likely dead scaffolding, unconfirmed whether
+  safe to delete.
+- Verified end-to-end in-browser (real login, real logout, real backend) that logout **does**
+  correctly clear the cookie and blocks re-entry to `/landlord` (which has the guard) — the
+  `/contractor` symptom is a missing-guard bug on that one route, not a cookie/session-store bug.
+- **Logo aspect-ratio warning** ("Image... has either width or height modified, but not the
+  other") — root cause: Tailwind's Preflight (`img,video{height:auto}`) silently overrides the
+  `height={28}` prop on every `<Image src="/logo.png">`, while `width={99}` is untouched, producing
+  the mismatch. Fix: keep `height={28}` as a prop (still required, used for layout-shift
+  reservation) and add `className="h-auto"` to make the CSS override intentional/acknowledged.
+  **Only applied to `components/site-header.tsx` so far** — `app/(auth)/login/page.tsx` and
+  `app/(auth)/register/page.tsx` still have the same warning, not yet fixed.
+- Per user request this session: no `Co-Authored-By` trailer in commits (already noted
+  2026-08-23), and **always ask before running `git commit`**, even when this file's own protocol
+  describes committing as the normal next step — that description isn't itself permission.
+- **Next step:** add the `/contractor` auth guard, finish the logo fix on the two remaining files,
+  and double-check `app/landlord/layout.tsx`'s allowed-roles list (currently lets Admin/Tenant/
+  Contractor into what's presumably meant to be the landlord-only portal).
+
+---
+
+## 2026-08-24 — Antigravity logged Canadian & Provincial (Ontario/Manitoba) compliance requirements & RBAC architecture
+
+- **Legal compliance policy established**: Documented requirement in `PROGRESS.md` and `AGENTS.md`
+  that all future features must be cross-checked against Canadian Federal Law (PIPEDA, CASL),
+  Ontario's *Residential Tenancies Act, 2006* (LTB rules, Ontario Standard Lease, ban on damage
+  deposits, rent increase guidelines), and Manitoba's *The Residential Tenancies Act* (RTB rules,
+  0.5 month deposit limits, 3-month rent increase notices).
+- **Multi-Role Access Architecture (RBAC)** discussed: SuperAdmin, Landlord, Tenant, and Contractor /
+  Maintenance access hierarchy and scoping models clarified.
+- Guided-coding mode confirmed: Explanations and "why" first; code generated only upon explicit request.
+- **Next step:** Decide SuperAdmin vs Landlord route scoping (`/admin` vs `/landlord`), or continue
+  building the role-based dashboard/features with provincial compliance in mind.
 
 ---
 
