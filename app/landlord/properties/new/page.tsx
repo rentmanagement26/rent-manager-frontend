@@ -1,4 +1,4 @@
-import { createPropertyAction } from "@/app/admin/properties/actions";
+import { createPropertyAction } from "@/app/landlord/properties/actions";
 
 export default function NewPropertyPage() {
   return (

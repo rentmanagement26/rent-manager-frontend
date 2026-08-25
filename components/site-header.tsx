@@ -6,7 +6,7 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-10 border-b border-default bg-surface/85 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between p-4">
         <Link href="/" className="flex items-center">
-          <Image src="/logo.png" alt="DomusPRO" width={99} height={28} priority />
+          <Image src="/logo.svg" alt="DomusPRO" width={160} height={28} className="h-auto" />
         </Link>
 
         <nav className="flex items-center gap-6">

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createSession, SESSION_COOKIE_NAME } from "@/lib/session";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { SessionUser } from "@/lib/types";
+import { getDefaultDashboard } from "@/lib/auth-guard";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
@@ -25,6 +26,7 @@ export async function loginAction(formData: FormData) {
   const user: SessionUser = {
     id: data.userId,
     email: data.email,
+    name: data.name,
     role: data.roles[0],
   };
 
@@ -39,5 +41,5 @@ export async function loginAction(formData: FormData) {
     maxAge: 60 * 60 * 8,
   });
 
-  redirect("/admin");
+  redirect(getDefaultDashboard(user.role));
 }
