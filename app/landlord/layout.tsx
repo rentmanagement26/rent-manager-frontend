@@ -6,7 +6,7 @@ import Image from "next/image";
 import { requireAuth } from "@/lib/auth-guard";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode; }) {
-  const session = await requireAuth(["Admin", "Landlord", "Tenant", "Contractor"]);
+  const session = await requireAuth(["Admin", "Landlord"]);
 
 
   return (
