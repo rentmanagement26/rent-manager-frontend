@@ -152,7 +152,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="min-w-0 pr-4">
                     <p className="text-sm font-medium text-slate-900 truncate">
-                      {property.address}
+                      {property.line1}
                     </p>
                     <p className="text-xs text-slate-500">{property.city}</p>
                   </div>
