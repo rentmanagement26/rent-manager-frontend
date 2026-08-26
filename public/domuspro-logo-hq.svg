@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200" width="700" height="200" role="img" aria-label="DomusPRO">
+  <title>DomusPRO</title>
+
+  <!--
+    ICON ANALYSIS from original:
+    - Blue piece: house pentagon outline, right side has a CONCAVE semicircle arc cut into it,
+      bottom right has a rectangular door notch. Like the letter "d" or a house with circular right edge.
+    - Green piece: a "D"/"p" shape — vertical flat left edge, circular arc on right.
+      Sits next to / partially overlapping the blue concave cutout.
+    - They interlock: blue concave arc matches green convex arc.
+  -->
+
+  <!--
+    COORDINATE SYSTEM (icon fits in ~0,0 to 175,185):
+    - House peak at (75, 8)
+    - Left wall: x=8
+    - Right wall of blue: x=100
+    - Bottom: y=182
+    - Arc center for concave cutout: approximately (100, 105), radius ~52
+    - Door notch in blue bottom-right: rectangle roughly x=70..100, y=140..182
+    - Green D piece: left edge x=75, arc center same as concave = (100,105), outer right x=152
+  -->
+
+  <!-- BLUE PIECE -->
+  <!-- House shape: peak → right-top → concave arc right side → door notch bottom → left bottom → left wall → peak -->
+  <path
+    d="
+      M 75 8
+      L 110 8
+      L 110 40
+      A 58 58 0 0 1 110 168
+      L 85 168
+      L 85 140
+      L 70 140
+      L 70 168
+      L 8 168
+      L 8 75
+      Z
+    "
+    fill="#1A6FE8"
+  />
+  <!-- Roof slope — darker blue for the angled roof face -->
+  <path
+    d="M 75 8 L 110 8 L 110 40 L 8 75 Z"
+    fill="#1558C0"
+  />
+
+  <!-- GREEN PIECE — D shape: flat left vertical, round right arc -->
+  <!-- Left edge at x~78, top y~40, bottom y~168, arc bulges to x~152 at midpoint y~104 -->
+  <path
+    d="
+      M 78 40
+      L 108 40
+      A 64 64 0 0 1 108 168
+      L 78 168
+      L 78 128
+      A 24 24 0 0 0 78 80
+      Z
+    "
+    fill="#2ECC8E"
+  />
+
+  <!-- WORDMARK -->
+  <!-- "Domus" in near-black heavy weight -->
+  <text
+    x="200"
+    y="138"
+    font-family="'Helvetica Neue', 'Arial', sans-serif"
+    font-size="96"
+    font-weight="800"
+    letter-spacing="-3"
+    fill="#111111"
+  >Domus</text>
+
+  <!-- "PRO" in matching teal -->
+  <text
+    x="488"
+    y="138"
+    font-family="'Helvetica Neue', 'Arial', sans-serif"
+    font-size="96"
+    font-weight="800"
+    letter-spacing="-3"
+    fill="#2ECC8E"
+  >PRO</text>
+
+</svg>

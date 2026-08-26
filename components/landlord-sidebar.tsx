@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { logoutAction } from "@/app/actions";
 import { useSidebar } from "@/lib/sidebar-context";
 
 interface LandlordSidebarProps {
-  role: string;
   email: string;
 }
 
-export function LandlordSidebar({ role, email }: LandlordSidebarProps) {
+export function LandlordSidebar({ email }: LandlordSidebarProps) {
   const { open, setOpen } = useSidebar();
 
   return (
@@ -27,18 +25,16 @@ export function LandlordSidebar({ role, email }: LandlordSidebarProps) {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center px-6 py-6 border-b border-slate-100 lg:border-slate-200 lg:bg-white">
-          <Link href="/landlord" className="flex items-center gap-2">
-            <Image src="/logo-sm.svg" alt="DomusPRO" width={50} height={50} priority />
-            <div>
-              <span className="font-bold text-slate-900 tracking-tight block text-base">
-                DomusPRO
-              </span>
-              <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
-                {role} Portal
-              </span>
-            </div>
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center px-6 py-6 border-b border-slate-100 lg:border-b-0 lg:bg-white">
+          <Link href="/landlord">
+            <Image
+              src="/domuspro-logo.png"
+              alt="DomusPRO"
+              width={140}
+              height={32}
+              priority
+              className="h-auto w-auto"
+            />
           </Link>
         </div>
 
@@ -46,39 +42,44 @@ export function LandlordSidebar({ role, email }: LandlordSidebarProps) {
           <nav className="p-4 space-y-1">
             <Link
               href="/landlord"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 transition"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-blue-50 text-brand-blue transition"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
               Dashboard
             </Link>
             <Link
               href="/landlord/properties"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
               Properties
             </Link>
             <Link
               href="/landlord/tenants"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
             >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
               Tenants
             </Link>
           </nav>
 
-          <div className="p-4 border-t border-slate-100 bg-slate-50/60 m-3 rounded-xl">
-            <div className="mb-3 truncate">
-              <p className="text-xs text-slate-500 font-medium">Logged in as</p>
-              <p className="text-sm font-semibold text-slate-900 truncate" title={email}>
-                {email}
-              </p>
-            </div>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
-              >
-                Sign out
-              </button>
-            </form>
+          <div className="m-3 p-4 rounded-xl bg-gradient-to-br from-brand-green-tint to-blue-50 border border-brand-green/30">
+            <p className="text-xs font-semibold text-slate-900">Free plan</p>
+            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+              Upgrade for more properties and priority support.
+            </p>
+            <Link
+              href="/landlord/billing"
+              className="mt-3 block text-center w-full px-3 py-2 text-xs font-semibold text-white bg-brand-blue hover:opacity-90 rounded-lg transition"
+            >
+              View plans
+            </Link>
           </div>
         </div>
       </div>

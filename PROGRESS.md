@@ -25,6 +25,76 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-26 — Claude (Windows) implemented the landlord shell redesign (sidebar, header, dashboard)
+
+- Followed on from Antigravity's exploration below — mocked the design up interactively first
+  (visualize tool, several rounds of feedback) before writing any real code, then built it guided
+  step-by-step; user typed every file by hand and verified after each piece.
+- **Brand colors** (`app/globals.css`): added `--brand-blue` (`#1565c0`), `--brand-green`
+  (`#2ecc8e`), `--brand-green-dark` (`#0f8a5f`), `--brand-green-tint` (`#e7faf1`) as new `@theme
+  inline` tokens (`bg-brand-blue`, `text-brand-green-dark`, etc.), matching the real DomusPRO logo
+  colors. Note this is a **separate token set from the existing `--accent`** (`#3358d6`, used by
+  the marketing site) — the landlord portal never consumed `--accent` in the first place (it
+  hardcoded raw Tailwind `blue-600`), so this doesn't touch/replace that system, just gives the
+  landlord portal its own on-brand palette where it previously hardcoded arbitrary blues.
+- **Logo wired in** (`components/landlord-sidebar.tsx`): swapped the old icon+text pairing for the
+  real `public/domuspro-logo.png` (user-provided this session) via `next/image`. Found but did
+  **not** use `public/domuspro-logo-hq.svg` — an unused, uncommitted wordmark SVG already sitting
+  in `public/` from some earlier point, visually the same logo. Left as-is, untracked; worth
+  clarifying later whether it should replace the PNG or be deleted as a duplicate.
+- **Sidebar rebuilt**: removed the border under the logo at `lg:` (desktop) only — the header row's
+  own border now reads as one continuous line since both sit in the same grid row (mobile keeps its
+  border, since the drawer still needs a break between logo and nav there). Removed the "{role}
+  Portal" badge (moved to the header). Replaced the old "logged in as / sign out" card at the
+  bottom with a "Free plan / View plans" card. Added simple inline-SVG nav icons (dashboard/
+  properties/tenants), no new icon library.
+- **New `components/account-menu.tsx`** (client component): notifications bell (decorative only —
+  no real notification system exists yet), an "Upgrade" link, and an avatar-initials dropdown
+  (click-outside-to-close via a `mousedown` listener) holding Profile/Settings/Sign out —
+  `logoutAction` moved here from the sidebar. Rendered in **both** the desktop header row and the
+  mobile inline header in `app/landlord/layout.tsx`, since sign-out no longer lives in the sidebar
+  drawer at all.
+- **Three stub pages added** (`/landlord/profile`, `/landlord/settings`, `/landlord/billing`) so
+  the dropdown/upgrade links the header now has don't 404 — same "coming soon" placeholder pattern
+  as the pre-existing `/landlord/tenants` gap. None have real content yet.
+- **Dashboard content** (`app/landlord/page.tsx`): added a welcome banner (gradient backdrop + a
+  generic house illustration, per Antigravity's requirement below for the no-image-uploaded case)
+  with the "Add property" CTA moved into it; trimmed 4 KPI cards down to 3 (Properties, Occupancy,
+  Revenue — dropped "Maintenance & alerts", which always showed a fake `0`); recolored the page's
+  hardcoded blues/greens to the new `brand-*` tokens.
+- **Responsive pass**: role badge and "Upgrade" button in `AccountMenu` now hide below `sm`
+  (640px) to avoid crowding the mobile header next to the hamburger button; `PageHeaderSlot`'s
+  title now truncates and shrinks a step on mobile (user also dropped the description line
+  entirely from `PageHeaderSlot`, simplifying it further); fixed an asymmetric-padding bug in
+  `app/landlord/layout.tsx`'s mobile header wrapper (`pt-8` with no bottom padding, pre-existing
+  but only visually obvious once the header content got shorter) — changed to `py-6` so the header
+  row sits centered in its bar instead of hugging the bottom border.
+- Not yet done / known gaps: notification bell has no real backend; Profile/Settings/Billing pages
+  are empty placeholders; the "Active" status pill on property rows is still hardcoded (pre-existing,
+  not addressed this session — `Property` has no status field); the public marketing site
+  (`components/site-header.tsx`, `public/logo.svg`/`logo-sm.svg`) still uses the **old** logo/blue
+  (`#004eeb` skyscraper monogram) — not updated to match the new brand colors, since this session
+  was scoped to the landlord portal only.
+- **Next step:** decide whether to extend the new brand colors/logo to the public marketing site
+  and `/login`/`/register` pages for consistency, resolve the unused `domuspro-logo-hq.svg` vs
+  `domuspro-logo.png` duplication, and eventually give Profile/Settings/Billing real content.
+
+---
+
+## 2026-08-26 — Antigravity (Windows) explored Landlord Dashboard redesign options & refined requirements
+
+- Explored dashboard redesign directions for `app/landlord/page.tsx`:
+  1. Clean Modern SaaS style (4 KPI cards + property list + quick action & compliance hub).
+  2. Bento Grid style (high-density modular tiles).
+  3. Playful Vibrant style (circular occupancy progress rings).
+  4. Modern Eye-Catchy with vibrant mesh gradient welcome banner (`bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-700`).
+- **User design requirements clarified:**
+  - When no property image is uploaded: display a clean, tasteful generic architectural house illustration header with a subtle gradient backdrop.
+  - Buttons must be **simple and decent** (clean solid blue for primary `+ Add Property`, subtle outlined/gray-bordered buttons for card actions).
+  - Modern and eye-catchy yet clean and super user-friendly with zero clutter (3 clean KPI metrics: Properties, Occupancy, Revenue).
+- Standalone HTML visual layout drafted for `app/landlord/page.tsx`.
+- **Next step:** In the new session, guide the user to implement the refined `app/landlord/page.tsx` dashboard code incorporating the generic house placeholder and decent button styling.
+
 ---
 
 ## 2026-08-26 — Claude (MacBook) fixed TypeScript build errors from the incomplete Property type migration

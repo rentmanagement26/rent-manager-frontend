@@ -11,6 +11,10 @@
   --accent: #3358d6;
   --accent-dark: oklch(40% 0.15 258);
   --accent-tint: oklch(95% 0.03 258);
+  --brand-blue: #1565c0;
+--brand-green: #2ecc8e;
+--brand-green-dark: #0f8a5f;
+--brand-green-tint: #e7faf1;
 }
 
 @theme inline {
@@ -24,6 +28,10 @@
   --color-accent: var(--accent);
   --color-accent-dark: var(--accent-dark);
   --color-accent-tint: var(--accent-tint);
+  --color-brand-blue: var(--brand-blue);
+--color-brand-green: var(--brand-green);
+--color-brand-green-dark: var(--brand-green-dark);
+--color-brand-green-tint: var(--brand-green-tint);
   --font-sans: var(--font-body);
   --font-head: var(--font-head);
 }
