@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { listProperties } from "@/lib/data/store";
+import { PageHeader } from "@/components/page-header";
 
 export default function PropertiesPage() {
   const properties = listProperties();
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-head text-2xl font-bold text-heading">Properties</h1>
-        <Link
-          href="/admin/properties/new"
-          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark"
-        >
-          Add property
-        </Link>
-      </div>
+  
+        <PageHeader
+          title="Properties"
+          description="Every property in your portfolio, in one place."
+          action={
+            <Link
+              href="/landlord/properties/new"
+              className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark"
+            >
+              Add property
+            </Link>
+          }
+        />
+  
 
       {properties.length === 0 ? (
         <p className="text-muted">No properties yet.</p>

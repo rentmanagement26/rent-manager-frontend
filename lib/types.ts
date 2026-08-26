@@ -7,16 +7,21 @@ export interface SessionUser {
   role: AppRole;
 }
 
-export interface Property {
-  id: string;
-  address: string;
-  city: string;
-  rentAmount: number;
-}
-
 export interface Tenant {
   id: string;
   name: string;
   email: string;
   phonenumber: number;
+}
+
+export interface Property {
+  id: string;
+  name: string;
+  propertyTypeId: number;
+  line1: string;
+  line2: string | null;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
 }

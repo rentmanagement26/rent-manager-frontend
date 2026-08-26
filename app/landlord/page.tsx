@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/get-session";
 import { listProperties } from "@/lib/data/store";
+import { PageHeader } from "@/components/page-header";
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
@@ -14,27 +15,21 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Top Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Welcome back! Here is what is happening with your rental portfolio.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/landlord/properties/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Property
-          </Link>
-        </div>
-      </div>
+    <PageHeader
+  title="Dashboard"
+  description="Welcome back! Here is what is happening with your rental portfolio."
+  action={
+    <Link
+      href="/landlord/properties/new"
+      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+      Add Property
+    </Link>
+  }
+/>
 
       {/* 4 KPI Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
