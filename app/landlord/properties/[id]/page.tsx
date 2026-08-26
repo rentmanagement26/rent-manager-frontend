@@ -15,9 +15,12 @@ export default async function PropertyDetailPage({
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold">{property.address}</h1>
-      <p className="text-muted">{property.city}</p>
-      <p className="mt-4 text-lg">${property.rentAmount}/month</p>
+      <h1 className="mb-2 text-2xl font-bold">{property.name}</h1>
+      <p className="text-muted">
+        {property.line1}
+        {property.line2 ? `, ${property.line2}` : ""}, {property.city}, {property.region}{" "}
+        {property.postalCode}
+      </p>
     </div>
   );
 }

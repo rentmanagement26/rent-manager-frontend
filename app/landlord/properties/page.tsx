@@ -29,16 +29,15 @@ export default function PropertiesPage() {
           {properties.map((property) => (
             <Link
               key={property.id}
-              href={`/admin/properties/${property.id}`}
+              href={`/landlord/properties/${property.id}`}
               className="flex items-center justify-between gap-4 border-t border-subtle px-5 py-4 first:border-t-0 hover:bg-subtle/60"
             >
               <div>
-                <p className="font-semibold text-heading">{property.address}</p>
-                <p className="text-sm text-muted">{property.city}</p>
+                <p className="font-semibold text-heading">{property.name}</p>
+                <p className="text-sm text-muted">
+                  {property.line1}, {property.city}
+                </p>
               </div>
-              <span className="text-sm font-semibold text-heading">
-                ${property.rentAmount}/mo
-              </span>
             </Link>
           ))}
         </div>

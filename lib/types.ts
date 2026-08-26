@@ -24,5 +24,4 @@ export interface Property {
   region: string;
   postalCode: string;
   country: string;
-  rentAmount: number;
 }

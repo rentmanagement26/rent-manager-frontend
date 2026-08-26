@@ -9,7 +9,6 @@ export default async function AdminDashboardPage() {
 
   // Calculate live statistics
   const totalProperties = properties.length;
-  const totalRent = properties.reduce((acc, p) => acc + (p.rentAmount || 0), 0);
   const occupancyRate = totalProperties > 0 ? "100%" : "0%";
 
   return (
@@ -65,9 +64,9 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <p className="text-2xl font-bold text-slate-900">
-              ${totalRent.toLocaleString()}<span className="text-sm font-normal text-slate-500">/mo</span>
+              &mdash;<span className="text-sm font-normal text-slate-500">/mo</span>
             </p>
-            <p className="text-xs text-emerald-600 font-medium mt-1">Projected collection</p>
+            <p className="text-xs text-slate-400 font-medium mt-1">Rent data not tracked yet</p>
           </div>
         </div>
 
@@ -118,7 +117,7 @@ export default async function AdminDashboardPage() {
               <p className="text-xs text-slate-500 mt-0.5">Overview of active rentals</p>
             </div>
             <Link
-              href="/admin/properties"
+              href="/landlord/properties"
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
             >
               View all →
@@ -137,7 +136,7 @@ export default async function AdminDashboardPage() {
                 Get started by adding your first rental unit.
               </p>
               <Link
-                href="/admin/properties/new"
+                href="/landlord/properties/new"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition"
               >
                 + Add Property
@@ -157,17 +156,11 @@ export default async function AdminDashboardPage() {
                     <p className="text-xs text-slate-500">{property.city}</p>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-slate-900">
-                        ${property.rentAmount}
-                      </p>
-                      <p className="text-xs text-slate-400">per month</p>
-                    </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                       Active
                     </span>
                     <Link
-                      href={`/admin/properties/${property.id}`}
+                      href={`/landlord/properties/${property.id}`}
                       className="text-xs font-medium text-slate-400 hover:text-slate-600 p-1.5 rounded-md hover:bg-slate-100 transition"
                       title="View Details"
                     >
@@ -187,7 +180,7 @@ export default async function AdminDashboardPage() {
             <h2 className="font-semibold text-slate-900 text-sm mb-3">Quick Actions</h2>
             <div className="space-y-2">
               <Link
-                href="/admin/properties/new"
+                href="/landlord/properties/new"
                 className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition"
               >
                 <div className="p-1.5 bg-blue-50 text-blue-600 rounded-md">
@@ -202,7 +195,7 @@ export default async function AdminDashboardPage() {
               </Link>
 
               <Link
-                href="/admin/tenants"
+                href="/landlord/tenants"
                 className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition"
               >
                 <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-md">

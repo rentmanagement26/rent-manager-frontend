@@ -27,6 +27,30 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-26 — Claude (MacBook) fixed TypeScript build errors from the incomplete Property type migration
+
+- `lib/types.ts`'s `Property` type was changed to match the real backend JSON shape earlier
+  (`name`/`line1`/`line2`/`city`/`region`/`postalCode`/`country`) but three consumers
+  (`app/landlord/page.tsx`, `app/landlord/properties/page.tsx`,
+  `app/landlord/properties/[id]/page.tsx`) were never updated and still referenced the old
+  `address`/`rentAmount` fields — caught by `npx tsc --noEmit`, not by the dev server (Turbopack
+  dev doesn't block rendering on type errors, only `tsc`/production builds do).
+- Also found: `Property` still had a leftover, unused `rentAmount: number` **required** field
+  tacked onto the end of the interface from the old shape — removed entirely, since there's no
+  rent data anywhere in the real backend's property model right now. Everywhere rent was
+  displayed, either removed the line entirely (property list rows) or replaced with an honest
+  "&mdash; rent data not tracked yet" placeholder (dashboard KPI card) rather than showing `$0` or
+  fabricating a number.
+- Same pass also fixed several leftover `/admin/...` links in `app/landlord/page.tsx` (View all,
+  empty-state Add Property, Quick Actions) to `/landlord/...` — dead links from the route rename
+  that predates this session. Note `/landlord/tenants` doesn't exist as a page yet (same as the
+  sidebar's own Tenants link) — those links point there anyway for consistency, will 404 until
+  that page is built.
+- Verified with `npx tsc --noEmit` (zero errors) and in-browser (dashboard renders, no console
+  errors).
+- **Next step:** still the colorful redesign confirmation from the previous entry, plus building
+  `/landlord/tenants` at some point.
+
 ## 2026-08-26 — Claude (MacBook) rebuilt the landlord shell as a true responsive grid; explored a colorful redesign (not yet built)
 
 - User typed every file by hand, guided step-by-step. Long session — summarizing the end state,
