@@ -65,7 +65,7 @@ export function HeroShowcase() {
               <span className="text-sm font-bold text-heading">$18,450</span>
             </div>
             <div className="p-2.5 rounded-xl bg-subtle border border-default">
-              <span className="text-[10px] text-muted block">Standard Leases</span>
+              <span className="text-[10px] text-muted block">Active Leases</span>
               <span className="text-sm font-bold text-heading">8 Active</span>
             </div>
             <div className="p-2.5 rounded-xl bg-subtle border border-default">
@@ -82,7 +82,7 @@ export function HeroShowcase() {
                   1A
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-heading">5496 Gorvan Dr • Unit 1</div>
+                  <div className="text-xs font-semibold text-heading">123 Maple Street • Unit 1</div>
                   <div className="text-[11px] text-muted">Sarah Jenkins</div>
                 </div>
               </div>
@@ -98,7 +98,7 @@ export function HeroShowcase() {
                   2B
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-heading">5496 Gorvan Dr • Unit 2</div>
+                  <div className="text-xs font-semibold text-heading">123 Maple Street • Unit 2</div>
                   <div className="text-[11px] text-muted">Michael Chang</div>
                 </div>
               </div>
@@ -111,12 +111,12 @@ export function HeroShowcase() {
         </div>
       </div>
 
-      {/* Floating Badge 1: Ontario Standard Lease (Top Right) */}
+      {/* Floating Badge 1: Digital Lease (Top Right) */}
       <div className="absolute -top-4 -right-2 sm:-right-4 rounded-xl border border-default bg-surface/95 px-3 py-2 shadow-lg backdrop-blur-md flex items-center gap-2.5">
         <span className="text-base">📄</span>
         <div className="text-left">
-          <div className="text-xs font-bold text-heading">Ontario Standard Lease</div>
-          <div className="text-[10px] text-green-600 font-semibold">✓ Compliant &amp; Signed</div>
+          <div className="text-xs font-bold text-heading">Digital Lease</div>
+          <div className="text-[10px] text-green-600 font-semibold">✓ Signed</div>
         </div>
       </div>
 

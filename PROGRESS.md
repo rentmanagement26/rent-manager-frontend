@@ -27,6 +27,26 @@ Codex and Claude use this file as the project handoff, across both computers.
 
 ---
 
+## 2026-08-25 — Claude (MacBook) removed legal-compliance marketing claims and a real address from mock data
+
+- User: "i don't want to write anything legal thing" — removed every specific legal/compliance
+  claim from the public marketing site (`app/(marketing)/page.tsx`, `components/faq-section.tsx`,
+  `components/hero-showcase.tsx`): the "Compliance & Legal Trust Ticker" section (Ontario RTA,
+  Manitoba RTB, PIPEDA, CASL claims), "Ontario & Manitoba tenancy law" / "compliant leases" copy in
+  the hero and feature cards, the "Ontario Standard Lease ✓ Compliant & Signed" showcase badge (now
+  generic "Digital Lease ✓ Signed"), and two FAQ entries that made specific legal claims (tenancy
+  law, PIPEDA). Verified with a full-page text dump afterward that no Ontario/Manitoba/PIPEDA/CASL/
+  compliance mentions remain anywhere in `app/`, `components/`, or `lib/`.
+  **Note:** this doesn't retract the Canadian & Provincial Tenancy Law Compliance review
+  requirement in `AGENTS.md`/this file's protocol section (still applies internally when building
+  lease/deposit/notice features) — it's specifically about not making public-facing legal claims in
+  marketing copy for compliance work that isn't actually built yet.
+- Separately: a real street address ("5496 Gorvan Dr") was sitting in the landing page's dashboard
+  mockup (`hero-showcase.tsx`) — user asked that it never be used anywhere until they say otherwise
+  (likely a real/personal address). Replaced both occurrences with the generic placeholder "123
+  Maple Street". This is now a standing rule, not just a one-time cleanup.
+- **Next step:** not yet decided.
+
 ## 2026-08-25 — Claude (MacBook) debugged logout/routing on the new DomusPRO structure; partial logo fix
 
 - First session back on this machine since the DomusPRO rebrand (design system, role folders

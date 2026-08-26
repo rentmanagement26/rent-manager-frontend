@@ -22,7 +22,7 @@ export default function Home() {
             </h1>
 
             <p className="text-base sm:text-lg text-muted max-w-lg leading-relaxed">
-              One home for your rental business — properties, tenants, leases, and payments — being built around Ontario &amp; Manitoba tenancy law from day one.
+              One home for your rental business — properties, tenants, leases, and payments, all in one place.
             </p>
 
             {/* Email Form */}
@@ -50,7 +50,7 @@ export default function Home() {
             {/* Trust badges */}
             <div className="pt-4 border-t border-default w-full flex flex-wrap items-center gap-5 text-xs text-muted">
               <div className="flex items-center gap-1">
-                <span>🍁</span> Ontario &amp; Manitoba Ready
+                <span>🍁</span> Made in Canada
               </div>
               <div className="flex items-center gap-1">
                 <span>🔒</span> Privacy-first by design
@@ -65,17 +65,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. COMPLIANCE & LEGAL TRUST TICKER */}
-      <section className="border-y border-default bg-subtle px-6 py-6 sm:px-8">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-around gap-6 text-center text-xs sm:text-sm font-semibold text-body">
-          <div>🍁 <strong>Ontario RTA:</strong> Standard Lease tools — in progress</div>
-          <div>⚖️ <strong>Manitoba RTB:</strong> Deposit-limit guardrails — in progress</div>
-          <div>🛡️ <strong>PIPEDA:</strong> Privacy-first data handling</div>
-          <div>✉️ <strong>CASL:</strong> Compliant tenant notices</div>
-        </div>
-      </section>
-
-      {/* 3. 3-COLUMN FEATURE CARDS */}
+      {/* 2. 3-COLUMN FEATURE CARDS */}
       <section id="features" className="px-6 py-20 sm:px-8 max-w-6xl mx-auto w-full">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-bold uppercase tracking-wider text-accent">Feature Suite</span>
@@ -95,7 +85,7 @@ export default function Home() {
             </div>
             <h3 className="font-head text-lg font-bold text-heading">For Landlords</h3>
             <p className="text-sm text-muted leading-relaxed">
-              Track every property and unit, monitor occupancy in real time, and manage it all from one dashboard — with Ontario &amp; Manitoba–compliant leases and rent reconciliation on the way.
+              Track every property and unit, monitor occupancy in real time, and manage leases and rent reconciliation all from one dashboard.
             </p>
           </div>
 
@@ -123,7 +113,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. FAQ SECTION */}
+      {/* 3. FAQ SECTION */}
       <section id="faq" className="px-6 py-20 sm:px-8 bg-subtle border-t border-default">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
@@ -136,14 +126,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. BOTTOM CONVERSION BANNER */}
+      {/* 4. BOTTOM CONVERSION BANNER */}
       <section className="px-6 py-20 sm:px-8 max-w-5xl mx-auto w-full">
         <div className="rounded-3xl bg-heading p-8 sm:p-14 text-center text-white space-y-6 shadow-xl">
           <h2 className="font-head text-2xl sm:text-4xl font-extrabold text-white">
             Ready to upgrade your rental management?
           </h2>
           <p className="max-w-xl mx-auto text-sm sm:text-base text-white/70">
-            Built for Canadian landlords and tenants — designed around Ontario &amp; Manitoba tenancy law from the ground up.
+            Built for Canadian landlords and tenants — everything you need in one place.
           </p>
           <div className="pt-2">
             <Link

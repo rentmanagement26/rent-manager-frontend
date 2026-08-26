@@ -4,14 +4,6 @@ import { useState } from "react";
 
 const faqs = [
   {
-    q: "Is DomusPRO built around Ontario and Manitoba tenancy law?",
-    a: "Yes — DomusPRO is being built specifically for Canadian tenancy regulations. We're designing our lease and deposit tools around the Ontario Standard Lease (OSL) requirements and Manitoba RTB rules, including the 0.5-month deposit cap, as those features roll out.",
-  },
-  {
-    q: "How does DomusPRO protect tenant privacy under PIPEDA?",
-    a: "We follow PIPEDA's data-minimization principle from the ground up — for example, we never ask for a Social Insurance Number (SIN) during registration or tenant screening. As lease and record storage comes online, it'll be encrypted in transit and at rest.",
-  },
-  {
     q: "How will rent payments and tracking work?",
     a: "Online rent payments with automatic reconciliation (Interac e-Transfer and pre-authorized debit) are on our roadmap — landlords will get instant payment notifications and tenants will get automatic rent receipts.",
   },
