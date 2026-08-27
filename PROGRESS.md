@@ -25,6 +25,49 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-27 — Claude (Windows) built the create-unit flow and redesigned the properties pages
+
+- User typed every file by hand, guided step-by-step.
+- New create-unit flow, associated with its parent property via the URL rather than the request
+  body (mirrors the backend's real endpoint, `POST /api/properties/{propertyId}/units`, confirmed
+  in the entry below): routes moved from a flat, ID-less `app/landlord/properties/units/new/` to
+  `app/landlord/properties/[id]/units/new/` (the still-stub unit detail page moved alongside it, to
+  `units/[unitId]/page.tsx`, renamed from `[id]` to avoid two same-named dynamic segments in one
+  path). `createUnitAction` added to `app/landlord/properties/actions.ts`, reading `propertyId`
+  from a hidden form field and posting to `/api/properties/${propertyId}/units`.
+- `lib/types.ts`: added `CreateUnitInput` (write shape, no `propertyId` field — that travels in the
+  URL, not the body, same read/write split reasoning as `CreatePropertyInput`/`Property`) and
+  `UnitType` (`{id, name}`, mirrors `PropertyType`). Also ended up with a `Unit` interface with an
+  identical shape to `CreateUnitInput` (typed as a separate addition instead of a rename as
+  intended) — **dead/duplicate, not used anywhere, worth deleting**.
+- Unit type dropdown wired to a real backend endpoint the user confirmed: `GET
+  /api/properties/unit-types` (new `lib/unit-types.ts`, `getUnitTypes()`, mirrors
+  `lib/property-types.ts`).
+- Redesigned both properties pages to surface fields that already existed on `Property` but were
+  never rendered (`propertyType`, `units.length`): the list page
+  (`app/landlord/properties/page.tsx`) gained a 3-tile stats strip (Properties/Total units/Cities,
+  all real counts from fetched data, no fabricated numbers) and its row-list became a card grid via
+  a new client component (`properties-grid.tsx`) with a live client-side search box (filters by
+  name/city, no refetch) and per-card "Add unit"/"View" buttons. The detail page (`[id]/page.tsx`)
+  gained a two-column card layout, a property-type badge, a units count with an empty-state "Add
+  the first one" link, and a header "Add unit" action button.
+- **Known gap, not yet fixed:** `[id]/units/new/new-unit-form.tsx` is missing a submit button
+  entirely (only reachable by pressing Enter in a text field) and still has two leftover copy/paste
+  bugs from the property form it was based on — the `PageHeader` still reads "Add property" instead
+  of "Add unit", and the Asking Rent `<label>`'s `htmlFor` still points at `"postalCode"` instead of
+  `"askingRent"`. `bedrooms` is also still missing `required` (inconsistent with the other three
+  number fields). None of these are type errors, so `tsc` doesn't catch them.
+- Verified with `npx tsc --noEmit` (zero errors) after each step. **Not yet verified in-browser** —
+  the create-unit flow hasn't been exercised against the real backend yet, partly blocked by the
+  missing submit button above.
+- **Next step:** fix the three `new-unit-form.tsx` gaps above, delete the dead `Unit` type, then
+  verify the full create-unit flow end-to-end in-browser against the real backend. After that:
+  render an actual unit list on the detail page (currently just a count, since the backend's
+  per-unit read shape is still unconfirmed — same "verify before coding" gap noted for the property
+  read/write split below).
+
+---
+
 ## 2026-08-26 — Claude (MacBook) wired `/landlord/properties` to the real ASP.NET backend
 
 - User typed every file by hand, guided step-by-step. Replaced the local mock store

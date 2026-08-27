@@ -43,3 +43,26 @@ export interface Property {
   country: string;
   units: unknown[];
 }
+
+export interface Unit {
+  unitTypeId: number;
+  label: string;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  askingRent: number;
+}
+
+export interface UnitType {
+  id: number;
+  name: string;
+}
+
+export interface CreateUnitInput {
+  unitTypeId: number;
+  label: string;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  askingRent: number;
+}
