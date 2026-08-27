@@ -23,8 +23,8 @@ export async function createSession(user: SessionUser): Promise<string> {
 export async function getSessionUser(token: string): Promise<SessionUser | undefined> {
   try {
     const { payload } = await jwtVerify(token, getSecretKey());
-    const { id, email, name, role } = payload as unknown as SessionUser;
-    return { id, email, name, role };
+    const { id, email, fullName, role, backendToken } = payload as unknown as SessionUser;
+    return { id, email, fullName, role, backendToken };
   } catch {
     return undefined;
   }

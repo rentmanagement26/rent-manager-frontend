@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { getSession } from "@/lib/get-session";
-import { listProperties } from "@/lib/data/store";
+import { requireBackendToken } from "@/lib/auth-guard";
+import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
+import type { Property } from "@/lib/types";
 
 export default async function AdminDashboardPage() {
-  const session = await getSession();
-  const properties = listProperties();
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const response = await backendFetch("/api/properties/mine", session.backendToken);
+  const properties: Property[] = await response.json();
 
   const totalProperties = properties.length;
   const occupancyRate = totalProperties > 0 ? "100%" : "0%";
@@ -21,7 +23,7 @@ export default async function AdminDashboardPage() {
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-brand-green-tint via-blue-50 to-slate-50 px-6 py-7 sm:px-8 flex items-center justify-between gap-6">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">
-            Welcome back{session?.name ? `, ${session.name}` : ""}
+            Welcome back{session?.fullName ? `, ${session.fullName}` : ""}
           </h2>
           <p className="text-sm text-slate-500 mt-1">
             Here&apos;s what&apos;s happening with your portfolio.

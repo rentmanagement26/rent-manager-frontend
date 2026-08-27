@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
-import { getProperty } from "@/lib/data/store";
+import { requireBackendToken } from "@/lib/auth-guard";
+import { backendFetch } from "@/lib/api-client";
+import type { Property } from "@/lib/types";
 
 export default async function PropertyDetailPage({
   params,
@@ -7,11 +9,14 @@ export default async function PropertyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = getProperty(id);
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const response = await backendFetch(`/api/properties/${id}`, session.backendToken);
 
-  if (!property) {
+  if (response.status === 404) {
     notFound();
   }
+
+  const property: Property = await response.json();
 
   return (
     <div>

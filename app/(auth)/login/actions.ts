@@ -26,8 +26,9 @@ export async function loginAction(formData: FormData) {
   const user: SessionUser = {
     id: data.userId,
     email: data.email,
-    name: data.name,
+    fullName: data.fullName,
     role: data.roles[0],
+    backendToken: data.token,
   };
 
 const token = await createSession(user);

@@ -31,3 +31,13 @@ export async function requireAuth(allowedRoles?: AppRole[]): Promise<SessionUser
   }
   return session;
 }
+
+export async function requireBackendToken(
+  allowedRoles?: AppRole[]
+): Promise<SessionUser & { backendToken: string }> {
+  const session = await requireAuth(allowedRoles);
+  if (!session.backendToken) {
+    redirect("/login");
+  }
+  return session as SessionUser & { backendToken: string };
+}

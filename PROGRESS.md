@@ -25,6 +25,69 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-26 — Claude (MacBook) wired `/landlord/properties` to the real ASP.NET backend
+
+- User typed every file by hand, guided step-by-step. Replaced the local mock store
+  (`lib/data/store.ts`, deleted — confirmed zero remaining importers before removal) with real
+  calls to the backend, discovered by reading the live OpenAPI spec directly
+  (`http://localhost:5080/swagger/v1/swagger.json` — the Azure instance's `/swagger` route was
+  inaccessible from this session, but the user's local backend instance's spec worked) since
+  nothing in this repo had documented the properties endpoints before.
+- **Endpoints found**: `POST /api/properties` (create, returns just `{ propertyId: number }`, no
+  full entity), `GET /api/properties/mine` (list, already scoped to the logged-in landlord — no
+  manual filtering needed), `GET /api/properties/{propertyId}` (single), `GET
+  /api/properties/property-types` (real property types — replaces the old hardcoded, TODO-flagged
+  `lib/property-types.ts` list entirely). Property IDs are backend-assigned **integers**, not the
+  frontend's old `crypto.randomUUID()` strings.
+- **Read vs. write shape mismatch discovered**: creating a property takes `propertyTypeId: number`,
+  but listing/reading one returns `propertyType: string` (the resolved type name, e.g.
+  `"SingleFamilyHouse"`) — no `propertyTypeId` in the read shape at all. Split `lib/types.ts`'s old
+  single `Property` interface into three: `Property` (read shape, `id: number`, `propertyType:
+  string`, plus a `units: unknown[]` array not yet used by any UI), `CreatePropertyInput` (write
+  shape, `propertyTypeId: number`), and `PropertyType` (`{id, name}`, for the type dropdown).
+- **New `lib/api-client.ts`**: a minimal `backendFetch(path, token, init)` helper — prefixes
+  `BACKEND_API_URL`, attaches `Authorization: Bearer <token>`. First real use of a bearer token
+  against the backend anywhere in this app.
+- **This exposed and fixed a real gap flagged in yesterday's session-JWT rewrite discussion**: the
+  backend's own login JWT (in the login response's `token` field, confirmed via the user's own
+  curl test) was being silently discarded — nothing after login ever needed it, since no real
+  backend calls existed yet. Added `backendToken?: string` to `SessionUser` (`lib/types.ts`) and
+  populated it at login (`app/(auth)/login/actions.ts`) so it rides inside our own signed session
+  JWT, retrievable server-side for every backend call. Added `requireBackendToken()` in
+  `lib/auth-guard.ts` — wraps `requireAuth()`, additionally redirects to `/login` if
+  `backendToken` is missing (covers anyone with a session predating this change).
+- **Two unrelated real bugs found and fixed in passing** while wiring the token capture:
+  (1) `app/(auth)/login/actions.ts` read `data.name` for the session's display name, but the real
+  backend field is `data.fullName` — `SessionUser.name` had been `undefined` in every session since
+  login was first wired up (2026-08-23). Renamed the field to `fullName` throughout
+  (`lib/types.ts`, `lib/session.ts`, `app/landlord/page.tsx`) and fixed the source read. (2) User
+  briefly set `SESSION_SECRET` to the well-known example JWT from jwt.io's homepage while testing —
+  caught and rotated before it reached Vercel; see the entry directly below for the full story.
+- **Rewired, all now hitting the real backend**: `app/landlord/properties/page.tsx` (list, via
+  `GET /mine`), `app/landlord/properties/actions.ts` (`createPropertyAction`, via `POST`),
+  `app/landlord/properties/[id]/page.tsx` (detail, via `GET /{id}`), `lib/property-types.ts`
+  (rewritten from a hardcoded array to `getPropertyTypes(token)`), `app/landlord/page.tsx`
+  (dashboard's Properties KPI count and "Your properties" preview list). Split
+  `app/landlord/properties/new/page.tsx` into a server component (fetches real property types,
+  calls `requireBackendToken`) plus a new `new-property-form.tsx` client component (keeps the
+  existing live-preview `useState` behavior, now driven by fetched types instead of the hardcoded
+  list).
+- **Verified end-to-end locally** (real backend, not mocked): typechecked clean (`npx tsc
+  --noEmit`), then in-browser — properties list shows real backend data, detail page for an
+  existing property renders correctly, and a brand-new property was created through the actual
+  form (not curl) and correctly appeared in both the properties list and the dashboard's KPI count
+  (2) and preview list immediately after. Zero console errors.
+- **Not yet done**: the single-property response shape (`GET /api/properties/{id}`) was inferred
+  to match the list item shape rather than confirmed against a real captured sample before writing
+  the code — it worked in the live test, so this is now confirmed correct, but worth noting the
+  process gap for next time. Units (`POST /api/properties/{propertyId}/units`, `GET
+  /api/properties/units/{unitId}`) exist on the backend but have no UI yet. Tenants still use
+  fully separate, unrelated mock data (`Tenant` type only, no store or pages wired).
+- **Next step**: decide whether to build unit management next (natural follow-on, backend already
+  supports it), or move to wiring `/landlord/tenants` the same way.
+
+---
+
 ## 2026-08-26 — Claude (MacBook) caught and rotated an insecure `SESSION_SECRET`
 
 - While discussing HS256 vs HS512 for the session JWT (see entry below), the user pasted a new
