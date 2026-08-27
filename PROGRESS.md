@@ -57,9 +57,13 @@ Codex and Claude use this file as the project handoff, across both computers.
   `httpOnly`). Full proof of the fix — surviving a serverless instance swap — is being verified on
   the actual Vercel deployment as this entry is written, since a local refresh alone (same
   long-lived dev process) can't reproduce the original bug.
-- **Next step:** confirm on the live Vercel URL that login survives a hard refresh; if it does,
-  this bug is closed. Minor cleanup still open: `lib/get-session.ts` and `lib/session.ts` are
-  missing trailing newlines (pre-existing, not touched this session).
+- **Confirmed fixed** on the live deployment (`https://rentmanagement-liard.vercel.app`): logged
+  in, landed on `/landlord`, then did a full server round-trip navigation back to `/landlord`
+  (equivalent to a hard refresh) — stayed on the dashboard, no bounce to `/login`. Bug closed.
+- **Next step:** none for this bug. Minor cleanup still open: `lib/get-session.ts` and
+  `lib/session.ts` are missing trailing newlines (pre-existing, not touched this session); a
+  console 404 for `/landlord/tenants` prefetching is expected/unrelated — that page doesn't exist
+  yet (see earlier entries).
 
 ---
 
