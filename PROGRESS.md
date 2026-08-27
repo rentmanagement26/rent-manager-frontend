@@ -25,6 +25,44 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-26 — Claude (MacBook) fixed the "logged out on refresh" bug on the live server by finishing the JWT session rewrite
+
+- User reported: after logging in on the deployed (Vercel) site, refreshing the page logged them
+  back out. Root cause: `lib/session.ts` stored sessions in a plain in-memory `Map`
+  (`globalThis.__sessions`), scoped to a single Node process — the cookie only held a random
+  token, with the actual user data living only in that `Map`. On localhost this is invisible (one
+  long-lived dev process), but on Vercel's serverless platform, requests can land on different
+  ephemeral function instances, so the instance handling a refresh often doesn't have the token
+  from the instance that handled login — `getSessionUser()` returns nothing, `requireAuth()` sees
+  `null`, and the user is bounced to `/login`.
+- This is exactly the unfinished JWT rewrite flagged as "found but NOT fixed" in the 2026-08-24
+  entry below — that version was left uncommitted because `getSecretKey()`/equivalent had **no
+  validation** on a missing `SESSION_SECRET`, which would've silently signed with an empty key
+  (anyone could forge a session). Rewrote `lib/session.ts` from scratch (not recovered from any
+  git history — the old WIP was never committed anywhere, confirmed via `git log --all`, branches,
+  stash, reflog — all came up empty) using `jose` (`SignJWT`/`jwtVerify`, already a dependency)
+  with a hard `throw` in `getSecretKey()` if `SESSION_SECRET` is unset, so a missing secret fails
+  loudly at request time instead of silently weakening security.
+- Session is now fully stateless: the JWT itself (containing `id`/`email`/`name`/`role`, 8-hour
+  expiry) is the cookie value — no server-side store at all, so it works identically regardless of
+  which serverless instance handles a given request. `createSession`/`getSessionUser` are now
+  `async`; updated their two call sites (`app/(auth)/login/actions.ts`,
+  `lib/get-session.ts`) to `await` them. `deleteSession()` is now a no-op stub (kept for call-site
+  compatibility in `app/actions.ts`'s `logoutAction`) — actual logout is just the existing
+  `cookieStore.delete(SESSION_COOKIE_NAME)` right after it.
+- Added `SESSION_SECRET` (random 32-byte value) to local `.env.local`; user confirmed it is already
+  set in Vercel's production environment variables.
+- Verified with `npx tsc --noEmit` (zero errors) and in-browser locally (login succeeds, lands on
+  `/landlord`, `session_token` cookie correctly invisible to `document.cookie` since it's
+  `httpOnly`). Full proof of the fix — surviving a serverless instance swap — is being verified on
+  the actual Vercel deployment as this entry is written, since a local refresh alone (same
+  long-lived dev process) can't reproduce the original bug.
+- **Next step:** confirm on the live Vercel URL that login survives a hard refresh; if it does,
+  this bug is closed. Minor cleanup still open: `lib/get-session.ts` and `lib/session.ts` are
+  missing trailing newlines (pre-existing, not touched this session).
+
+---
+
 ## 2026-08-26 — Claude (Windows) implemented the landlord shell redesign (sidebar, header, dashboard)
 
 - Followed on from Antigravity's exploration below — mocked the design up interactively first

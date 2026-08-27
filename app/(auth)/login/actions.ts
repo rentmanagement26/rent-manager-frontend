@@ -30,7 +30,7 @@ export async function loginAction(formData: FormData) {
     role: data.roles[0],
   };
 
-  const token = createSession(user);
+const token = await createSession(user);
   const cookieStore = await cookies();
   cookieStore.set({
     name: SESSION_COOKIE_NAME,
