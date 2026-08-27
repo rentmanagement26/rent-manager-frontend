@@ -25,6 +25,34 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-26 — Claude (MacBook) caught and rotated an insecure `SESSION_SECRET`
+
+- While discussing HS256 vs HS512 for the session JWT (see entry below), the user pasted a new
+  `SESSION_SECRET` value into `.env.local` that turned out to be **the well-known example JWT from
+  jwt.io's homepage** (`eyJhbGc...` decoding to `{"sub":"1234567890","name":"John Doe",...}`), not
+  an actual secret — an easy mix-up since both are long base64-looking strings, but this one is
+  public knowledge copied into tutorials/screenshots everywhere. Using it as the HMAC signing key
+  would have let anyone forge a valid session cookie (e.g. claim `role: "Admin"`) without ever
+  needing a real password, since `lib/session.ts`'s `getSecretKey()` only checks that the env var
+  is non-empty, not that it's actually secret.
+- Generated a fresh random 32-byte secret (`crypto.randomBytes(32).toString('base64')`), replaced
+  the compromised value in local `.env.local`, and had the user update the same value in Vercel's
+  production environment variables.
+- Verified on the live deployment (`https://rentmanagement-liard.vercel.app`): logged in fresh
+  (old sessions signed with the leaked secret are now correctly invalid), refreshed, stayed on
+  `/landlord` — confirms the new secret is live and session verification still works end-to-end.
+- Algorithm stays **HS256** (not HS512) per the same discussion — HS256 already gives a 128-bit
+  security level, sufficient here; HS512's only difference is a larger security margin and bigger
+  token/key, not a meaningful practical improvement for a session cookie, and the user had no
+  specific reason (compliance, interop) requiring it.
+- **Lesson for future sessions:** never copy a `SESSION_SECRET`/signing-key value from a website,
+  tutorial, or JWT decoder example — always generate fresh random bytes. Worth a quick sanity check
+  any time a secret value is pasted in rather than generated.
+- **Next step:** none open for this. `SESSION_SECRET` is confirmed matching between local and
+  Vercel, both verified working live.
+
+---
+
 ## 2026-08-26 — Claude (MacBook) fixed the "logged out on refresh" bug on the live server by finishing the JWT session rewrite
 
 - User reported: after logging in on the deployed (Vercel) site, refreshing the page logged them
