@@ -25,6 +25,23 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-28 — Claude (Windows) started a native mobile companion app (new sibling repo)
+
+- New sibling repo, `rent-management-mobile` (Expo + React Native + Expo Router, TypeScript),
+  alongside this repo and `Rent Management Back-End` — same owner, same backend. Not a rewrite of
+  this Next.js app; a separate native app hitting the same Azure-hosted backend.
+- Built out a first real feature set this session — login (+ forgot-password, + biometric login),
+  dashboard, properties (list/detail/create), units (create) — all against the real backend, no
+  mocked data. See `rent-management-mobile/PROGRESS.md` for the full session log; not duplicated
+  here since it's a different codebase with its own history.
+- Mentioning it here only so any agent working in *this* repo knows a mobile companion now exists —
+  no changes were made to this web repo itself this session.
+- **Next step for the mobile repo**: real device testing on the MacBook (`npx expo run:ios`) —
+  see that repo's `PROGRESS.md` for why (Expo Go's App Store build lagging the project's SDK
+  version, worked around by waiting rather than fighting it on a locked-down office PC).
+
+---
+
 ## 2026-08-28 — Claude (MacBook) fixed the landlord portal's mobile scroll/bounce bugs and a desktop sidebar clipping bug
 
 - Long debugging session, several wrong turns before landing on the real fixes — summarizing the
