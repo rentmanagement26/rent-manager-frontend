@@ -13,12 +13,12 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
 
   return (
     <>
-      {open && (
-        <div
-          className="max-lg:fixed max-lg:inset-0 max-lg:z-20 max-lg:bg-black/30 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      <div
+        className={`max-lg:fixed max-lg:inset-0 max-lg:z-20 max-lg:bg-black/30 max-lg:transition-opacity lg:hidden ${
+          open ? "max-lg:opacity-100" : "max-lg:pointer-events-none max-lg:opacity-0"
+        }`}
+        onClick={() => setOpen(false)}
+      />
 
       <div
         className={`max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-30 max-lg:w-64 max-lg:border-r max-lg:border-slate-200 max-lg:bg-white max-lg:flex max-lg:flex-col max-lg:justify-between max-lg:transition-transform lg:contents ${
