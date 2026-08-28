@@ -76,9 +76,10 @@ Codex and Claude use this file as the project handoff, across both computers.
   elements can't cover them. Added `export const viewport: Viewport = { width: "device-width",
   initialScale: 1, viewportFit: "cover" }`. Also made the drawer backdrop always-mounted (fades via
   `opacity`/`transition-opacity` instead of instant DOM add/remove) as a second mitigation for the
-  same class of stale-paint-on-abrupt-removal issue. **Not yet confirmed fixed on a real device** —
-  this is the most targeted fix yet (based on a real, named, currently-relevant Safari bug rather
-  than a guess), but needs the user's actual iPhone to confirm.
+  same class of stale-paint-on-abrupt-removal issue. **Confirmed fixed on the user's real iPhone**
+  against the live Vercel deployment: pull-to-refresh works, single natural bounce (no more double-
+  bounce), sidebar "Free plan" card fits with no clipping, and the stray Safari backdrop strip is
+  gone. Bug closed.
 - User granted one-off exceptions to the standing guided-coding-mode rule twice this session (the
   `max-lg:` sidebar refactor, and the viewport-fit/backdrop fix) — explicitly said "change it
   yourself this time only" / "change it yourself" each time. Standing rule (user types application
@@ -88,15 +89,9 @@ Codex and Claude use this file as the project handoff, across both computers.
   desktop sidebar bug and the drawer/backdrop mechanics — first time this session used live
   DOM/CSS inspection instead of relying on the user's own screenshots, and it's what actually cracked
   the sidebar clipping bug after CSS-reasoning-only guesses kept missing it.
-- **Next step**: user needs to confirm the `viewport-fit=cover` fix on a real iPhone against the
-  live Vercel deployment (pull-to-refresh, single natural bounce, sidebar card fit, and now no
-  stray Safari backdrop strip) — none of today's mobile-Safari-specific fixes have been confirmed
-  on real Safari yet, only reasoned about/tested in Chrome. If the strip persists even with
-  `viewport-fit=cover`, the next things worth checking: `env(safe-area-inset-*)` padding on the
-  backdrop/drawer explicitly, or whether the bug needs a full Safari restart/cache clear to observe
-  the fix (Liquid Glass compositing bugs have been reported as sometimes sticky per the sources
-  found). Also still open from the 2026-08-27 entry below: unit edit flow (blocked on backend
-  update endpoint), `[unitId]/page.tsx` real content, `/landlord/tenants` wiring.
+- **Next step**: nothing open for this bug. Still open from the 2026-08-27 entry below: unit edit
+  flow (blocked on backend update endpoint), `[unitId]/page.tsx` real content, `/landlord/tenants`
+  wiring.
 
 ---
 
