@@ -15,17 +15,17 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
     <>
       {open && (
         <div
-          className="fixed inset-0 z-20 bg-black/30 lg:hidden"
+          className="max-lg:fixed max-lg:inset-0 max-lg:z-20 max-lg:bg-black/30 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200 bg-white flex flex-col justify-between transition-transform lg:contents ${
-          open ? "translate-x-0" : "-translate-x-full"
+        className={`max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-30 max-lg:w-64 max-lg:border-r max-lg:border-slate-200 max-lg:bg-white max-lg:flex max-lg:flex-col max-lg:justify-between max-lg:transition-transform lg:contents ${
+          open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"
         }`}
       >
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center px-6 py-6 border-b border-slate-100 lg:border-b-0 lg:bg-white">
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center px-6 py-6 max-lg:border-b max-lg:border-slate-100 lg:bg-white">
           <Link href="/landlord">
             <Image
               src="/domuspro-logo.png"
@@ -38,7 +38,7 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
           </Link>
         </div>
 
-       <div className="flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
+        <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
           <nav className="p-4 space-y-1">
             <Link
               href="/landlord"
