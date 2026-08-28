@@ -5,10 +5,9 @@ import Image from "next/image";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; registered?: string }>;
+    searchParams: Promise<{ error?: string; registered?: string; reset?: string }>;
 }) {
-  const { error, registered } = await searchParams;
-
+    const { error, registered, reset } = await searchParams;
   return (
     <main className="flex flex-1 flex-col md:flex-row">
       <div className="relative flex flex-col justify-between gap-6 overflow-hidden bg-linear-to-br from-accent to-accent-dark p-8 text-white md:w-[420px] md:flex-shrink-0 md:gap-14 md:p-14">
@@ -37,6 +36,12 @@ export default async function LoginPage({
           {registered && (
             <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
               Registration successful. Please verify your email and log in again.
+            </p>
+          )}
+
+          {reset && (
+            <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
+              Password reset successful. Please log in with your new password.
             </p>
           )}
 
@@ -72,7 +77,9 @@ export default async function LoginPage({
                 className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
               />
             </div>
-
+            <Link href="/forgot-password" className="text-right text-sm text-accent hover:text-accent-dark">
+              Forgot password?
+            </Link>
             <button
               type="submit"
               className="mt-2 rounded-xl bg-accent px-4 py-3 font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-dark"
