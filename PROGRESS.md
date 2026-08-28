@@ -25,6 +25,51 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-27 — Claude (MacBook) built the forgot-password / reset-password flow
+
+- Continuation of the same day's session below — picked up the "next step" note about a possible
+  forgot-password feature. User typed every file by hand, guided step-by-step.
+- **Verified before building, per this project's standing process**: checked the local backend's
+  live Swagger spec (`http://localhost:5080/swagger/v1/swagger.json`) and confirmed both
+  `POST /api/auth/forgot-password` (body `{ email }`) and `POST /api/auth/reset-password` (body
+  `{ userId, token, newPassword }`, same `userId`/`token` convention as `confirm-email`) actually
+  exist and got their real request schemas. Also curl-tested `forgot-password` directly with a
+  fake, non-existent email — confirmed the backend already returns a generic
+  `"If an account with that email exists, a password reset link has been sent."` (HTTP 200)
+  regardless of whether the account exists, i.e. account-enumeration protection is already handled
+  backend-side.
+- **Compliance pass** (PIPEDA/CASL, federal only — no Ontario RTA/Manitoba RTB angle here, this
+  isn't a tenancy-terms feature): frontend only collects `email` (forgot-password form) and
+  `newPassword` (reset form) — no extra fields. The reset email is sent server-side and is
+  transactional only (just the link), so CASL's consent/unsubscribe rules don't apply. The
+  frontend's success message reuses the backend's own generic wording rather than ever branching on
+  "account not found," matching the enumeration protection confirmed above.
+- **New**: `app/(auth)/forgot-password/page.tsx` + `actions.ts` (email form, generic success/error
+  message, no split brand-panel — lean utility page like `confirm-email`, not a primary entry point
+  like login/register). `app/(auth)/reset-password/page.tsx` + `actions.ts` (reads `userId`/`token`
+  from the URL exactly like `confirm-email/page.tsx`, shows "Invalid or expired reset link." if
+  either is missing; on a failed reset, redirects back to itself with `userId`/`token` preserved in
+  the URL so the form still works without re-clicking the email link). `login/page.tsx`: added a
+  "Forgot password?" link and a `?reset=1` success message.
+- **Bug caught before commit**: first pass at the login page edit nested the new "Forgot password?"
+  `Link` *inside* the password field's `<div>` instead of after it — valid JSX, so `tsc` didn't
+  catch it, would've just rendered the link squeezed under the input instead of as its own row
+  before the submit button. Caught by inspection, fixed by moving the `</div>` up to close right
+  after the password `<input>`.
+- Verified with `npx tsc --noEmit` (zero errors) after each step, then **confirmed working
+  end-to-end by the user on the live Vercel deployment** (`https://rentmanagement-liard.vercel.app`)
+  against the real Azure-hosted backend — forgot-password → real email → reset link → new password
+  set → logged in successfully with it.
+- **Note for later**: this was verified against the local backend's Swagger spec and curl, and
+  separately confirmed working live on Vercel/Azure — so both are known-good as of this entry. If a
+  future session finds either environment's backend has changed, don't assume the other still
+  matches.
+- **Next step**: not yet decided. Open options carried over from the entry below: build the real
+  unit edit flow once the backend adds a `PUT`/`PATCH` endpoint for units, give the still-stub
+  `[unitId]/page.tsx` real content, or wire `/landlord/tenants` to the real backend.
+
+---
+
 ## 2026-08-27 — Claude (MacBook) fixed the create-unit form gaps, listed real units on the property detail page, added View/Edit buttons
 
 - Continuation of the session below (Claude/Windows) in the same day — picked up its four flagged
