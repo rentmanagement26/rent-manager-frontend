@@ -25,7 +25,7 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
           open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"
         }`}
       >
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center px-6 py-6 max-lg:border-b max-lg:border-slate-100 lg:bg-white">
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-6 max-lg:border-b max-lg:border-slate-100 lg:bg-white">
           <Link href="/landlord">
             <Image
               src="/domuspro-logo.png"
@@ -36,6 +36,16 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
               className="h-auto w-auto"
             />
           </Link>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="lg:hidden rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
