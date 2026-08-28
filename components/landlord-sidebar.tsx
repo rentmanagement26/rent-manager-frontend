@@ -38,7 +38,7 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
           </Link>
         </div>
 
-        <div className="flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:bg-white">
+       <div className="flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
           <nav className="p-4 space-y-1">
             <Link
               href="/landlord"
