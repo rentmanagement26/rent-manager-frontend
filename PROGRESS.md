@@ -25,6 +25,58 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-27 — Claude (MacBook) fixed the create-unit form gaps, listed real units on the property detail page, added View/Edit buttons
+
+- Continuation of the session below (Claude/Windows) in the same day — picked up its four flagged
+  `new-unit-form.tsx` gaps and its "verify before coding" units read-shape gap. User typed every
+  file by hand, guided step-by-step.
+- **Fixed all four flagged gaps in `[id]/units/new/new-unit-form.tsx`**: added the missing submit
+  button (was only reachable via Enter), fixed `PageHeader` title from "Add property" to "Add
+  unit", fixed the Asking Rent `<label>`'s `htmlFor` from `"postalCode"` to `"askingRent"`, and
+  added `required` to the `bedrooms` field.
+- **Confirmed the real read shape for a property's `units` array** by having the user open the app
+  in-browser (real login, real dev server) and paste the actual `GET /api/properties/{id}` JSON
+  for a property with a unit already on it — first time this was verified rather than guessed.
+  Confirmed: each unit read-item has `id`, `label`, `unitType: string` (resolved name, same
+  read/write split pattern as `Property`/`PropertyType` — write still sends `unitTypeId: number`
+  via `CreateUnitInput`, unchanged), `bedrooms`, `bathrooms`, `squareFeet`, `askingRent`, and a new
+  `status: string` field (e.g. `"Listed"`) not present anywhere in the types before.
+- **`lib/types.ts`**: rewrote the previously-dead `Unit` interface (flagged dead in the entry
+  below — it had been an exact duplicate of `CreateUnitInput`, `unitTypeId: number`, no `id`) to
+  match the confirmed shape above (`unitType: string`, `status: string`, `id`). Changed
+  `Property.units` from `unknown[]` to `Unit[]` — the last `unknown` in the codebase is gone, and
+  `Unit` is no longer dead code (now consumed by `Property`).
+- **`[id]/page.tsx`**: replaced the units section's plain `"N units"` count with an actual grid of
+  unit cards (label, status pill — same `bg-accent-tint`/`text-accent-dark` style as the property
+  badges — unit type, bed/bath/sqft line, formatted rent via `.toLocaleString()`), each with small
+  View/Edit buttons. Caught and fixed a self-introduced bug along the way: the first pass at this
+  edit didn't replace the existing ternary, it nested a second (unreachable) copy of it inside the
+  `else` branch — `tsc` didn't catch it since both branches were valid JSX: dead code, not a type
+  error. Fixed by collapsing back to a single ternary.
+- **View/Edit buttons**: View links to the existing (still-stub, unrelated to this session)
+  `[unitId]/page.tsx`. Edit links to a **new stub page**, `[unitId]/edit/page.tsx` — deliberately
+  *not* a real edit form, because the local backend's live Swagger spec
+  (`http://localhost:5080/swagger/v1/swagger.json`) has no `PUT`/`PATCH` route for units at all
+  (checked directly, not assumed) and the user confirmed the backend doesn't have one yet either.
+  Stub mirrors the exact existing "coming soon" placeholder pattern from
+  `app/landlord/profile/page.tsx`.
+- Verified with `npx tsc --noEmit` after each step (zero errors throughout, including through the
+  ternary-duplication bug above, since it wasn't a type error) plus a final check after all changes
+  landed. Visual/in-browser check for this session's changes was done by the user directly on
+  their own already-running local dev server (port 3000) rather than a separate Claude-driven
+  preview session.
+- **Next step**: build the real unit edit flow once the backend adds an update endpoint for units
+  (`PUT`/`PATCH /api/properties/units/{unitId}` or similar — re-check the Swagger spec, don't
+  assume the route name). Until then: the still-stub `[unitId]/page.tsx` (real unit detail content,
+  same `GET /api/properties/units/{unitId}` endpoint already confirmed to exist) or wiring
+  `/landlord/tenants` to the real backend are both open, unstarted. User is now considering a
+  forgot-password flow as a possible next feature — not started, needs the real backend endpoint
+  confirmed first (same "verify before coding" process as everything above) before any code is
+  written, and should get the usual Canadian/PIPEDA compliance pass per `AGENTS.md` given it deals
+  with account recovery / user identity.
+
+---
+
 ## 2026-08-27 — Claude (Windows) built the create-unit flow and redesigned the properties pages
 
 - User typed every file by hand, guided step-by-step.

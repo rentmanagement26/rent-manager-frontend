@@ -41,16 +41,18 @@ export interface Property {
   region: string;
   postalCode: string;
   country: string;
-  units: unknown[];
+  units: Unit[];
 }
 
 export interface Unit {
-  unitTypeId: number;
+  id: number;
   label: string;
+  unitType: string;
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;
   askingRent: number;
+  status: string;
 }
 
 export interface UnitType {

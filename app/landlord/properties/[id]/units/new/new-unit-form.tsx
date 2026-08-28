@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createUnitAction } from "@/app/landlord/properties/actions";
 import { PageHeader } from "@/components/page-header";
 import type { UnitType } from "@/lib/types";
+import Link from "next/link";
 
 export function NewUnitForm({ propertyId, unitTypes }: { propertyId: number; unitTypes: UnitType[] }) {
   const [unitTypeId, setUnitTypeId] = useState(unitTypes[0]?.id ?? 0);
@@ -20,7 +21,7 @@ export function NewUnitForm({ propertyId, unitTypes }: { propertyId: number; uni
   return (
     <div>
 
-      <PageHeader title="Add property" description="Enter the property's basic details." />
+      <PageHeader title="Add unit" description="Enter the unit's basic details." />
 
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
@@ -64,6 +65,7 @@ export function NewUnitForm({ propertyId, unitTypes }: { propertyId: number; uni
                 placeholder="Number of bedrooms"
                 className={inputClass}
                 value={bedrooms}
+                required
                 onChange={(e) => setBedrooms(e.target.value)}
               />
             </div>
@@ -97,7 +99,7 @@ export function NewUnitForm({ propertyId, unitTypes }: { propertyId: number; uni
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="postalCode" className={labelClass}>Asking Rent</label>
+                <label htmlFor="askingRent" className={labelClass}>Asking Rent</label>
                 <input
                   id="askingRent"
                   name="askingRent"
@@ -109,6 +111,20 @@ export function NewUnitForm({ propertyId, unitTypes }: { propertyId: number; uni
                 />
               </div>
               </div>
+                <div className="mt-2 pt-4 border-t border-default flex justify-end gap-3">
+              <Link
+                href="/landlord/properties"
+                className="rounded-lg border border-default px-4 py-2.5 text-sm font-medium text-heading hover:bg-subtle"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark"
+              >
+                Add unit
+              </button>
+            </div>
               </form>
         </div>
       </div>

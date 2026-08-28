@@ -53,10 +53,44 @@ export default async function PropertyDetailPage({
                 </Link>
                 .
               </p>
-            ) : (
-              <p className="text-heading">
-                {property.units.length} unit{property.units.length === 1 ? "" : "s"}
-              </p>
+            ) :  (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {property.units.map((unit) => (
+                  <div
+                    key={unit.id}
+                    className="rounded-xl border border-default p-4 flex flex-col gap-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-heading">{unit.label}</p>
+                      <span className="shrink-0 text-xs px-2 py-1 rounded bg-accent-tint text-accent-dark font-medium">
+                        {unit.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted">{unit.unitType}</p>
+                    <p className="text-sm text-heading">
+                      {unit.bedrooms} bd &middot; {unit.bathrooms} ba &middot; {unit.squareFeet} sqft
+                    </p>
+                    <p className="text-sm font-medium text-heading">
+                      ${unit.askingRent.toLocaleString()}/mo
+                    </p>
+
+                    <div className="flex gap-2 pt-2">
+                      <Link
+                        href={`/landlord/properties/${property.id}/units/${unit.id}`}
+                        className="flex-1 rounded-lg border border-default px-2.5 py-1.5 text-center text-xs font-medium text-heading hover:bg-subtle"
+                      >
+                        View
+                      </Link>
+                      <Link
+                        href={`/landlord/properties/${property.id}/units/${unit.id}/edit`}
+                        className="flex-1 rounded-lg bg-accent px-2.5 py-1.5 text-center text-xs font-semibold text-white hover:bg-accent-dark"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
