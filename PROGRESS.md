@@ -25,6 +25,81 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-08-28 — Claude (MacBook) fixed the landlord portal's mobile scroll/bounce bugs and a desktop sidebar clipping bug
+
+- Long debugging session, several wrong turns before landing on the real fixes — summarizing the
+  end state; see conversation history for the full trail if needed. User reported two symptoms on
+  the live Vercel deployment (iPhone Safari): pull-to-refresh didn't work, and an ugly "double
+  bounce" feel when overscrolling.
+- **Root cause #1 (found and fixed):** `app/landlord/layout.tsx`'s `<main>` had `h-screen
+  overflow-y-auto overscroll-y-none` applied at **all** screen sizes (no `lg:` scoping), making it
+  an independently-scrolling box on mobile instead of letting the real page scroll — and
+  `overscroll-y-none` (plus a matching `overscroll-none` on `<body>` in `app/layout.tsx`, same
+  original commit `64069b4`) blocked the scroll-chaining that Safari's native pull-to-refresh
+  depends on. Fixed by scoping `<main>`'s height/overflow to `lg:` only and removing both
+  `overscroll-none` rules, making the actual document the sole scroll container on mobile (verified
+  via injected JS: `body.scrollHeight > html.clientHeight` after the fix). A deliberate revert-for-
+  testing round trip happened here (commit `5bb3686` then `b0c501f` restoring the fix) — worth
+  knowing about if `git log` looks like it flip-flopped, that was intentional.
+- **Root cause #2 (found and fixed):** the sidebar's "Free plan" card was silently clipped at the
+  bottom on desktop, with no way to scroll to it. Two nested instances of the same CSS gotcha —
+  `min-height: auto` letting a box grow past its available space instead of respecting it: (1) the
+  nav+card flex column in `components/landlord-sidebar.tsx` needed `lg:min-h-0`; (2) the outer
+  grid's `grid-rows-[auto_1fr]` in `app/landlord/layout.tsx` needed `auto_minmax(0,1fr)` — a bare
+  `1fr` track has an implicit `auto` minimum too. Confirmed **empirically**, not just reasoned about
+  — logged into the local dev server with real Browser-tool access (test creds:
+  `hardeep2792@gmail.com`), measured the actual computed `grid-template-rows` and element rects via
+  injected JS, verified the fix live before advising, then re-verified with a screenshot after.
+- **Sidebar refactor**: per user's request, converted `landlord-sidebar.tsx`'s mobile-drawer classes
+  from implicitly-cancelled-out (relying on `lg:contents`/`lg:hidden` to neutralize unprefixed
+  mobile styles) to explicit `max-lg:`/`lg:` pairs throughout, so nothing depends on remembering to
+  add a cancel-out override at the other breakpoint. `app/landlord/layout.tsx` needed no changes —
+  audited and confirmed already fully explicit.
+- **Researched how spavaro.com and amazon.com handle their mobile hamburger menus** (live via the
+  Browser tool) at the user's request — both turned out to use the exact same slide-in-drawer +
+  backdrop pattern we already had, just vanilla JS/class-toggling instead of React state, so nothing
+  fundamentally different to borrow. Two real differences adopted anyway: an explicit **X close
+  button** in the drawer header (`landlord-sidebar.tsx`, `lg:hidden`), and a **scroll-lock** while
+  the drawer is open (`lib/sidebar-context.tsx`).
+- **Scroll-lock went through two iterations**: first pass used `overflow-hidden` toggled on `<body>`
+  — worked on Chrome but left a stray backdrop-colored strip at the top/bottom of the screen on
+  Safari after closing the menu (a known-unreliable technique on iOS specifically). Rewrote to the
+  standard iOS-safe pattern: `position: fixed` + a negative `top` offset recording/restoring
+  `window.scrollY`, instead of plain `overflow-hidden`.
+- **That didn't fully fix it either** — user still saw the same stray strip on Safari (initially
+  misreported as "Chrome", corrected to Safari). User found the actual cause via their own research:
+  a known **Safari 26 "Liquid Glass" bug** with `position: fixed` overlays and safe-area/toolbar
+  compositing (referenced a `mui/material-ui` GitHub issue, #46953, hitting the identical symptom —
+  confirmed by fetching it). Real fix: **`app/layout.tsx` was missing a `viewport-fit=cover`
+  viewport meta tag entirely** (no `export const viewport` existed before this) — without it,
+  Safari's layout viewport doesn't extend into the safe-area regions at all, so fixed-position
+  elements can't cover them. Added `export const viewport: Viewport = { width: "device-width",
+  initialScale: 1, viewportFit: "cover" }`. Also made the drawer backdrop always-mounted (fades via
+  `opacity`/`transition-opacity` instead of instant DOM add/remove) as a second mitigation for the
+  same class of stale-paint-on-abrupt-removal issue. **Not yet confirmed fixed on a real device** —
+  this is the most targeted fix yet (based on a real, named, currently-relevant Safari bug rather
+  than a guess), but needs the user's actual iPhone to confirm.
+- User granted one-off exceptions to the standing guided-coding-mode rule twice this session (the
+  `max-lg:` sidebar refactor, and the viewport-fit/backdrop fix) — explicitly said "change it
+  yourself this time only" / "change it yourself" each time. Standing rule (user types application
+  code, guided step-by-step) still applies by default; these were not a permanent change to that.
+- Verified with `npx tsc --noEmit` after every step (always clean). In-browser verification used the
+  Browser tool directly against the local dev server (logged in with real test creds) for the
+  desktop sidebar bug and the drawer/backdrop mechanics — first time this session used live
+  DOM/CSS inspection instead of relying on the user's own screenshots, and it's what actually cracked
+  the sidebar clipping bug after CSS-reasoning-only guesses kept missing it.
+- **Next step**: user needs to confirm the `viewport-fit=cover` fix on a real iPhone against the
+  live Vercel deployment (pull-to-refresh, single natural bounce, sidebar card fit, and now no
+  stray Safari backdrop strip) — none of today's mobile-Safari-specific fixes have been confirmed
+  on real Safari yet, only reasoned about/tested in Chrome. If the strip persists even with
+  `viewport-fit=cover`, the next things worth checking: `env(safe-area-inset-*)` padding on the
+  backdrop/drawer explicitly, or whether the bug needs a full Safari restart/cache clear to observe
+  the fix (Liquid Glass compositing bugs have been reported as sometimes sticky per the sources
+  found). Also still open from the 2026-08-27 entry below: unit edit flow (blocked on backend
+  update endpoint), `[unitId]/page.tsx` real content, `/landlord/tenants` wiring.
+
+---
+
 ## 2026-08-27 — Claude (MacBook) built the forgot-password / reset-password flow
 
 - Continuation of the same day's session below — picked up the "next step" note about a possible
