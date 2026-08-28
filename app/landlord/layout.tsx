@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <AccountMenu email={session.email} role={role} />
           </div>
 
-          <main className="h-screen overflow-y-auto overscroll-y-none px-8 pb-8 lg:pt-8 lg:h-auto lg:col-start-2 lg:row-start-2">
+          <main className="h-screen overflow-y-auto px-8 pb-8 lg:pt-8 lg:h-auto lg:col-start-2 lg:row-start-2">
             <div className="lg:hidden py-6 -mx-8 px-8 mb-6 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
