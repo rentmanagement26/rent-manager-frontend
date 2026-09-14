@@ -25,6 +25,126 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (Windows) planned the property/unit photo (media) feature — NOT YET BUILT, plan only
+
+- User wants full parity with the mobile app's media feature next: adding property photos, cover-image
+  selection, deleting photos, and unit photos — researched the mobile app + backend thoroughly (agent-based
+  deep read of both codebases, not guessed) and wrote this plan instead of code, since the user will
+  continue the actual implementation on the MacBook. **Nothing in this entry is built yet** — read this plan
+  fully before writing any code against it, and re-verify against the live backend/mobile source if much
+  time has passed, per this project's standing "verify before coding" process.
+- **Scope decision (user confirmed)**: match mobile exactly — **property photos get add + cover-select +
+  delete; unit photos are add-only**, no cover/delete UI for units, same as mobile today (even though the
+  backend supports cover/delete for units too — just build it for properties only, consistent with mobile).
+- **Build order (user confirmed)**: property and unit media together in one pass, sharing the same
+  upload/API layer rather than building one then the other.
+
+### The upload mechanism (confirmed from backend source + mobile's working implementation)
+
+Direct-to-Azure-Blob, 3 HTTP calls per photo, in this exact order — **the API server never touches file
+bytes**:
+1. `POST /api/v1/properties/{propertyId}/media/upload-url` (or `.../units/{unitId}/media/upload-url`) —
+   body `{ fileExtension: ".jpg" }` (derive from the file's MIME type: `image/jpeg`→`.jpg`, `image/png`→
+   `.png`, `image/webp`→`.webp`, default `.jpg`) — returns `{ blobPath: string, uploadUrl: string }`
+   (`uploadUrl` is a write-only SAS URL, 15 min expiry).
+2. **`PUT` the raw file bytes directly to `uploadUrl`** — headers `{ "x-ms-blob-type": "BlockBlob",
+   "Content-Type": <file's mime type> }`, body = the raw `File`/`Blob` itself (NOT `FormData`, NOT base64).
+   The `x-ms-blob-type` header is mandatory for Azure's SAS "Put Blob" operation. No `Authorization` header
+   on this call — the SAS token in the URL query string is the auth.
+3. `POST /api/v1/properties/{propertyId}/media` (or `.../units/{unitId}/media`) — body
+   `{ blobPath, sortOrder }` (`sortOrder` = current photo count + index, appended after existing photos) —
+   registers the DB row. This is where the backend enforces the 6MB file-size limit (checks actual blob size
+   in storage after upload) and the per-property/unit photo count limit — a rejected file's blob is deleted
+   server-side, nothing orphaned lingers.
+
+Reads: `GET .../media` returns `[{ id, url, sortOrder, isCover }]` — `url` is a **fresh 10-minute read-only
+SAS URL**, regenerated on every call. Never cache/store this URL past the current page load; re-fetch on
+every page visit (mobile does this via `useFocusEffect`; web should do it via a normal server-rendered
+`GET` on every page load, which happens naturally with Server Components).
+
+**Confirmed limits**: 5 photos per property, **10 photos per unit** (not 5 — verified against the backend's
+`MaxPhotosPerUnit` constant and mobile's own `MAX_UNIT_PHOTOS = 10`, don't assume it matches the property
+limit). 6MB per file, both provinces/limits enforced server-side already — client-side pre-checks are a nice-
+to-have for UX, not required for correctness.
+
+**Cover image**: `POST .../media/{mediaId}/cover` (property only, per the scope decision above), empty body
+— unsets the previous cover, sets this one. The backend auto-sets the *first* photo ever uploaded as cover,
+so no explicit cover call is needed after the very first upload. On the property detail page, mobile
+reorders cover-first client-side (`isCover` photo moved to index 0 in a `useMemo`, regardless of
+`sortOrder`) — worth doing the same on web rather than relying on `sortOrder` alone.
+
+**Delete**: `POST .../media/delete` (property only, per scope decision), body `{ mediaIds: number[] }` —
+always send a single-element array from the UI (bulk delete exists backend-side but nothing client-side
+needs it). IDs that aren't yours are silently skipped, not an error.
+
+### Architecture decision for this Next.js app — recommended, not yet built
+
+Mobile does the actual file-bytes PUT (step 2 above) directly from the device to Azure. **This web app
+should do the same — the PUT must happen client-side (browser), not inside a Server Action** — because
+Vercel serverless functions have a request body size limit (historically ~4.5MB) well under this feature's
+6MB file-size limit; routing file bytes through a Server Action risks silently failing on exactly the
+photos most likely to hit the size cap. Recommended split:
+- Steps 1 (`upload-url`) and 3 (`media` register) — small JSON payloads, need `session.backendToken` — fit
+  naturally as **Server Actions**, same pattern as every other backend call in this app.
+- Step 2 (the actual PUT) — **must run in a `"use client"` component**, calling `fetch(uploadUrl, {...})`
+  directly from the browser to Azure, in between calling the two Server Actions above (client calls Server
+  Action 1 → gets `{blobPath, uploadUrl}` back → client does the PUT itself → client calls Server Action 3
+  with `blobPath`). This means the property/unit detail pages need a small client component for the
+  upload/cover/delete UI (they're currently pure Server Components) — mirrors how `properties-grid.tsx`
+  already exists as this app's one precedent for a client component alongside server-rendered pages.
+
+### File-by-file plan
+
+- **`lib/types.ts`** — add:
+  ```ts
+  export interface MediaItem { id: number; url: string; sortOrder: number; isCover: boolean; }
+  ```
+  (request/response shapes for the upload-url/register/delete calls can just be inline `JSON.stringify`
+  bodies and `await response.json()` casts, matching how `CreatePropertyInput` etc. are already used — no
+  need for dedicated request/response interfaces unless it gets unwieldy.)
+- **New `lib/media-api.ts`** (mirrors mobile's `lib/media-api.ts` 1:1 in spirit, adapted to this app's
+  `backendFetch(path, token, init)` helper) — server-side functions, callable from Server Actions:
+  `getPropertyMedia(propertyId, token)`, `getUnitMedia(unitId, token)`, `getPropertyMediaUploadUrl(propertyId, fileExtension, token)`, `getUnitMediaUploadUrl(unitId, fileExtension, token)`, `registerPropertyMedia(propertyId, blobPath, sortOrder, token)`, `registerUnitMedia(unitId, blobPath, sortOrder, token)`, `setPropertyMediaCover(propertyId, mediaId, token)`, `deletePropertyMedia(propertyId, mediaId, token)`.
+- **`app/landlord/properties/actions.ts`** — add Server Actions wrapping the above:
+  `getPropertyUploadUrlAction`, `registerPropertyMediaAction`, `setPropertyCoverAction`,
+  `deletePropertyMediaAction`, and unit equivalents (`getUnitUploadUrlAction`, `registerUnitMediaAction`) —
+  no cover/delete actions needed for units per scope decision.
+- **New client component** (e.g. `app/landlord/properties/[id]/photo-carousel.tsx`) — property detail's
+  photo carousel: cover-first ordering, "add" tile (disabled at 5/5, spinner while uploading), count badge
+  ("N/5"), edit-mode toggle revealing a delete button on the active photo, cover-star toggle button.
+  Orchestrates the 3-step upload per file the user picks (sequentially per file, not `Promise.all`, so the
+  server-side count check isn't raced — same reasoning mobile's code comment gives).
+- **New client component** (e.g. `app/landlord/properties/[id]/units/[unitId]/photo-strip.tsx`) — unit
+  detail's simpler photo strip: fixed-size thumbnails, "add" tile (disabled at 10/10), no cover/delete UI,
+  click-to-open lightbox (a plain full-screen overlay with prev/next, no library needed — mobile's
+  `PhotoViewerModal` has no special logic worth porting beyond "show the image full-screen with a counter").
+- **`app/landlord/properties/[id]/page.tsx`** — wire in `<PhotoCarousel>`, fetching `getPropertyMedia`
+  alongside the existing property fetch (`Promise.all`, matching mobile's pattern).
+- **`app/landlord/properties/[id]/units/[unitId]/page.tsx`** — **currently a total stub** (`return <div>Hello</div>`,
+  confirmed just now) — needs real content built from scratch, not just a photo strip added: unit
+  label/type/status/bed-bath-sqft/asking-rent display (same data already fetched for the property detail's
+  unit cards) plus the new `<PhotoStrip>`.
+- Add `"Photos can't be removed without admin help."` static note on the unit detail page, matching mobile's
+  exact copy — this is a deliberate product decision (unit photos are never landlord-deletable), not a
+  missing feature to build around.
+
+### Compliance note (per AGENTS.md's standing rule)
+
+No new PIPEDA/CASL/RTA/RTB angle beyond what `COMPLIANCE.md` already recorded for Properties/Units — these
+are photos of the landlord's own property/unit, not tenant PII. Same caveat as before: if a photo happens to
+capture an identifiable person, that's a copy/product-policy question, not something this plan needs to
+solve.
+
+### Next step
+
+Pick this plan up (any machine/agent) by: (1) re-confirming the backend routes/limits above still match
+live source if this is a new session, (2) building `lib/types.ts`'s `MediaItem` + `lib/media-api.ts` first
+(no UI dependency, easy to verify in isolation), (3) then the two client components, (4) then wiring both
+detail pages, verifying end-to-end against the real Azure backend (upload a real photo, confirm it appears,
+confirm cover/delete work, confirm the unit stub page now shows real content) before considering this done.
+
+---
+
 ## 2026-09-14 — Claude (Windows) started the mobile→web visual retheme: design tokens, landlord dashboard/sidebar/header, new logo
 
 - Continuation of the same day's session — after the outage fix (below), picked the visual retheme over the
