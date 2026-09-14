@@ -25,6 +25,68 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (Windows) started the mobile→web visual retheme: design tokens, landlord dashboard/sidebar/header, new logo
+
+- Continuation of the same day's session — after the outage fix (below), picked the visual retheme over the
+  tenant-invite feature as the next mobile→web handoff doc item, per the user's own choice on sequencing.
+- **Mockup-first, per standing preference**: used the `visualize` tool to mock up the dashboard before
+  touching real code, iterated twice on user feedback (fixed an oversimplified Rent Overview section against
+  a real screenshot of the mobile app the user shared — the real design has two stacked Last month/This
+  month blocks with progress bars and a Collected/Outstanding legend, not the single simplified block first
+  drafted; adjusted the "+" header button to be a full "+ Add Property" pill on desktop vs. mobile's
+  icon-only circle), then got explicit go-ahead before writing real code.
+- **`app/globals.css`**: retheme is just new hex values inside the existing `:root` block — `--bg`/
+  `--surface`/`--heading`/`--body-text`/`--muted`/`--default`/`--subtle`/`--accent`/`--accent-tint` all
+  repointed to the mobile app's real `src/constants/colors.ts` values (verified against that file directly,
+  not guessed), `--brand-blue` repointed to `primaryDark` (the old blue predated the mobile redesign),
+  `--brand-green*` repointed to `accentTeal`/`greenDark`/`tealTint`. Cascaded correctly across the
+  properties list/detail pages (already fully token-driven) with zero component changes needed there.
+- **Dashboard (`app/landlord/page.tsx`) — bigger than a restyle, real new content added**: moved "Add
+  property" from the welcome banner into the page header's action slot (matching the Properties page's own
+  pattern) as an orange pill; replaced the 3 raw-Tailwind-colored KPI cards (Properties/Occupancy/Revenue)
+  with the mobile design's 4 colored stat tiles (Properties=greenDark, Occupied=accentOrange,
+  Maint.=purple, Vacancy=accentBlue); added a brand new "Rent overview" card (two stacked Last
+  month/This month blocks, progress-bar track, Collected/Outstanding legend with colored dots) that didn't
+  exist before — still always "No data yet" placeholders, no rent backend exists yet, matching the
+  handoff doc's own note; restyled "My properties" rows to icon-tile cards with the property type shown in
+  orange; expanded "Quick actions" from 2 to the mobile design's real 4 (Add property/Add tenant/Add
+  rent/Reports) with tinted icon backgrounds per action.
+- **`components/landlord-sidebar.tsx`**: active nav link recolored to `bg-accent-tint`/`text-accent`
+  (orange, was blue); "Free plan" card rebuilt into "Upgrade to Pro" — solid dark (`bg-heading`) card with a
+  shadow, per the mobile design's explicit rule that this is **the one deliberate shadow in the whole app**.
+- **`components/account-menu.tsx`**: notification bell wrapped in a 40px white circle button, matching the
+  handoff doc's "icon buttons" pattern (was a bare icon before).
+- **New logo, in 3 places** — user provided two real asset files (not generated): `domuspro-logo.png` (full
+  color: red skyscraper icon + "Domus" black + "PRO" red + tagline, 600x200px) for light backgrounds, and
+  `domouspro-white-logo.png` (all-white version) specifically for the orange gradient brand panel on
+  login/register. Wired into `landlord-sidebar.tsx` (150x50, was the old blue "D" icon at 140x32),
+  `site-header.tsx` (marketing site, 150x50, was `logo.svg`), and both `login/page.tsx`/`register/page.tsx`
+  (180x60, was `logo-white.svg`) — confirmed the white variant was made specifically for that orange panel
+  by rendering it against the panel's actual gradient before wiring it in, not just trusting the filename.
+- **Real bug hit and fixed, worth remembering**: after swapping `public/domuspro-logo.png`'s file content
+  (same filename), the marketing site kept showing the *old* logo — root cause was Next.js's image
+  optimizer disk cache (`.next/cache/images`) still serving a pre-swap cached render for that exact
+  URL+size combination (confirmed via network tab: `304 Not Modified` responses for `/_next/image?...`).
+  Replacing a static file's *content* while keeping the same filename doesn't bust that cache on its own —
+  fixed by clearing `.next` and restarting the dev server. Worth knowing for next time a `public/` asset is
+  swapped in place rather than renamed.
+- **Also hit and correctly diagnosed as a false alarm**: a `SyntaxError: Unexpected end of JSON input` on
+  the dashboard's `response.json()` call, reproducing across two fresh logins, initially looked like a real
+  bug. Added a temporary diagnostic (read the body as text first) and found the actual backend response was
+  a perfectly valid, complete `200` JSON payload — the error was stale Turbopack dev-overlay output from
+  requests landing mid-hot-reload while files were being edited, not a real defect. Removed the diagnostic
+  once confirmed; no code change was needed for this one.
+- Verified with `npx tsc --noEmit` (zero errors throughout) and in-browser against the real Azure backend
+  after every file change — dashboard, properties list, property detail, login, register, and the marketing
+  homepage all confirmed rendering correctly with zero console/server errors on a clean load.
+- **Next step**: two items still open from the mobile→web handoff doc — finish the retheme on the remaining
+  pages not yet touched (properties detail/create/edit flows, unit pages, tenants stub, profile/settings/
+  billing stubs — these will mostly cascade for free from the token change but haven't been visually
+  confirmed one-by-one), and separately, build the tenant-invite feature (new `register/tenant` route, the
+  dual-path new-account-vs-existing-account branching flow) whenever that's picked up next.
+
+---
+
 ## 2026-09-14 — Claude (Windows) built the access-token refresh flow (Part 2 of the same session's outage fix)
 
 - Continuation of the `/api/v1` outage fix below, same session. That fix alone left a second gap from the
