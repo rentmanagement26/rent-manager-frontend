@@ -25,6 +25,62 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (Windows) built the access-token refresh flow (Part 2 of the same session's outage fix)
+
+- Continuation of the `/api/v1` outage fix below, same session. That fix alone left a second gap from the
+  same backend change: access tokens dropped from 4h to **15 minutes**, with a new rotating refresh-token
+  pair (`POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`) issued alongside login. Without handling
+  it, any session older than 15 minutes would start silently failing backend calls.
+- **Confirmed a real Next.js 16 breaking change the hard way**: built the fix as standard `middleware.ts` /
+  `export function middleware`, which failed to load at all — Next.js 16 renamed the whole convention to
+  `proxy.ts` / `export function proxy` (confirmed in `node_modules/next/dist/docs/.../proxy.md`; a codemod
+  `npx @next/codemod@canary middleware-to-proxy .` exists but wasn't used since this was a from-scratch new
+  file, not a migration). Exactly the class of issue `AGENTS.md`'s "this is NOT the Next.js you know"
+  warning is about — worth remembering for any future proxy/middleware work in this project. Bonus from the
+  same version bump: Proxy now defaults to the **Node.js runtime** instead of Edge, so no Edge-runtime
+  restrictions apply here.
+- **User decision**: sessions are now a **sliding 30 days** (was a flat 8-hour cap) — `proxy.ts` re-issues
+  the session cookie with a fresh 30-day `maxAge` on every successful refresh, matching the backend's
+  refresh-token lifetime. Chosen over keeping the 8h cap since refresh tokens make it possible without
+  meaningfully changing the threat model (still one signed httpOnly cookie either way).
+- **Architecture**: `lib/types.ts`'s `SessionUser` gained `backendTokenExpiresAt`/`refreshToken`/
+  `refreshTokenExpiresAt`; `lib/session.ts` carries them through `getSessionUser` and bumped
+  `SESSION_DURATION_SECONDS` to 30 days. `proxy.ts` (new) runs on `/landlord|tenant|contractor|admin/:path*`,
+  checks the stored token's expiry before each request, and refreshes+re-signs the session cookie ahead of
+  time — done here rather than reactively in `backendFetch` because Server Components (most call sites)
+  can't set cookies during render, only Proxy/Server Actions/Route Handlers can. `app/(auth)/login/actions.ts`
+  now stores the 3 new fields at login. `app/actions.ts`'s `logoutAction` now also calls the backend's
+  `/api/v1/auth/logout` to revoke the refresh token server-side (best-effort, `.catch(() => {})` — logout
+  must not get stuck on a network blip), closing a gap where the old logout only cleared the local cookie.
+- **Real bug caught during manual verification, not just reasoned about**: initially had `proxy.ts` force a
+  full logout (delete cookie + redirect to `/login`) on any failed refresh. Manually forced a refresh on
+  every request to test it end-to-end (temporary `FORCE_REFRESH_FOR_TESTING` flag + console logging, both
+  removed after) and caught a real race: the backend's refresh-token rotation has theft-detection (reusing
+  an already-rotated token revokes *every* refresh token on the account, confirmed in the backend's own
+  `PROGRESS.md`) — two near-simultaneous requests (Next.js's own prefetching can cause this) both reading
+  the same pre-refresh cookie will race, the loser gets treated as token reuse, and the old "force logout on
+  failure" behavior would have nuked an otherwise-healthy session over a harmless race. **Fixed**: a failed
+  refresh in `proxy.ts` now just passes the request through with the existing token instead of forcing
+  logout — a losing race self-heals on the next request once the winning request's cookie has propagated;
+  the only regression is the narrow case of a *genuinely* dead refresh token no longer getting a clean
+  redirect (falls back to pre-this-session silent-failure behavior for that one case, not a new problem).
+- Verified end-to-end against the real Azure backend on the local dev server, with the forced-refresh test
+  above: a real login → real refresh call → `200` with a rotated token pair, confirming the mechanism itself
+  works. Final clean pass (no forcing) after the race fix: fresh login → dashboard renders real data →
+  `proxy.ts` correctly passes through in ~10ms without refreshing (token still fresh) — no false triggers,
+  zero console errors, zero `tsc` errors.
+- **User granted one-off exceptions to guided-coding-mode** for the temporary test scaffolding (added and
+  removed by Claude directly, not typed by the user, since it was throwaway debug code rather than
+  application logic) and for the final race-condition fix in `proxy.ts` ("change it yourself"). The 5 real
+  files (`lib/types.ts`, `lib/session.ts`, `app/(auth)/login/actions.ts`, `app/actions.ts`, and the initial
+  `proxy.ts`) were typed by the user per the standing rule.
+- **Next step**: nothing open for the outage/refresh-token work — both parts of this session's fix are
+  verified working. Still open from the mobile→web handoff doc: the visual retheme (design tokens/component
+  patterns) and the tenant-invite feature (needs a new `register/tenant` route) — user's choice which to
+  start next.
+
+---
+
 ## 2026-09-14 — Claude (Windows) fixed a live production outage: backend moved to `/api/v1/...`, this app still called the old unversioned routes
 
 - Triggered by a mobile→web handoff doc the user shared (mockup-first design retheming + a tenant-invite

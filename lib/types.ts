@@ -6,6 +6,9 @@ export interface SessionUser {
   fullName: string;
   role: AppRole;
   backendToken?: string;
+  backendTokenExpiresAt?: string;
+  refreshToken?: string;
+  refreshTokenExpiresAt?: string;
 }
 
 export interface Tenant {
@@ -68,3 +71,4 @@ export interface CreateUnitInput {
   squareFeet: number;
   askingRent: number;
 }
+

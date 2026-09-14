@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createSession, SESSION_COOKIE_NAME } from "@/lib/session";
+import { createSession, SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS } from "@/lib/session";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { SessionUser } from "@/lib/types";
 import { getDefaultDashboard } from "@/lib/auth-guard";
@@ -29,9 +29,12 @@ export async function loginAction(formData: FormData) {
     fullName: data.fullName,
     role: data.roles[0],
     backendToken: data.token,
+    backendTokenExpiresAt: data.expiresAt,
+    refreshToken: data.refreshToken,
+    refreshTokenExpiresAt: data.refreshTokenExpiresAt,
   };
 
-const token = await createSession(user);
+  const token = await createSession(user);
   const cookieStore = await cookies();
   cookieStore.set({
     name: SESSION_COOKIE_NAME,
@@ -39,7 +42,7 @@ const token = await createSession(user);
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 8,
+    maxAge: SESSION_DURATION_SECONDS,
   });
 
   redirect(getDefaultDashboard(user.role));
