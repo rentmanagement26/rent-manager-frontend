@@ -7,7 +7,7 @@ import type { Property } from "@/lib/types";
 
 export default async function PropertiesPage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);
-  const response = await backendFetch("/api/properties/mine", session.backendToken);
+  const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
   const properties: Property[] = await response.json();
 
   const totalUnits = properties.reduce((sum, p) => sum + p.units.length, 0);

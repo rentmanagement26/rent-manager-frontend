@@ -21,7 +21,7 @@ export async function createPropertyAction(formData: FormData) {
     country: String(formData.get("country") ?? "Canada"),
   };
 
-  const response = await backendFetch("/api/properties", session.backendToken, {
+  const response = await backendFetch("/api/v1/properties", session.backendToken, {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -49,7 +49,7 @@ export async function createUnitAction(formData: FormData) {
     askingRent: Number(formData.get("askingRent") ?? 0),
   };
 
-  const response = await backendFetch(`/api/properties/${propertyId}/units`, session.backendToken, {
+  const response = await backendFetch(`/api/v1/properties/${propertyId}/units`, session.backendToken, {
     method: "POST",
     body: JSON.stringify(input),
   });

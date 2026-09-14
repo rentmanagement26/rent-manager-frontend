@@ -6,7 +6,7 @@ import type { Property } from "@/lib/types";
 
 export default async function AdminDashboardPage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);
-  const response = await backendFetch("/api/properties/mine", session.backendToken);
+  const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
   const properties: Property[] = await response.json();
 
   const totalProperties = properties.length;

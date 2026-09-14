@@ -18,7 +18,7 @@ export default async function ConfirmEmailPage({
     );
   }
 
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/auth/confirm-email`, {
+  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/confirm-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ UserId: userId, Token: token }),

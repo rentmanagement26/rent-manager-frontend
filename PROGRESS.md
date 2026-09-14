@@ -25,6 +25,49 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (Windows) fixed a live production outage: backend moved to `/api/v1/...`, this app still called the old unversioned routes
+
+- Triggered by a mobile→web handoff doc the user shared (mockup-first design retheming + a tenant-invite
+  feature to build next) — while cross-checking its claims against the actual sibling repos (all present
+  locally: `rent-management-mobile`, `Rent Management Back-End`), found the backend's `PROGRESS.md` and git
+  log (`6d77c03`, on `master`, pushed) show **all API routes moved to `/api/v1/...`** as a documented
+  breaking change. This frontend was still calling the old unversioned paths everywhere.
+- **Confirmed this was a live outage, not just a theoretical mismatch**: curl'd the real Azure backend
+  directly (`BACKEND_API_URL` in `.env.local`) — `/api/auth/login` → `404`, `/api/v1/auth/login` → `400`
+  (reachable, just moved). **Nobody could log in on the live Vercel deployment.** Also confirmed every route
+  is a pure prefix change (checked `AuthController.cs`/`PropertiesController.cs` directly) — no paths were
+  otherwise renamed, so the fix is purely mechanical.
+- **Fixed all 11 call sites** (grepped every `backendFetch(`/`BACKEND_API_URL` usage in `app/` and `lib/` to
+  confirm completeness) by inserting `v1/` after `api/`: `lib/property-types.ts`, `lib/unit-types.ts`,
+  `app/(auth)/confirm-email/page.tsx`, `app/(auth)/forgot-password/actions.ts`,
+  `app/(auth)/login/actions.ts`, `app/(auth)/register/actions.ts`, `app/(auth)/reset-password/actions.ts`,
+  `app/landlord/page.tsx`, `app/landlord/properties/actions.ts` (2 call sites),
+  `app/landlord/properties/page.tsx`, `app/landlord/properties/[id]/page.tsx`.
+- **User granted a one-off exception to the standing guided-coding-mode rule** ("change it") — edits were
+  made directly rather than the user typing them, given this was an active production outage rather than
+  new feature work.
+- Verified with `npx tsc --noEmit` (zero errors — pure string changes, no type impact), then end-to-end
+  in-browser against the real Azure backend on the local dev server: logged in with a real account,
+  confirmed the dashboard (real property count/occupancy), properties list (real per-property unit counts),
+  and a property detail page (real address/units/rent) all render real data with zero console errors.
+- **Also surfaced but not yet fixed**: the same backend change dropped the access token lifetime from 4h to
+  15 minutes and added a refresh-token flow (`POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`,
+  login/refresh responses now include `refreshToken`/`refreshTokenExpiresAt`). This app's session
+  (`lib/session.ts`) only stores the access token in an 8-hour cookie and never refreshes it, so any session
+  older than 15 minutes will start silently failing backend calls (not logged out of the site, just unable
+  to load data). Fixing this needs Next.js Middleware (`middleware.ts`, doesn't exist in this project yet)
+  since Server Components can't set cookies — user chose to ship this outage fix alone first and pick up
+  the refresh-token/middleware work as its own next step.
+- **Compliance note**: no tenancy-law angle on this fix itself (routing only); the mobile→web handoff doc's
+  design-retheme and tenant-invite work it was found alongside are unstarted — tenant-invite compliance
+  (PIPEDA data minimization on the invite/registration fields) still needs a pass when that's built, per the
+  existing "Not yet built" section in `COMPLIANCE.md`.
+- **Next step**: push this fix and confirm on the live Vercel deployment (this is where the actual outage
+  is — local verification alone doesn't prove it). After that: build the `middleware.ts` refresh-token flow
+  (Part 2 above), then decide between the visual retheme and the tenant-invite feature from the handoff doc.
+
+---
+
 ## 2026-08-28 — Claude (Windows) started a native mobile companion app (new sibling repo)
 
 - New sibling repo, `rent-management-mobile` (Expo + React Native + Expo Router, TypeScript),

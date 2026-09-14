@@ -12,7 +12,7 @@ export default async function PropertyDetailPage({
 }) {
   const { id } = await params;
   const session = await requireBackendToken(["Admin", "Landlord"]);
-  const response = await backendFetch(`/api/properties/${id}`, session.backendToken);
+  const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
 
   if (response.status === 404) {
     notFound();

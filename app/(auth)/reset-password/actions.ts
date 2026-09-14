@@ -8,7 +8,7 @@ export async function resetPasswordAction(formData: FormData) {
   const token = String(formData.get("token") ?? "");
   const newPassword = String(formData.get("newPassword") ?? "");
 
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/auth/reset-password`, {
+  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ UserId: userId, Token: token, NewPassword: newPassword }),
