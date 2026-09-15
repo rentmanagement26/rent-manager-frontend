@@ -79,3 +79,33 @@ export interface MediaItem {
   isCover: boolean;
 }
 
+export interface TenantInvitePreview {
+  email: string;
+  landlordName: string;
+  unitLabel: string;
+  propertyName: string;
+  addressLine: string;
+  expiresAt: string;
+  isExpired: boolean;
+  isUsed: boolean;
+}
+
+export interface CreateTenantInviteResult {
+  token: string;
+  inviteUrl: string;
+  expiresAt: string;
+}
+
+export interface RegisterTenantInput {
+  token: string;
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
+  password: string;
+}
+
+export interface RegisterTenantResult {
+  message: string;
+  userId: string;
+  email: string;
+}

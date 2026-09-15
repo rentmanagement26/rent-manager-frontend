@@ -5,9 +5,9 @@ import Image from "next/image";
 export default async function LoginPage({
   searchParams,
 }: {
-    searchParams: Promise<{ error?: string; registered?: string; reset?: string }>;
+      searchParams: Promise<{ error?: string; registered?: string; reset?: string; redirect?: string }>;
 }) {
-    const { error, registered, reset } = await searchParams;
+    const { error, registered, reset, redirect } = await searchParams;
   return (
     <main className="flex flex-1 flex-col md:flex-row">
       <div className="relative flex flex-col justify-between gap-6 overflow-hidden bg-linear-to-br from-accent to-accent-dark p-8 text-white md:w-[420px] md:flex-shrink-0 md:gap-14 md:p-14">
@@ -52,6 +52,7 @@ export default async function LoginPage({
           )}
 
           <form action={loginAction} className="flex flex-col gap-4">
+            <input type="hidden" name="redirect" value={redirect ?? ""} />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-semibold text-body">
                 Email

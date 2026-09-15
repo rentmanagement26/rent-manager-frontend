@@ -41,3 +41,7 @@ export async function requireBackendToken(
   }
   return session as SessionUser & { backendToken: string };
 }
+
+export function isSafeRedirectTarget(path: string | undefined | null): path is string {
+  return !!path && /^\/(?!\/|\\)/.test(path);
+}

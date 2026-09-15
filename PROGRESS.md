@@ -25,6 +25,73 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-15 — Claude (Windows) built the tenant-invite feature (invite-send + public accept/register flow)
+
+- Last open item from the mobile→web handoff doc — the dashboard's "Add tenant" / sidebar "Tenants"
+  links have pointed at `/landlord/tenants` (a 404) for a while; this builds that page plus the
+  matching public accept-invite flow.
+- **Verified before coding, not guessed**: researched the real backend source directly
+  (`PropertyManagementRepo/.../AuthController.cs`) and confirmed the entire backend for this feature
+  already exists and works (4 endpoints under `/api/v1/auth`: `POST tenant-invites`,
+  `GET tenant-invites/{token}`, `POST register/tenant`, `POST tenant-invites/{token}/accept`) — but
+  neither this web app nor the mobile app had any UI for it (mobile's "Invite tenant" menu item is
+  literally `Alert.alert("Coming soon")`). No "list my tenants" endpoint exists yet, so a tenant
+  roster/list page is explicitly out of scope for this pass — invite-send + invite-accept only.
+- Confirmed the invite email's link is hardcoded backend-side to
+  `https://rentmanagement-liard.vercel.app/register/tenant?token={token}` (`Frontend:TenantSignupUrl`
+  in the backend's `appsettings.json`) — so the route had to be exactly `/register/tenant` reading
+  `token` from the query string, matching how `/reset-password` and `/confirm-email` already work.
+- **New**: `lib/tenant-invite-api.ts` (mirrors `lib/media-api.ts`'s shape — public calls via plain
+  `fetch`, authenticated calls via `backendFetch`), `app/landlord/tenants/` (invite-send page + form +
+  action, landlord-only), `app/(auth)/register/tenant/` (public preview/accept/register page + actions
+  — branches on missing/expired/used token, not-logged-in vs. logged-in-matching-email vs.
+  logged-in-wrong-email). `lib/types.ts` gained the request/response shapes for all 4 endpoints.
+- **`/login` gained an optional `redirect` param** (so "you already have an account" on the invite
+  page can send someone to log in and land back on their invite) — added `isSafeRedirectTarget()` in
+  `lib/auth-guard.ts` (same-origin relative paths only, `/^\/(?!\/|\\)/`) to close the open-redirect
+  hole this would otherwise create, applied on both the login success *and* error-retry paths (a
+  mistyped password shouldn't lose the link back).
+- **Closed a real dead-end in the new-account path**: a brand-new tenant's journey is register →
+  confirm email (external link, unrelated to the invite token) → log in → accept (still needs the
+  *original* invite token, which is otherwise gone from the URL by then). Fixed with a short-lived
+  (~2h) `httpOnly` `pending_tenant_invite` cookie set right before the post-registration redirect;
+  `loginAction` checks for it after building the session and, if present (and no explicit `redirect`
+  already won), sends them straight back to `/register/tenant?token=...` instead of their default
+  dashboard.
+- **Verified end-to-end against the real Azure backend and real SMTP**, all via the guided-coding
+  process (user typed every file): `npx tsc --noEmit` clean throughout. Sent a real invite from
+  `/landlord/tenants` — real email arrived from the backend's own mailer, confirming the SMTP path
+  end-to-end, not just the frontend call. Loaded the real invite token locally (swapped the email's
+  Vercel domain for `localhost:3000` — the token itself is backend-issued and works on either
+  frontend) and confirmed two real branches live: **wrong-account mismatch** (logged in as a
+  different real account than the invite's target — correct message + logout button, real
+  landlord/unit/property/address data rendered in the intro card, no raw 403 leaked) and **matching-
+  account accept** (logged in as the actual invited email, which turned out to already hold a
+  Contractor role — a genuine multi-role test, not just a fresh signup — accept succeeded, redirected
+  to the success screen, "Go to your portal" link worked). Zero console/server errors throughout.
+- **Not yet verified**: the brand-new-account signup branch (`register/tenant` → confirm-email →
+  login → auto-return via the `pending_tenant_invite` cookie), the expired/already-used-invite
+  messaging (the token used above is now itself in the "already used" state and hasn't been reloaded
+  to confirm that message), and the whole flow against the **live Vercel deployment** using the real,
+  unmodified email link (this session tested locally by swapping the domain on a real token — about
+  to push and test live next).
+- **Not part of this push, still sitting local-only**: `heic2any@0.0.4` was added as a dependency in
+  an earlier part of this session (HEIC→JPEG client-side conversion for the photo-upload feature),
+  but that work was paused before any file was written to use it, and the user chose to hold off on
+  committing it too — `package.json`/`package-lock.json` still show it modified locally but
+  uncommitted. Pick that work back up (and commit it then) whenever HEIC photo handling comes up
+  again; see the 2026-09-14 HEIC investigation entry below for full context.
+- **Next step**: push and confirm on the live Vercel deployment with the real, unmodified invite
+  email link (this is the one thing local testing can't prove — whether Vercel's own env vars/config
+  match). After that: the new-account signup branch and the expired/used-invite messaging, both
+  easy to test with a second throwaway invite. Separately, still open: the dashboard's "Add
+  rent"/"Reports" quick actions both still incorrectly link to `/landlord/tenants` (pre-existing
+  copy-paste bug, not touched this session) — they need their own real destinations once those
+  features exist. Also still open (unrelated, deferred by user mid-session): the HEIC upload fix
+  itself (`lib/heic-convert.ts` + wiring into the photo-carousel/photo-strip upload flow) and its
+  optional display-side fallback for already-broken HEIC blobs in storage — see the 2026-09-14 HEIC
+  investigation entry below for full context.
+
 ## 2026-09-14 — Claude (MacBook) verified the property/unit photo feature end-to-end; found and scoped an iPhone/HEIC upload bug (not fixed anywhere yet)
 
 - Verified the property-photo (add/cover/delete) and unit-photo (add + real view page) feature built earlier

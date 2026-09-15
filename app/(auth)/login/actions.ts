@@ -5,11 +5,12 @@ import { redirect } from "next/navigation";
 import { createSession, SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS } from "@/lib/session";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { SessionUser } from "@/lib/types";
-import { getDefaultDashboard } from "@/lib/auth-guard";
+import { getDefaultDashboard, isSafeRedirectTarget } from "@/lib/auth-guard";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const redirectTo = String(formData.get("redirect") ?? "");
 
   const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/login`, {
     method: "POST",
@@ -19,7 +20,9 @@ export async function loginAction(formData: FormData) {
 
   if (!response.ok) {
     const message = await extractErrorMessage(response);
-    redirect(`/login?error=${encodeURIComponent(message)}`);
+    const params = new URLSearchParams({ error: message });
+    if (isSafeRedirectTarget(redirectTo)) params.set("redirect", redirectTo);
+    redirect(`/login?${params.toString()}`);
   }
 
   const data = await response.json();
@@ -44,6 +47,16 @@ export async function loginAction(formData: FormData) {
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });
+
+  if (isSafeRedirectTarget(redirectTo)) {
+    redirect(redirectTo);
+  }
+
+  const pendingInvite = cookieStore.get("pending_tenant_invite")?.value;
+  if (pendingInvite) {
+    cookieStore.delete("pending_tenant_invite");
+    redirect(`/register/tenant?token=${encodeURIComponent(pendingInvite)}`);
+  }
 
   redirect(getDefaultDashboard(user.role));
 }
