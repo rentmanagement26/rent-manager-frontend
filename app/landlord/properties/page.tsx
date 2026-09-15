@@ -21,7 +21,7 @@ export default async function PropertiesPage() {
         action={
           <Link
             href="/landlord/properties/new"
-            className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark"
+                        className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark whitespace-nowrap"
           >
             Add property
           </Link>

@@ -25,6 +25,30 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (MacBook) fixed the header "Add property" button wrapping mid-word on tablet-width screens
+
+- User reported the button "not looking good on lower screens" — reproduced in-browser (not guessed):
+  at exactly the width where the mobile header layout (`lg:hidden`, active up to 1024px) is showing the
+  `sm:`-and-up "Landlord" badge + "Upgrade" link (640px+) alongside the title and the "Add property" pill,
+  none of the header row's flex children had shrink protection, so the button got squeezed and its text
+  wrapped to "Add" / "property" on two lines instead of the title truncating first.
+- **Root-cause fix in `components/page-header-slot.tsx`**: gave the title wrapper `min-w-0 flex-1` (so it's
+  the element that shrinks/truncates under pressure — it already had `truncate` on the `<h1>` but nothing
+  upstream constrained its width) and the action wrapper `shrink-0` (so the button never gets compressed).
+  Fixes this for all 4 pages that use `PageHeader`'s `action` slot, not just the 2 with this button.
+- Added `whitespace-nowrap` directly to the two "Add property" pill buttons (`app/landlord/page.tsx`,
+  `app/landlord/properties/page.tsx`) as a second line of defense.
+- **Verified in-browser at the exact width that broke** (800px CSS, reproduced via the browser tool's
+  custom-size resize) on both pages — button now stays on one line — plus re-checked true mobile (375px)
+  and desktop for no regression. `npx tsc --noEmit` clean.
+- **Next step**: nothing open from this fix. Separately, the property/unit photo feature below (add/cover/
+  delete for properties, add-only for units, plus a real unit detail page replacing the old stub) has been
+  built per the plan in the entry below but **not yet verified end-to-end against the real backend** — an
+  agent couldn't log in to test it (won't type a password into the login form), so the next session/human
+  should click through add/cover/delete on a real property and unit before trusting it fully.
+
+---
+
 ## 2026-09-14 — Claude (Windows) planned the property/unit photo (media) feature — NOT YET BUILT, plan only
 
 - User wants full parity with the mobile app's media feature next: adding property photos, cover-image

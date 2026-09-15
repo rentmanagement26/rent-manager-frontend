@@ -8,10 +8,10 @@ export function PageHeaderSlot() {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
-      <div>
+          <div className="min-w-0 flex-1">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">{header.title}</h1>
       </div>
-      {header.action && <div className="flex items-center gap-3">{header.action}</div>}
+      {header.action && <div className="flex items-center gap-3 shrink-0">{header.action}</div>}
     </div>
   );
 }
