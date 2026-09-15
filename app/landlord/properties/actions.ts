@@ -5,6 +5,14 @@ import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { CreatePropertyInput, CreateUnitInput } from "@/lib/types";
+import {
+  getPropertyMediaUploadUrl,
+  registerPropertyMedia,
+  setPropertyMediaCover,
+  deletePropertyMedia,
+  getUnitMediaUploadUrl,
+  registerUnitMedia,
+} from "@/lib/media-api";
 
 export async function createPropertyAction(formData: FormData) {
   const session = await requireBackendToken(["Admin", "Landlord"]);
@@ -33,6 +41,26 @@ export async function createPropertyAction(formData: FormData) {
   redirect("/landlord/properties");
 }
 
+export async function getPropertyUploadUrlAction(propertyId: number, fileExtension: string) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  return getPropertyMediaUploadUrl(propertyId, fileExtension, session.backendToken);
+}
+
+export async function registerPropertyMediaAction(propertyId: number, blobPath: string, sortOrder: number) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  return registerPropertyMedia(propertyId, blobPath, sortOrder, session.backendToken);
+}
+
+export async function setPropertyCoverAction(propertyId: number, mediaId: number) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  await setPropertyMediaCover(propertyId, mediaId, session.backendToken);
+}
+
+export async function deletePropertyMediaAction(propertyId: number, mediaId: number) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  await deletePropertyMedia(propertyId, mediaId, session.backendToken);
+}
+
 
 
 
@@ -59,4 +87,14 @@ export async function createUnitAction(formData: FormData) {
   }
 
   redirect(`/landlord/properties/${propertyId}`);
+}
+
+export async function getUnitUploadUrlAction(unitId: number, fileExtension: string) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  return getUnitMediaUploadUrl(unitId, fileExtension, session.backendToken);
+}
+
+export async function registerUnitMediaAction(unitId: number, blobPath: string, sortOrder: number) {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  return registerUnitMedia(unitId, blobPath, sortOrder, session.backendToken);
 }

@@ -72,3 +72,10 @@ export interface CreateUnitInput {
   askingRent: number;
 }
 
+export interface MediaItem {
+  id: number;
+  url: string;
+  sortOrder: number;
+  isCover: boolean;
+}
+

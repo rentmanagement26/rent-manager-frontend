@@ -4,6 +4,8 @@ import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
 import type { Property } from "@/lib/types";
+import { PhotoCarousel } from "./photo-carousel";
+import { getPropertyMedia } from "@/lib/media-api";
 
 export default async function PropertyDetailPage({
   params,
@@ -12,21 +14,27 @@ export default async function PropertyDetailPage({
 }) {
   const { id } = await params;
   const session = await requireBackendToken(["Admin", "Landlord"]);
-  const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
+     const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
 
   if (response.status === 404) {
     notFound();
   }
 
   const property: Property = await response.json();
+  const photos = await getPropertyMedia(property.id, session.backendToken);
+
 
   return (
     <div>
-      <PageHeader
+          <PageHeader
         title={property.name}
         description={property.propertyType}
     
       />
+
+      <div className="mb-6">
+        <PhotoCarousel propertyId={property.id} photos={photos} />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
         <div className="bg-white rounded-2xl border border-default shadow-sm p-6">
