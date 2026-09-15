@@ -25,6 +25,63 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-14 — Claude (MacBook) verified the property/unit photo feature end-to-end; found and scoped an iPhone/HEIC upload bug (not fixed anywhere yet)
+
+- Verified the property-photo (add/cover/delete) and unit-photo (add + real view page) feature built earlier
+  this session, end-to-end against the real Azure backend, logged in as a real landlord: deleted a real
+  property photo (count updated correctly), set a different photo as cover (star badge + hero image updated),
+  uploaded a synthetic test photo via a JS-simulated `<input type=file>` change event (real SAS URL issued →
+  real PUT to Azure Blob → real backend registration → appeared after `router.refresh()`), then deleted it to
+  leave demo data clean. Unit page: real unit details render correctly, add-photo flow works end-to-end the
+  same way, lightbox (prev/next/counter/close) all work, no delete UI (by design — the "Photos can't be
+  removed without admin help." note shows, matching the mobile app's behavior).
+- Hit a stale Turbopack dev-cache issue mid-testing (phantom "export doesn't exist" console errors for
+  exports that were actually present and correct on disk). Same class of bug as the `.next/cache` staleness
+  noted 2026-08-28, just the module graph instead of static images this time. Fixed by killing and restarting
+  the dev server — not a real code defect, don't chase it as one if it recurs.
+- **Found a real, unrelated bug while testing the unit page**: one of unit 2's existing seed photos renders
+  as a broken image. Traced it (not guessed): the blob at
+  `property-media/units/2/f1b4804b-bc22-4d26-8ff7-de9c3a339cfd.jpg` is actually HEIC content (`ftypheic`
+  magic bytes, `Content-Type: image/heic`, confirmed by fetching the SAS URL directly), which browsers can't
+  decode — despite the `.jpg` extension. Root cause: `rent-management-mobile`'s two `launchImageLibraryAsync`
+  calls (`src/app/properties/[id]/index.tsx:79`, `src/app/properties/[id]/units/[unitId].tsx:85`) don't set
+  `preferredAssetRepresentationMode`, so it defaults to `Automatic` — which on a HEIC-shot iPhone photo can
+  hand back the original HEIC asset instead of converting it. That's the primary fix, and it's in the mobile
+  repo, not this one.
+- **Since most landlords will be on iPhones** (HEIC is iOS's default capture format), rejecting HEIC outright
+  anywhere in the pipeline would break the common case, not an edge case. Right shape is layered: fix at the
+  mobile picker (primary — see above), confirm this repo's web upload inputs' existing
+  `accept="image/jpeg,image/png,image/webp"` restriction actually triggers Safari's documented HEIC→JPEG
+  auto-conversion (needs a real-iPhone check, not just code review — not yet done), and validate real file
+  content server-side as a safety net, not the primary handler (full server-side HEIC *decoding* would need a
+  native libheif/ImageMagick dependency .NET doesn't have — not worth it unless client-side conversion proves
+  unreliable in practice).
+- **Backend fix was prototyped and reverted, not shipped**: built real content-sniffing validation in
+  `PropertyManagementRepo` — new `SharedKernel/ImageSignature.cs` (magic-byte check for JPEG/PNG/WEBP), a
+  ranged `DownloadHeaderBytesAsync` added to `IBlobStorageService`, wired into `AddPropertyMediaCommand`/
+  `AddUnitMediaCommand` right after the existing size check (same reject-and-delete-blob pattern already used
+  there for the size limit). `dotnet build` verified clean, 0 warnings. **Reverted per explicit user
+  instruction** ("do not change anything on backend") — this was a design proof, not a shipped fix. Full task
+  write-up (all 3 parts) also logged in `PropertyManagementRepo/PROGRESS.md`'s "Known issues / follow-ups"
+  section for whoever picks it up there.
+- **Next step**: three independent tasks, any order —
+  1. Mobile (`rent-management-mobile`): add
+     `preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible`
+     to both `launchImageLibraryAsync` calls above; test with a real iPhone-shot HEIC photo, not the
+     simulator (simulator photo libraries are usually already JPEG).
+  2. Web (this repo): confirm on a real iPhone that the existing `accept`-restricted file inputs already
+     convert HEIC to JPEG on selection; only needs a code change (e.g. a client-side conversion library) if
+     that check fails.
+  3. Backend (`PropertyManagementRepo`): re-implement the reverted content-sniffing validation described
+     above.
+  Separately, still open from earlier this session: whether to commit+push this repo's photo-feature code
+  (verified working per above, but still uncommitted) — waiting on the user.
+- Also: the broken seed photo itself (`property-media/units/2/f1b4804b-...jpg`) is still sitting there
+  broken — none of the above fixes it retroactively. Needs a manual delete via DB/blob access, since there's
+  no unit-photo delete UI by product design.
+
+---
+
 ## 2026-09-14 — Claude (MacBook) fixed the header "Add property" button wrapping mid-word on tablet-width screens
 
 - User reported the button "not looking good on lower screens" — reproduced in-browser (not guessed):
