@@ -323,6 +323,35 @@ confirm cover/delete work, confirm the unit stub page now shows real content) be
 
 ---
 
+## 2026-09-02 — Claude (MacBook) added `COMPLIANCE.md`, a standing compliance checklist
+
+- User asked to sync the repo with git; found one untracked file, `COMPLIANCE.md` (not authored
+  in this conversation — pre-existing local work from an earlier session that was never committed).
+  Read it, confirmed it's a legitimate doc-only addition (no application code), and it directly
+  operationalizes the standing Canadian/provincial tenancy-law compliance-review rule already in
+  `AGENTS.md`/this file's protocol section: a per-feature checklist recording what's been reviewed
+  (Login/Register/Session, Forgot/Reset-password, Properties/Units, marketing copy) vs. what still
+  needs a pass when built (Tenants, Leases, Deposits, Rent increases, Entry/Eviction notices,
+  Payments, AI features).
+- Confirmed with the user before committing, then pushed directly to `main` (`83915cd`) — this is a
+  docs/config file, not `app/`/`lib/` application source, so it's outside the guided-coding-mode
+  restriction.
+- Repo is otherwise fully in sync: local `main` matched `origin/main` exactly before this, no
+  divergence, no unpushed commits.
+- Sanity-checked a few other entries' "still open" claims against current repo state while here (all
+  still accurate, no drift): `/landlord/tenants` still doesn't exist, the unit edit page
+  (`[unitId]/edit/page.tsx`) is still the "coming soon" stub, the DomusPRO palette (entry directly
+  below) hasn't been ported into `app/globals.css` yet, and both `public/domuspro-logo-hq.svg` and
+  `public/logo.jpg` are still sitting unresolved.
+- **Next step:** keep `COMPLIANCE.md` updated whenever a listed feature changes or a new
+  lease/deposit/rent-increase/notice/payment feature is built, same trigger as the standing
+  `AGENTS.md` rule. No other action needed from this entry.
+  (Note: this entry originally also logged a pending "DomusPRO palette not yet ported" note from
+  the same session; dropped on the 2026-09-14 sync-merge below since the "Retheme landlord
+  dashboard/sidebar/header" entry above shows that port already happened.)
+
+---
+
 ## 2026-08-28 — Claude (MacBook) fixed the landlord portal's mobile scroll/bounce bugs and a desktop sidebar clipping bug
 
 - Long debugging session, several wrong turns before landing on the real fixes — summarizing the
