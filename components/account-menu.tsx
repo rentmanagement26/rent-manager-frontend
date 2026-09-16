@@ -62,6 +62,13 @@ export function AccountMenu({ email, role }: AccountMenuProps) {
               <p className="text-sm font-semibold text-slate-900 truncate">{role}</p>
               <p className="text-xs text-slate-500 truncate" title={email}>{email}</p>
             </div>
+            <Link
+              href="/landlord/billing"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent hover:bg-slate-50 sm:hidden"
+              onClick={() => setOpen(false)}
+            >
+              Upgrade to Pro
+            </Link>
             <Link href="/landlord/profile" className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50" onClick={() => setOpen(false)}>
               Profile
             </Link>

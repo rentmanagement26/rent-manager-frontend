@@ -25,6 +25,28 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-16 — Claude (Windows) repositioned the "Add property" banner and surfaced role/Upgrade on mobile
+
+- Continuation of the same day's session below — two small, user-directed placement follow-ups
+  after the property/unit edit-archive work shipped.
+- **"Add property" banner moved from below the property grid to right below the page header**
+  (`app/landlord/properties/page.tsx`) — user wanted it visible without scrolling past the whole
+  grid first. Same banner markup, just relocated above the stats cards instead of after the grid.
+- **`Landlord` role badge and the `Upgrade` button were invisible below the `sm:` breakpoint**
+  (both have had `hidden sm:inline-flex` in `account-menu.tsx` since the original mobile-header
+  work, deliberately, since the mobile header row has no room to spare). User asked where else
+  these could go on mobile without changing the existing design — mocked up 3 options with the
+  `visualize` tool first (a permanent strip below the header, moving/adding to the top of the
+  slide-out drawer, or surfacing inside the already-existing avatar dropdown) before writing any
+  code. **User picked the dropdown.** The role badge already showed there for every screen size;
+  added an "Upgrade to Pro" link right below it, wrapped in `sm:hidden` so it only appears in the
+  dropdown on mobile — desktop is completely unchanged (still just the top-bar pill, confirmed via
+  screenshot: no duplicate entry in the dropdown at desktop width).
+- Verified both in-browser at real mobile (375px) and desktop widths, `npx tsc --noEmit` clean, no
+  console/server errors.
+- **Not committed this session, still local-only**: the `heic2any` dependency, held again.
+- **Next step**: nothing open from this entry. Same still-open items as the entry below.
+
 ## 2026-09-16 — Claude (Windows) built property/unit edit + archive, fixed a real layout-clipping bug, and unified the "Add property" CTA
 
 - User explicitly authorized writing these files directly this session ("do it yourself"),

@@ -31,6 +31,16 @@ export default async function PropertiesPage({
         description="Every property in your portfolio, in one place."
       />
 
+      <div className="mb-6 rounded-2xl border border-default bg-accent-tint px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-sm font-medium text-accent-dark">Have another property to manage?</p>
+        <Link
+          href="/landlord/properties/new"
+          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark whitespace-nowrap"
+        >
+          Add property
+        </Link>
+      </div>
+
       {properties.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
           <div className="bg-white rounded-2xl border border-default shadow-sm p-5 flex items-center gap-4">
@@ -66,16 +76,6 @@ export default async function PropertiesPage({
       )}
 
       <PropertiesGrid properties={properties} />
-
-      <div className="mt-6 rounded-2xl border border-default bg-accent-tint px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
-        <p className="text-sm font-medium text-accent-dark">Have another property to manage?</p>
-        <Link
-          href="/landlord/properties/new"
-          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark whitespace-nowrap"
-        >
-          Add property
-        </Link>
-      </div>
     </div>
   );
 }
