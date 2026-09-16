@@ -8,3 +8,11 @@ export async function getUnitTypes(token: string): Promise<UnitType[]> {
   }
   return response.json();
 }
+
+export async function getUnitStatuses(token: string): Promise<string[]> {
+  const response = await backendFetch("/api/v1/properties/unit-statuses", token);
+  if (!response.ok) {
+    throw new Error("Failed to load unit statuses");
+  }
+  return response.json();
+}

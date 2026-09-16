@@ -5,7 +5,12 @@ import { PageHeader } from "@/components/page-header";
 import { PropertiesGrid } from "./properties-grid";
 import type { Property } from "@/lib/types";
 
-export default async function PropertiesPage() {
+export default async function PropertiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ archived?: string }>;
+}) {
+  const { archived } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
   const properties: Property[] = await response.json();
@@ -15,17 +20,15 @@ export default async function PropertiesPage() {
 
   return (
     <div>
+      {archived === "1" && (
+        <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
+          Property archived.
+        </p>
+      )}
+
       <PageHeader
         title="Properties"
         description="Every property in your portfolio, in one place."
-        action={
-          <Link
-            href="/landlord/properties/new"
-                        className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark whitespace-nowrap"
-          >
-            Add property
-          </Link>
-        }
       />
 
       {properties.length > 0 && (
@@ -63,6 +66,16 @@ export default async function PropertiesPage() {
       )}
 
       <PropertiesGrid properties={properties} />
+
+      <div className="mt-6 rounded-2xl border border-default bg-accent-tint px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-sm font-medium text-accent-dark">Have another property to manage?</p>
+        <Link
+          href="/landlord/properties/new"
+          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-dark whitespace-nowrap"
+        >
+          Add property
+        </Link>
+      </div>
     </div>
   );
 }

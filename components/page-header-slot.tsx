@@ -7,7 +7,7 @@ export function PageHeaderSlot() {
   if (!header) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4 w-full">
           <div className="min-w-0 flex-1">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">{header.title}</h1>
       </div>

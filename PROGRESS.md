@@ -25,6 +25,73 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-16 — Claude (Windows) built property/unit edit + archive, fixed a real layout-clipping bug, and unified the "Add property" CTA
+
+- User explicitly authorized writing these files directly this session ("do it yourself"),
+  overriding the standing guided-coding-mode rule for this work only — not a permanent change to
+  that rule.
+- **Confirmed backend support before coding**: `PropertiesController.cs` already has
+  `PUT /api/v1/properties/{id}` (update), `POST /api/v1/properties/{id}/archive`,
+  `PUT /api/v1/properties/units/{id}` (update, including `Status`), and
+  `POST /api/v1/properties/units/{id}/archive` — all fully built, all returning `204` on success.
+  Archiving a property is blocked server-side while it still has any active unit ("Archive all
+  units before archiving this property"); archived items disappear from every list/detail view
+  automatically. This finally unblocks the old unit-edit stub, which had been waiting on exactly
+  this endpoint since 2026-08-27.
+- **New**: `app/landlord/properties/[id]/edit/` (property edit form, mirrors `new-property-form.tsx`
+  pre-filled), `app/landlord/properties/[id]/units/[unitId]/edit/` (real unit edit form — replaces
+  the "coming soon" stub — includes a `Status` dropdown backed by the real
+  `GET /unit-statuses` enum, which `new-unit-form.tsx` never had), `archive-property-button.tsx` /
+  `archive-unit-button.tsx` (inline confirm UI, see below), `updatePropertyAction` /
+  `archivePropertyAction` / `updateUnitAction` / `archiveUnitAction` in `properties/actions.ts`,
+  `UpdateUnitInput` type, `getUnitStatuses()` in `lib/unit-types.ts`.
+- **Real bug caught and fixed, not just a testing inconvenience**: built the Archive buttons with
+  a native `confirm()` dialog first. Browser-tool testing showed **this in-app browser suppresses
+  all native JS dialogs and always returns `false`** — but the underlying problem is real beyond
+  just this testing tool: `confirm()` is genuinely unreliable in production too (some mobile
+  WebViews block it outright; desktop browsers let users permanently silence repeated dialogs on a
+  site). Replaced with a small inline confirm UI built into each button component itself
+  (click → reveals an inline message + Cancel/Confirm — no browser API involved) — more reliable
+  everywhere and now actually testable end-to-end.
+- **Real pre-existing layout bug found and fixed, not introduced by this work**: adding the new
+  "Danger zone" section made a property/unit detail page tall enough to finally expose a bug that's
+  been in `app/landlord/layout.tsx` all along. `<main>` had both `lg:h-screen` (forcing exactly
+  100vh) *and* sat in a grid row already sized by `grid-rows-[auto_minmax(0,1fr)]` — the two
+  conflict, so `<main>`'s own box rendered exactly as tall as the header above it (measured: 117px
+  in one repro), with that excess hard-clipped by the outer grid's `overflow:hidden`. Not a scroll
+  bug — no amount of scrolling `<main>`'s own content could ever reach the clipped region, since
+  `<main>`'s box itself was drawn past the bottom of the screen. Fixed by swapping `lg:h-screen` for
+  `lg:min-h-0`, letting the grid track size it correctly — same fix pattern as the 2026-08-28
+  sidebar-clipping bug. Verified precisely (computed exact pixel overflow before/after: 117px → 0),
+  confirmed on both the newly-tall property page and the dashboard (no regression).
+- **User-directed placement decisions, not assumed**: Archive was first added to the `PageHeader`
+  action slot (matching Edit) — user explicitly said no, moved both to a "Danger zone" card at the
+  bottom of each detail page instead. Separately, user flagged the "Add property" button rendering
+  differently on the dashboard vs. the Properties page (a `rounded-full` pill with an icon vs. a
+  plain `rounded-xl` button) — fixed to match everywhere, then user asked to see placement
+  alternatives to moving it out of the header entirely. **Mocked up 4 options with the `visualize`
+  tool before writing any code** (per standing mockup-first preference): a grid "+" tile (matching
+  the existing photo-upload pattern), a banner below the grid, a floating action button, and a
+  sidebar quick-add. **User picked the banner.** Removed the header button from both the Dashboard
+  and Properties pages; added a new banner CTA below the property grid on the Properties page;
+  left the Dashboard as-is otherwise since it already has two other entry points (the "Quick
+  actions" tile and the empty-state link) — no redundant banner added there.
+- **Verified end-to-end against the real Azure backend** for every path: property edit (real save,
+  reverted after), property archive success (throwaway test property) and the backend-blocked case
+  (real property with active units — real error message shown, nothing touched), unit edit (real
+  status change, reverted), unit archive (throwaway test unit). `npx tsc --noEmit` clean after every
+  step. No console or server errors at any point.
+- **Compliance note**: no new PIPEDA/CASL/RTA/RTB angle — editing/archiving a landlord's own
+  property/unit records, no new personal data collected or exposed.
+- **Not committed this session, still local-only**: the `heic2any` dependency
+  (`package.json`/`package-lock.json`) from the paused HEIC photo-conversion work — held again per
+  user's earlier instruction, kept out of this push too.
+- **Next step**: nothing open for this session's work. Still open: the HEIC upload fix itself, the
+  Option A tenant-invite backend change (route existing-account invitees straight to login instead
+  of showing a registration form — needs a change in `Rent Management Back-End`, not this repo),
+  and the two still-open PROGRESS.md items from 2026-09-14 below (the `/landlord/tenants`-vs-"Add
+  rent"/"Reports" duplicate-link bug, and the broken HEIC seed photo needing manual cleanup).
+
 ## 2026-09-15 — Claude (Windows) built the tenant-invite feature (invite-send + public accept/register flow)
 
 - Last open item from the mobile→web handoff doc — the dashboard's "Add tenant" / sidebar "Tenants"

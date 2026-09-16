@@ -72,6 +72,16 @@ export interface CreateUnitInput {
   askingRent: number;
 }
 
+export interface UpdateUnitInput {
+  unitTypeId: number;
+  label: string;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  askingRent: number;
+  status: string;
+}
+
 export interface MediaItem {
   id: number;
   url: string;

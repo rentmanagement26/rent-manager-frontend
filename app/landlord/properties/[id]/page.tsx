@@ -6,13 +6,17 @@ import { PageHeader } from "@/components/page-header";
 import type { Property } from "@/lib/types";
 import { PhotoCarousel } from "./photo-carousel";
 import { getPropertyMedia } from "@/lib/media-api";
+import { ArchivePropertyButton } from "./archive-property-button";
 
 export default async function PropertyDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string; unitArchived?: string }>;
 }) {
   const { id } = await params;
+  const { error, unitArchived } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
      const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
 
@@ -29,8 +33,27 @@ export default async function PropertyDetailPage({
           <PageHeader
         title={property.name}
         description={property.propertyType}
-    
+        action={
+          <Link
+            href={`/landlord/properties/${property.id}/edit`}
+            className="rounded-xl border border-default px-4 py-2.5 text-sm font-semibold text-heading hover:bg-subtle whitespace-nowrap"
+          >
+            Edit
+          </Link>
+        }
       />
+
+      {unitArchived === "1" && (
+        <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
+          Unit archived.
+        </p>
+      )}
+
+      {error && (
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="mb-6">
         <PhotoCarousel propertyId={property.id} photos={photos} />
@@ -118,6 +141,11 @@ export default async function PropertyDetailPage({
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 bg-white rounded-2xl border border-default shadow-sm p-6">
+        <p className="text-sm font-medium text-muted mb-3">Danger zone</p>
+        <ArchivePropertyButton propertyId={property.id} hasActiveUnits={property.units.length > 0} />
       </div>
     </div>
   );
