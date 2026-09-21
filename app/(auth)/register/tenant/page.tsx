@@ -2,14 +2,17 @@ import Link from "next/link";
 import { getSession } from "@/lib/get-session";
 import { getTenantInvitePreview } from "@/lib/tenant-invite-api";
 import { logoutAction } from "@/app/actions";
+import { loginAction } from "@/app/(auth)/login/actions";
+import { AuthSplitLayout } from "@/components/auth-split-layout";
 import { registerTenantAction, acceptTenantInviteAction } from "./actions";
+import { InviteChoice } from "./invite-choice";
 
 export default async function RegisterTenantPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string; accepted?: string }>;
+  searchParams: Promise<{ token?: string; error?: string; accepted?: string; step?: string }>;
 }) {
-  const { token, error, accepted } = await searchParams;
+  const { token, error, accepted, step } = await searchParams;
 
   if (!token) {
     return (
@@ -125,45 +128,38 @@ export default async function RegisterTenantPage({
     );
   }
 
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <div className="w-full max-w-sm">
-        <h2 className="mb-2 font-head text-2xl font-bold text-heading">Create your account</h2>
+    const backHref = `/register/tenant?token=${encodeURIComponent(token)}`;
+
+  if (step !== "login" && step !== "register") {
+    return (
+      <AuthSplitLayout>
+        <InviteChoice token={token} email={preview.email} introCard={introCard} />
+      </AuthSplitLayout>
+    );
+  }
+
+  const backLink = (
+    <Link href={backHref} className="mb-4 inline-block text-sm text-accent hover:text-accent-dark">
+      ← Back
+    </Link>
+  );
+
+  if (step === "login") {
+    return (
+      <AuthSplitLayout>
+        {backLink}
+        <h2 className="mb-2 font-head text-2xl font-bold text-heading">Log in to accept</h2>
         {introCard}
 
-        {error && (
-          <p className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
-            {error}
-          </p>
-        )}
-
-        <form action={registerTenantAction} className="flex flex-col gap-4">
-          <input type="hidden" name="token" value={token} />
+        <form action={loginAction} className="flex flex-col gap-4">
+          <input type="hidden" name="redirect" value={backHref} />
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="firstName" className="text-sm font-semibold text-body">First name</label>
+            <label htmlFor="email" className="text-sm font-semibold text-body">Email</label>
             <input
-              id="firstName"
-              name="firstName"
-              required
-              className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="middleName" className="text-sm font-semibold text-body">Middle name (optional)</label>
-            <input
-              id="middleName"
-              name="middleName"
-              className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="lastName" className="text-sm font-semibold text-body">Last name</label>
-            <input
-              id="lastName"
-              name="lastName"
+              id="email"
+              name="email"
+              type="email"
               required
               className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
             />
@@ -180,24 +176,83 @@ export default async function RegisterTenantPage({
             />
           </div>
 
+          <Link href="/forgot-password" className="text-right text-sm text-accent hover:text-accent-dark">
+            Forgot password?
+          </Link>
+
           <button
             type="submit"
             className="mt-2 rounded-xl bg-accent px-4 py-3 font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-dark"
           >
-            Create account
+            Log in
           </button>
         </form>
+      </AuthSplitLayout>
+    );
+  }
 
-        <p className="mt-4 text-center text-sm text-muted">
-          Already have an account?{" "}
-          <Link
-            href={`/login?redirect=${encodeURIComponent(`/register/tenant?token=${token}`)}`}
-            className="text-accent hover:text-accent-dark"
-          >
-            Log in
-          </Link>
+  return (
+    <AuthSplitLayout>
+      {backLink}
+      <h2 className="mb-2 font-head text-2xl font-bold text-heading">Create your account</h2>
+      {introCard}
+
+      {error && (
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">
+          {error}
         </p>
-      </div>
-    </main>
+      )}
+
+      <form action={registerTenantAction} className="flex flex-col gap-4">
+        <input type="hidden" name="token" value={token} />
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="firstName" className="text-sm font-semibold text-body">First name</label>
+          <input
+            id="firstName"
+            name="firstName"
+            required
+            className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="middleName" className="text-sm font-semibold text-body">Middle name (optional)</label>
+          <input
+            id="middleName"
+            name="middleName"
+            className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="lastName" className="text-sm font-semibold text-body">Last name</label>
+          <input
+            id="lastName"
+            name="lastName"
+            required
+            className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="password" className="text-sm font-semibold text-body">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            className="rounded-xl border border-default px-3.5 py-2.5 text-heading outline-none focus:border-accent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="mt-2 rounded-xl bg-accent px-4 py-3 font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-dark"
+        >
+          Create account
+        </button>
+      </form>
+    </AuthSplitLayout>
   );
 }

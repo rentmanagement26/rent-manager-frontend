@@ -25,6 +25,35 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-09-21 — Claude (Windows) added an "already have an account?" chooser to the tenant invite link
+
+- Guided-coding mode: user typed the app code, Claude reviewed it (caught and had the user fix a
+  misplaced block in `page.tsx` that broke `tsc`). Design mocked up with `visualize` first
+  (desktop split layout + mobile stacked), approved before any code.
+- **Behaviour**: a logged-out tenant opening `/register/tenant?token=…` now sees a chooser
+  ("You're invited", invite summary, "Do you already have a DomusPRO account?") instead of landing
+  straight on the create-account form. Uses a `step` query param: none → chooser,
+  `step=login` → "Log in to accept" form (posts to the existing `loginAction` with
+  `redirect=/register/tenant?token=…`), `step=register` → the existing create-account form. Both
+  steps have a "← Back" link to the chooser. Logged-in users are unchanged (Accept screen, or the
+  wrong-email "log out" screen).
+- **Files**: new `components/auth-split-layout.tsx` (orange brand panel + content, same look as
+  `/login`; login/register pages still inline their own copy — not refactored), new
+  `app/(auth)/register/tenant/invite-choice.tsx`, edited `page.tsx`; `actions.ts` now adds
+  `&step=register` to `registerTenantAction`'s error redirect so a failed sign-up stays on the form.
+- **Known behaviour**: a wrong password on the login step bounces to the generic `/login?error=…`
+  page (`loginAction` untouched, shared); the `redirect` param is preserved so a successful login
+  still returns to the invite. Registering still goes create account → verify email → log in →
+  Accept (pending-invite cookie flow unchanged).
+- **Verified**: `npx tsc --noEmit` and ESLint clean. **Not verified**: the end-to-end browser flow
+  with a real invite token — do the manual test list (chooser at desktop/phone width, login with
+  invited/other email, register error stays on form, Back links).
+- **Compliance**: routing-only change; the invited email was already shown on this page, so no new
+  PIPEDA exposure; no messages sent (CASL n/a); no Ontario/Manitoba tenancy rules touched.
+- **Next step**: run the manual test with a real invite. Uncommitted and unrelated, left out of this
+  commit: favicon swap (`app/favicon.ico` deleted, `public/app-logo-symbol.png`, `app/layout.tsx`)
+  and `package.json`/`package-lock.json` changes.
+
 ## 2026-09-16 — Claude (Windows) repositioned the "Add property" banner and surfaced role/Upgrade on mobile
 
 - Continuation of the same day's session below — two small, user-directed placement follow-ups

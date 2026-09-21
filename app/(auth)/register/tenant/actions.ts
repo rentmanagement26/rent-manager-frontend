@@ -22,7 +22,7 @@ export async function registerTenantAction(formData: FormData) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Couldn't create your account. Please try again.";
-    redirect(`/register/tenant?token=${encodeURIComponent(token)}&error=${encodeURIComponent(message)}`);
+    redirect(`/register/tenant?token=${encodeURIComponent(token)}&step=register&error=${encodeURIComponent(message)}`);
   }
 
   const cookieStore = await cookies();
