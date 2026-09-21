@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: "/app-logo-symbol.png",
+  },
 };
 
 export const viewport: Viewport = {
