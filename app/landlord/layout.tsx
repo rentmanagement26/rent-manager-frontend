@@ -37,12 +37,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
             </div>
             <div className="max-w-6xl mx-auto">{children}</div>
-            <div className="lg:hidden mt-8">
+            <div className="lg:hidden -mx-8 mt-8">
               <SiteFooter />
             </div>
           </main>
 
-          <div className="hidden lg:block lg:col-start-2 lg:row-start-3 px-8">
+          <div className="hidden lg:block lg:col-start-2 lg:row-start-3">
             <SiteFooter />
           </div>
         </div>
