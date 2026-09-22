@@ -106,6 +106,24 @@ export interface CreateTenantInviteResult {
   expiresAt: string;
 }
 
+export interface TenantInviteListItem {
+  id: number;
+  email: string;
+  unitLabel: string;
+  propertyName: string;
+  createdAt: string;
+  expiresAt: string;
+  status: "Pending" | "Accepted" | "Declined" | "Expired";
+}
+
+export interface TenantInviteStats {
+  sent: number;
+  pending: number;
+  accepted: number;
+  declined: number;
+  expired: number;
+}
+
 export interface RegisterTenantInput {
   token: string;
   firstName: string;

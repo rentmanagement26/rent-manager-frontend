@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useSidebar } from "@/lib/sidebar-context";
 
 interface LandlordSidebarProps {
@@ -10,6 +11,10 @@ interface LandlordSidebarProps {
 
 export function LandlordSidebar({ email }: LandlordSidebarProps) {
   const { open, setOpen } = useSidebar();
+  const pathname = usePathname();
+  const isDashboardActive = pathname === "/landlord";
+  const isPropertiesActive = pathname.startsWith("/landlord/properties");
+  const isTenantsActive = pathname.startsWith("/landlord/tenants");
 
   return (
     <>
@@ -48,11 +53,13 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
           </button>
         </div>
 
-        <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
+        <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 lg:row-span-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
           <nav className="p-4 space-y-1">
             <Link
               href="/landlord"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-accent-tint text-accent transition"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                isDashboardActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
+              }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -61,7 +68,9 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
             </Link>
             <Link
               href="/landlord/properties"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-body hover:bg-subtle hover:text-heading transition"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                isPropertiesActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
+              }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -70,7 +79,9 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
             </Link>
             <Link
               href="/landlord/tenants"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-body hover:bg-subtle hover:text-heading transition"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                isTenantsActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
+              }`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

@@ -5,6 +5,8 @@ import type {
   CreateTenantInviteResult,
   RegisterTenantInput,
   RegisterTenantResult,
+  TenantInviteListItem,
+  TenantInviteStats,
 } from "@/lib/types";
 
 // --- Public (unauthenticated) ---
@@ -52,6 +54,31 @@ export async function createTenantInvite(
     throw new Error(await extractErrorMessage(response));
   }
   return response.json();
+}
+
+export async function getTenantInvites(token: string): Promise<TenantInviteListItem[]> {
+  const response = await backendFetch("/api/v1/auth/tenant-invites", token);
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
+  return response.json();
+}
+
+export async function getTenantInviteStats(token: string): Promise<TenantInviteStats> {
+  const response = await backendFetch("/api/v1/auth/tenant-invites/stats", token);
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
+  return response.json();
+}
+
+export async function resendTenantInvite(id: number, token: string): Promise<void> {
+  const response = await backendFetch(`/api/v1/auth/tenant-invites/${id}/resend`, token, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
 }
 
 export async function acceptTenantInvite(inviteToken: string, token: string): Promise<{ message: string }> {

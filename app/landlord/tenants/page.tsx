@@ -1,19 +1,31 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
 import { InviteTenantForm } from "./invite-tenant-form";
+import { InviteList } from "./invite-list";
+import { getTenantInvites, getTenantInviteStats } from "@/lib/tenant-invite-api";
 import type { Property } from "@/lib/types";
 
 export default async function TenantsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; email?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; email?: string; error?: string; resent?: string }>;
 }) {
-  const { sent, email, error } = await searchParams;
+  const { sent, email, error, resent } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
+
+  if (response.status === 401) {
+    redirect("/login");
+  }
+
   const properties: Property[] = await response.json();
+  const [invites, stats] = await Promise.all([
+    getTenantInvites(session.backendToken),
+    getTenantInviteStats(session.backendToken),
+  ]);
 
   const hasUnits = properties.some((p) => p.units.length > 0);
 
@@ -24,6 +36,12 @@ export default async function TenantsPage({
       {sent === "1" && email && (
         <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
           Invite sent to {email}.
+        </p>
+      )}
+
+      {resent === "1" && (
+        <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
+          Invite resent.
         </p>
       )}
 
@@ -46,6 +64,8 @@ export default async function TenantsPage({
           </Link>
         </div>
       )}
+
+      <InviteList invites={invites} stats={stats} />
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function InviteTenantForm({ properties }: { properties: Property[] }) {
   const labelClass = "text-sm font-medium text-heading";
 
   return (
-    <div className="bg-white rounded-2xl border border-default shadow-sm p-6 max-w-lg">
+    <div className="bg-white rounded-2xl border border-default shadow-sm p-6 max-w-2xl">
       <form action={createTenantInviteAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className={labelClass}>Tenant&apos;s email</label>

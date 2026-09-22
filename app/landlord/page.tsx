@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
@@ -7,6 +8,11 @@ import type { Property } from "@/lib/types";
 export default async function AdminDashboardPage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
+
+  if (response.status === 401) {
+    redirect("/login");
+  }
+
   const properties: Property[] = await response.json();
 
   const totalProperties = properties.length;
@@ -42,42 +48,42 @@ export default async function AdminDashboardPage() {
       {/* Property summary - 4 colored stat tiles */}
       <div>
         <h2 className="font-semibold text-heading text-sm mb-3">Property summary</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-2xl p-4 text-white" style={{ backgroundColor: "#0f4a42" }}>
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
+          <div className="rounded-2xl p-4 lg:p-5 text-white" style={{ backgroundColor: "#0f4a42" }}>
+            <div className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold">
+              <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               Properties
             </div>
-            <p className="text-xl font-bold mt-2">{totalProperties}</p>
+            <p className="text-xl lg:text-3xl font-bold mt-2">{totalProperties}</p>
           </div>
-          <div className="rounded-2xl p-4 text-white bg-accent">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="rounded-2xl p-4 lg:p-5 text-white bg-accent">
+            <div className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold">
+              <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
               Occupied
             </div>
-            <p className="text-xl font-bold mt-2">{totalProperties > 0 ? `${totalProperties}/${totalProperties}` : "0/0"}</p>
+            <p className="text-xl lg:text-3xl font-bold mt-2">{totalProperties > 0 ? `${totalProperties}/${totalProperties}` : "0/0"}</p>
           </div>
-          <div className="rounded-2xl p-4 text-white" style={{ backgroundColor: "#7c4dff" }}>
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="rounded-2xl p-4 lg:p-5 text-white" style={{ backgroundColor: "#7c4dff" }}>
+            <div className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold">
+              <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               </svg>
               Maint.
             </div>
-            <p className="text-xl font-bold mt-2">0</p>
+            <p className="text-xl lg:text-3xl font-bold mt-2">0</p>
           </div>
-          <div className="rounded-2xl p-4 text-white" style={{ backgroundColor: "#1f6fd9" }}>
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="rounded-2xl p-4 lg:p-5 text-white" style={{ backgroundColor: "#1f6fd9" }}>
+            <div className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold">
+              <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               Vacancy
             </div>
-            <p className="text-xl font-bold mt-2">0</p>
+            <p className="text-xl lg:text-3xl font-bold mt-2">0</p>
           </div>
         </div>
       </div>

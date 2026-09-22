@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
@@ -19,6 +19,10 @@ export default async function PropertyDetailPage({
   const { error, unitArchived } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
      const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
+
+  if (response.status === 401) {
+    redirect("/login");
+  }
 
   if (response.status === 404) {
     notFound();

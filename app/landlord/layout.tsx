@@ -5,6 +5,7 @@ import { PageHeaderProvider } from "@/lib/page-header-context";
 import { SidebarProvider } from "@/lib/sidebar-context";
 import { MenuToggleButton } from "@/components/menu-toggle-button";
 import { AccountMenu } from "@/components/account-menu";
+import SiteFooter from "@/components/site-footer";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth(["Admin", "Landlord"]);
@@ -13,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <SidebarProvider>
       <PageHeaderProvider>
-        <div className="lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
+        <div className="lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
           <LandlordSidebar email={session.email} />
 
           <div className="hidden lg:flex lg:col-start-2 lg:row-start-1 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-8">
@@ -36,7 +37,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
             </div>
             <div className="max-w-6xl mx-auto">{children}</div>
+            <div className="lg:hidden mt-8">
+              <SiteFooter />
+            </div>
           </main>
+
+          <div className="hidden lg:block lg:col-start-2 lg:row-start-3 px-8">
+            <SiteFooter />
+          </div>
         </div>
       </PageHeaderProvider>
     </SidebarProvider>

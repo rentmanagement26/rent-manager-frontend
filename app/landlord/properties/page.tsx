@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
@@ -13,6 +14,11 @@ export default async function PropertiesPage({
   const { archived } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
+
+  if (response.status === 401) {
+    redirect("/login");
+  }
+
   const properties: Property[] = await response.json();
 
   const totalUnits = properties.reduce((sum, p) => sum + p.units.length, 0);
