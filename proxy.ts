@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   SESSION_COOKIE_NAME,
-  SESSION_DURATION_SECONDS,
+  SESSION_COOKIE_OPTIONS,
   createSession,
   getSessionUser,
 } from "@/lib/session";
@@ -51,14 +51,7 @@ export async function proxy(request: NextRequest) {
   });
 
   const response = NextResponse.next();
-  response.cookies.set({
-    name: SESSION_COOKIE_NAME,
-    value: newSessionToken,
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_DURATION_SECONDS,
-  });
+  response.cookies.set({ name: SESSION_COOKIE_NAME, value: newSessionToken, ...SESSION_COOKIE_OPTIONS });
   return response;
 }
 

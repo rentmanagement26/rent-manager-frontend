@@ -1,11 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createSession, SESSION_COOKIE_NAME, SESSION_DURATION_SECONDS } from "@/lib/session";
 import { extractErrorMessage } from "@/lib/api-error";
-import type { SessionUser } from "@/lib/types";
-import { getDefaultDashboard, isSafeRedirectTarget } from "@/lib/auth-guard";
+import { isSafeRedirectTarget } from "@/lib/auth-guard";
+import { setTwoFactorCookie } from "@/lib/auth-session";
+import type { TwoFactorChallenge } from "@/lib/types";
 
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
@@ -25,38 +24,13 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?${params.toString()}`);
   }
 
-  const data = await response.json();
-  const user: SessionUser = {
-    id: data.userId,
-    email: data.email,
-    fullName: data.fullName,
-    role: data.roles[0],
-    backendToken: data.token,
-    backendTokenExpiresAt: data.expiresAt,
-    refreshToken: data.refreshToken,
-    refreshTokenExpiresAt: data.refreshTokenExpiresAt,
-  };
+  // The backend never returns a session from the password step: only a short-lived
+  // token that is exchanged for one after the second factor.
+  const challenge: TwoFactorChallenge = await response.json();
+  await setTwoFactorCookie(challenge.twoFactorToken, challenge.setupRequired);
 
-  const token = await createSession(user);
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_DURATION_SECONDS,
-  });
-
-  if (isSafeRedirectTarget(redirectTo)) {
-    redirect(redirectTo);
-  }
-
-  const pendingInvite = cookieStore.get("pending_tenant_invite")?.value;
-  if (pendingInvite) {
-    cookieStore.delete("pending_tenant_invite");
-    redirect(`/register/tenant?token=${encodeURIComponent(pendingInvite)}`);
-  }
-
-  redirect(getDefaultDashboard(user.role));
+  const params = new URLSearchParams();
+  if (isSafeRedirectTarget(redirectTo)) params.set("redirect", redirectTo);
+  const query = params.size > 0 ? `?${params.toString()}` : "";
+  redirect(`/login/two-factor/${challenge.setupRequired ? "setup" : "verify"}${query}`);
 }

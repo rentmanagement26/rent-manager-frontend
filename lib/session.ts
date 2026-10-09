@@ -4,6 +4,14 @@ import type { SessionUser } from "@/lib/types";
 export const SESSION_COOKIE_NAME = "session_token";
 export const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30; // 30 days, sliding — middleware re-issues this on every refresh
 
+export const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: SESSION_DURATION_SECONDS,
+};
+
 function getSecretKey() {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {

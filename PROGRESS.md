@@ -25,6 +25,50 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 — Claude (Windows) added mandatory TOTP 2FA to the web login and made /login skip itself when signed in
+
+- **Why**: the backend made 2FA mandatory (see mobile `PROGRESS.md`, 2026-10-05): `POST /auth/login` now
+  returns only `{ setupRequired, twoFactorToken }`, never a session, so the old web login would have
+  crashed on `data.roles[0]`. Mobile already handled it; web had no 2FA code at all.
+- **Flow built** (user approved a `visualize` mockup first): `loginAction` stores the temporary token in an
+  httpOnly, `SameSite=Strict`, `/login/two-factor`-scoped cookie (15 min setup / 5 min verify, matching
+  `TwoFactorTokenService`) and redirects to `/login/two-factor/setup` (QR drawn locally with the new
+  `qrcode.react` dependency, manual key fallback, 6-digit code, then one-time recovery codes with
+  copy/download and an "I've saved these" check) or `/login/two-factor/verify` (code, or
+  `?mode=recovery` for a recovery code). The real session cookie is only created after the second factor
+  passes (`lib/auth-session.ts` `startSession`), and the `redirect` param + pending tenant-invite cookie
+  still work. New files: `lib/two-factor-api.ts`, `lib/auth-session.ts`, `app/(auth)/login/two-factor/*`.
+- **Security hardening bundled in**: session cookie now has `secure` in production (it was missing);
+  options shared via `SESSION_COOKIE_OPTIONS` in `lib/session.ts`, also used by `proxy.ts`.
+- **Auto-login fix**: `/login` redirected nobody, so a valid session still showed the form. It now sends
+  signed-in users to their dashboard (or the safe `redirect` target). To avoid a loop with the 401
+  redirects, those now go to a new `/session-expired` route handler that clears the dead cookie first.
+- **Verified**: `tsc` and ESLint clean; the 2FA pages redirect to `/login` without a pending token;
+  `/session-expired` redirects with the message. **Not verified**: the full login -> setup/verify ->
+  dashboard flow and the logged-in `/login` redirect, because agents don't type passwords or TOTP codes —
+  the owner needs to log in once in the browser pane.
+- **Not built yet**: Security settings page (2FA status, regenerate recovery codes, replace
+  authenticator) — mobile has it (`security-2fa.tsx`); web `settings` is still a stub.
+- **Next step**: owner logs in through the new flow; then commit. `package.json` now has `qrcode.react`
+  alongside the still-held `heic2any` change — stage only the `qrcode.react` line when committing.
+- **Still open vs mobile**: in-app notifications, tenant portal (`/tenant` is "coming soon"), invite-list
+  pagination, edit profile / change password.
+
+## 2026-09-22 — Claude (Windows) built the tenant invite list, route-aware sidebar, session-expiry redirect, and a footer
+
+- **Invite list** on `/landlord/tenants`: stats cards + sent invites (duplicates for the same
+  email/unit/property grouped as "resent Nx") with a Resend button, using the existing backend
+  `GET /tenant-invites`, `/tenant-invites/stats`, `POST /tenant-invites/{id}/resend`
+  (`app/landlord/tenants/invite-list.tsx`, `lib/tenant-invite-api.ts`). Fixed a bug found while testing:
+  invites expiring later the same day showed "Expired" (rounding) — now compared by milliseconds.
+- **Sidebar** nav items now highlight by route (`usePathname`); previously Dashboard was hardcoded active.
+- **Session expiry**: pages that call `.json()` on a 401 crashed; they now redirect (originally to
+  `/login`, now `/session-expired` — see the 2026-10-09 entry). Kept out of `backendFetch` itself because
+  Next's `redirect()` throws and existing actions wrap calls in `try/catch`.
+- **Footer** (no icon, shorter) added to the authenticated areas only (landlord/tenant/contractor), pinned
+  to the bottom on desktop with only the content scrolling; public/auth pages are unchanged — the owner
+  plans a separate public footer. Dashboard stat tiles got larger text on desktop.
+
 ## 2026-09-21 — Claude (Windows) added an "already have an account?" chooser to the tenant invite link
 
 - Guided-coding mode: user typed the app code, Claude reviewed it (caught and had the user fix a

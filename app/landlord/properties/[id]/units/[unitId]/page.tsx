@@ -21,7 +21,7 @@ export default async function UnitDetailPage({
   const response = await backendFetch(`/api/v1/properties/units/${unitId}`, session.backendToken);
 
   if (response.status === 401) {
-    redirect("/login");
+    redirect("/session-expired");
   }
 
   if (response.status === 404) {

@@ -31,6 +31,15 @@ built — same trigger as `AGENTS.md`'s standing compliance-review rule.
   server-side, frontend never branches on "account not found." CASL: reset email is transactional
   only (just the link), exempt from consent/unsubscribe requirements. Full detail in `PROGRESS.md`,
   2026-08-27 entry.
+- **Mandatory two-factor login (TOTP)** (2026-10-09) — PIPEDA safeguards principle: strengthens
+  account security, adds no personal data on the frontend (the TOTP shared secret is stored by the
+  backend; the browser only holds it in page memory during setup, never in a URL/localStorage/log).
+  The temporary 2FA token lives in a short-lived httpOnly, SameSite=Strict cookie; recovery codes
+  are shown once. CASL: no messages sent. No RTA/RTB angle. Session cookie now also gets the
+  `secure` flag in production.
+- **Tenant invite list / resend** (2026-09-22) — only re-displays the invited tenant's email,
+  unit, and status back to the landlord who entered it (no new collection). Resend re-sends the
+  same transactional invite (CASL transactional/existing-relationship, no marketing content).
 - **Properties / Units** — no tenant PII involved (address/property-type/unit specs are the
   landlord's own data about their own property). No RTA/RTB angle yet since no lease or tenancy
   terms exist on a property/unit record.

@@ -21,7 +21,7 @@ export default async function PropertyDetailPage({
      const response = await backendFetch(`/api/v1/properties/${id}`, session.backendToken);
 
   if (response.status === 401) {
-    redirect("/login");
+    redirect("/session-expired");
   }
 
   if (response.status === 404) {

@@ -116,6 +116,32 @@ export interface TenantInviteListItem {
   status: "Pending" | "Accepted" | "Declined" | "Expired";
 }
 
+export interface BackendAuthResponse {
+  token: string;
+  expiresAt: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: AppRole[];
+  refreshToken: string;
+  refreshTokenExpiresAt: string;
+}
+
+export interface TwoFactorChallenge {
+  setupRequired: boolean;
+  twoFactorToken: string;
+}
+
+export interface TwoFactorEnrollment {
+  sharedKey: string;
+  authenticatorUri: string;
+}
+
+export interface TwoFactorEnabledResult {
+  auth: BackendAuthResponse;
+  recoveryCodes: string[];
+}
+
 export interface TenantInviteStats {
   sent: number;
   pending: number;
