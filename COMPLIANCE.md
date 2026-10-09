@@ -39,6 +39,12 @@ built — same trigger as `AGENTS.md`'s standing compliance-review rule.
   `secure` flag in production. Security settings (regenerate recovery codes / replace authenticator,
   same day) re-authenticate with password + a code, collect no new personal data, and warn that a
   replacement signs out other devices (the backend sends its own transactional security notice).
+- **Profile edit / change password / mark-all-read — backend endpoints** (2026-10-09) — PIPEDA: profile edit
+  lets a person correct their own name (accuracy principle) and collects nothing new (names only; no phone, and
+  email is not editable); change password is a safeguard that requires the current password, counts failures
+  toward the existing lockout, signs out other devices, and sends a security notice so a takeover is noticed.
+  CASL: the password-changed email is a transactional security notice (no marketing content). No RTA/RTB angle.
+  Frontend wiring is still to do.
 - **Tenant portal** (2026-10-09) — PIPEDA: a tenant sees only their own tenancies (address, unit specs, dates)
   and their landlord's name, business name, and email, which the tenant already received through the
   landlord's invite; nothing new is collected. **RTA/RTB: rent is intentionally not displayed** — the backend

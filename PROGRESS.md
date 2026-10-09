@@ -25,6 +25,21 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 (end of day) — Claude (Windows) built the backend endpoints for profile, change password, and mark-all-read
+
+- Work was done in the **backend repo** (`Rent Management Back-End/PropertyManagementRepo`, branch `master`,
+  **uncommitted** there — see its `PROGRESS.md` for full detail). New: `GET`/`PUT /api/v1/auth/profile`,
+  `POST /api/v1/auth/change-password` (current password required, revokes other sessions, returns a fresh session,
+  sends an in-app notice + security email), `POST /api/v1/notifications/read-all`. No migration, so nothing to apply.
+- **This repo is not wired to them yet.** Still to build here (needs a mockup first): an editable Profile
+  (names), a Change password form on `/landlord/profile` (replacing the interim "Send reset link" row; the action
+  must also write the returned session cookie, as `saveSession` already does for authenticator replacement),
+  refresh the cached `fullName` in the session cookie after a profile edit, and a "Mark all as read" button on the
+  notifications page/bell. Tenant portal can reuse the same pieces. Mobile has the same three gaps.
+- **Verified**: backend builds clean; routes answer 401 unauthenticated (a fake route 404s). The success/error
+  paths are untested — they need a logged-in session (2FA).
+- **Not built (needs a migration + a design decision)**: notification preferences.
+
 ## 2026-10-09 (late) — Claude (Windows) paginated the landlord's sent-invites list
 
 - `app/landlord/tenants/invite-list.tsx` now shows 5 invites per page (same as mobile), paging the *grouped*
