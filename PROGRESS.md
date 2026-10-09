@@ -25,6 +25,15 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## Standing note — `heic2any` is held back on purpose (owner decision, 2026-10-12)
+
+- The root `package.json` / `package-lock.json` carry a **local, uncommitted** `"heic2any": "^0.0.4"` dependency from the paused
+  HEIC photo-upload work (see the 2026-09-14 HEIC entry). Nothing imports it yet. The owner will add it **later**, when the HEIC
+  work resumes.
+- Until then: **do not commit or push those lines**. When committing the root package files for another reason (e.g. the Next.js
+  upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
+  `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
+
 ## 2026-10-12 (fix) — Claude (Windows) fixed the landlord app's Vercel build failing on `admin/` files
 
 - **Problem**: the landlord (root) Vercel build ran `tsc` over the whole repo, including `admin/**`, whose files import
