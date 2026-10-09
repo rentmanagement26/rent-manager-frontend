@@ -1,5 +1,9 @@
+import Link from "next/link";
 import { resendTenantInviteAction } from "./actions";
 import type { TenantInviteListItem, TenantInviteStats } from "@/lib/types";
+
+const PAGE_SIZE = 5;
+const BASE_PATH = "/landlord/tenants";
 
 const STATUS_STYLES: Record<string, string> = {
   Pending: "bg-amber-50 text-amber-700",
@@ -37,13 +41,19 @@ function groupInvites(invites: TenantInviteListItem[]) {
 export function InviteList({
   invites,
   stats,
+  page,
 }: {
   invites: TenantInviteListItem[];
   stats: TenantInviteStats;
+  page: number;
 }) {
   if (invites.length === 0) return null;
 
   const grouped = groupInvites(invites);
+  const totalPages = Math.ceil(grouped.length / PAGE_SIZE);
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const firstIndex = (currentPage - 1) * PAGE_SIZE;
+  const visible = grouped.slice(firstIndex, firstIndex + PAGE_SIZE);
 
   return (
     <div className="mt-8 max-w-2xl">
@@ -56,8 +66,8 @@ export function InviteList({
 
       <h3 className="text-sm font-semibold text-heading mb-2">Sent invites</h3>
 
-      <div className="bg-white rounded-2xl border border-default shadow-sm divide-y divide-default">
-        {grouped.map((invite) => {
+      <div className="bg-white rounded-2xl border border-default shadow-sm divide-y divide-default overflow-hidden">
+        {visible.map((invite) => {
           const days = daysUntil(invite.expiresAt);
           const expiryUrgent = invite.status === "Pending" && days <= 2;
           const expiryText =
@@ -115,8 +125,71 @@ export function InviteList({
             </div>
           );
         })}
+
+        {totalPages > 1 && (
+          <Pager
+            currentPage={currentPage}
+            totalPages={totalPages}
+            first={firstIndex + 1}
+            last={firstIndex + visible.length}
+            total={grouped.length}
+          />
+        )}
       </div>
     </div>
+  );
+}
+
+function pageHref(page: number) {
+  return page === 1 ? BASE_PATH : `${BASE_PATH}?invitesPage=${page}`;
+}
+
+function Pager({
+  currentPage,
+  totalPages,
+  first,
+  last,
+  total,
+}: {
+  currentPage: number;
+  totalPages: number;
+  first: number;
+  last: number;
+  total: number;
+}) {
+  const buttonClass = "rounded-lg border px-3 py-1.5 text-xs font-semibold";
+  const activeClass = `${buttonClass} border-default bg-white text-heading hover:bg-subtle`;
+  const inactiveClass = `${buttonClass} border-transparent text-muted`;
+
+  return (
+    <nav aria-label="Invite pages" className="flex items-center justify-between gap-3 bg-subtle px-5 py-3">
+      <p className="text-xs text-muted">
+        Showing {first === last ? first : `${first}–${last}`} of {total}
+      </p>
+      <div className="flex items-center gap-2">
+        {currentPage > 1 ? (
+          <Link href={pageHref(currentPage - 1)} className={activeClass}>
+            Previous
+          </Link>
+        ) : (
+          <span className={inactiveClass} aria-disabled="true">
+            Previous
+          </span>
+        )}
+        <span className="text-xs text-muted">
+          Page {currentPage} of {totalPages}
+        </span>
+        {currentPage < totalPages ? (
+          <Link href={pageHref(currentPage + 1)} className={activeClass}>
+            Next
+          </Link>
+        ) : (
+          <span className={inactiveClass} aria-disabled="true">
+            Next
+          </span>
+        )}
+      </div>
+    </nav>
   );
 }
 

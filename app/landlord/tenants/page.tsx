@@ -11,9 +11,9 @@ import type { Property } from "@/lib/types";
 export default async function TenantsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; email?: string; error?: string; resent?: string }>;
+  searchParams: Promise<{ sent?: string; email?: string; error?: string; resent?: string; invitesPage?: string }>;
 }) {
-  const { sent, email, error, resent } = await searchParams;
+  const { sent, email, error, resent, invitesPage } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
 
@@ -65,7 +65,7 @@ export default async function TenantsPage({
         </div>
       )}
 
-      <InviteList invites={invites} stats={stats} />
+      <InviteList invites={invites} stats={stats} page={Number.parseInt(invitesPage ?? "1", 10) || 1} />
     </div>
   );
 }

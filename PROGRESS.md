@@ -25,6 +25,20 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 (late) — Claude (Windows) paginated the landlord's sent-invites list
+
+- `app/landlord/tenants/invite-list.tsx` now shows 5 invites per page (same as mobile), paging the *grouped*
+  rows (repeat invites to the same email/unit still collapse to one "resent Nx" row). The backend list endpoint
+  has no paging, so the page is sliced after fetching. The page lives in the URL (`?invitesPage=N`, page 1 has no
+  param), so it stays a server component and Back works; invalid/out-of-range values clamp. A footer bar
+  ("Showing 1–5 of 12", Previous / Page 1 of 3 / Next) renders only when there is more than one page. The stat
+  cards still count every invite. Sending/resending redirects back to page 1.
+- **Verified** (mockup approved first): `tsc` + ESLint clean; with the page size temporarily set to 2 against the
+  real 4 grouped invites: page 1/2 rows and ranges, disabled Previous/Next, `abc`/`-3`/`99` clamping, a real
+  click on Next, and the Back button all behaved. The size was set back to 5; with the current real data
+  (4 rows) the pager is correctly hidden.
+- This closes the last open "vs mobile" item for the landlord side.
+
 ## 2026-10-09 (night) — Claude (Windows) built the web tenant portal
 
 - **What**: `/tenant` was a "coming soon" stub. It now has a tenant shell (`app/tenant/layout.tsx`: white header with
