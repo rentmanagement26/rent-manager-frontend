@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* DomusPRO admin palette: the logo red as the single accent on warm neutrals. */
+:root {
+  --bg: #f8f6f5;
+  --surface: #ffffff;
+  --surface-2: #f2efee;
+  --ink: #222222;
+  --ink-2: #66605e;
+  --ink-3: #9a9391;
+  --line: #ece8e6;
+  --line-2: #d8d2cf;
+  --brand: #e82c2c;
+  --brand-on: #ffffff;
+  --brand-tint: #fdecec;
+  --brand-text: #b01f1f;
+  --alert-bg: #f1ecf7;
+  --alert-text: #6a3f8f;
+  --ok-bg: #e3f5ea;
+  --ok-text: #2b7a4b;
+  --shadow-card: 0 24px 60px rgba(60, 20, 20, 0.1);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-brand: var(--brand);
+  --color-brand-on: var(--brand-on);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-text: var(--brand-text);
+  --color-alert-bg: var(--alert-bg);
+  --color-alert-text: var(--alert-text);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-text: var(--ok-text);
+  --shadow-card: var(--shadow-card);
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-shake {
+  animation: shake 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

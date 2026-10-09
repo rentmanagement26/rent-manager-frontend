@@ -25,6 +25,44 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-11 — Claude (Windows) started the separate admin console project (`admin/`) with the admin sign-in
+
+- **Decision (owner)**: the admin console is a **separate Next.js project in this repo** (`admin/`, own `package.json`,
+  `node_modules`, port 3001), not routes inside the landlord app. Reasons: separate cookies/domain (a landlord session can
+  never reach it), separate deploys, no admin code in the customer bundle. It shares no code with the landlord app; the few
+  needed pieces (session, 2FA calls) were copied. Deploy later as its own Vercel project with root directory `admin` (not
+  done yet). Dev: `cd admin && npm run dev` (or the `domuspro-admin` entry in `.claude/launch.json`).
+- **Design (owner-approved mockups, see this session)**: centered card sign-in with the real DomusPRO logo, logo red
+  (`#e82c2c`) as the single accent on warm neutrals, Outfit font, a "Sign in -> Verify" stepper, six-box code entry. Light
+  mode only on the sign-in; the console will get light/dark. Tokens live in `admin/app/globals.css`.
+- **Built**: `/login` (email + password), `/login/two-factor/verify` (6 boxes or a recovery code) and
+  `/login/two-factor/setup` (QR + recovery codes for a first sign-in), `/overview` (placeholder behind a signed-in-admin
+  guard), sign out. Backend: the existing `POST /auth/login` + `/auth/2fa/*` + `/auth/refresh` + `/auth/logout`, unchanged.
+- **Industry practices applied**: generic "Email or password is incorrect." (never says which part); 429 shown as a wait
+  message; no "keep me signed in"; **4-hour sliding admin session** (the landlord app uses 30 days) in a `SameSite=Strict`
+  cookie named `admin_session` (different from the landlord app's, because localhost cookies are shared across ports);
+  the role is only known after the second factor, so a **non-admin account is rejected after 2FA and its refresh token is
+  revoked** (`startSession`); security headers (`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`); `noindex`.
+- **Roles**: the backend sends `SuperAdmin` / `Support` / `Billing` (the landlord app's `AppRole` still says `"Admin"`,
+  which never matches). The admin app only accepts those three. Permissions are NOT in the token (the backend checks them
+  per request from the role), so the sidebar will need either a small `GET /admin/me` or hard-coded role lists.
+- **Security note**: `npm audit` showed a critical Next.js advisory for `next` 16.0.0-16.3.7. The admin project starts on
+  `next@^16.4.0` (0 vulnerabilities). **The landlord app is still on `16.3.1` and is affected** — upgrade it when convenient.
+- **Env**: `admin/.env.local` (git-ignored) holds `BACKEND_API_URL` and its own `SESSION_SECRET`; `admin/.env.example` lists them.
+  Production needs both set on the admin Vercel project.
+- **Verified**: `tsc` and ESLint clean in `admin/`; the sign-in renders as designed; a wrong login shows the generic error;
+  `/overview` and both 2FA pages redirect to `/login` without a session/token. **Not verified**: a real admin sign-in
+  end to end (needs the owner's admin password and authenticator code, which agents don't type), the non-admin rejection
+  after 2FA, and the first-time 2FA setup screen with real data.
+- **Next steps**: (1) owner signs in once at http://localhost:3001 with the existing admin account and confirms `/overview`;
+  (2) build the real console shell (sidebar, header, light/dark) and the Audit log, Audit settings and Overview pages from
+  the approved mockups (`GET /api/v1/admin/audit-logs`, `/admin/audit-settings`); (3) decide `GET /admin/me` vs hard-coded
+  permissions; (4) create the Vercel project and subdomain.
+- **Uncommitted, left alone on purpose**: earlier in this session I also edited the **landlord app** (role names, an
+  `/admin/login` page, `components/auth-split-layout.tsx`, ...) before the decision to split. That work is superseded by
+  `admin/` and is **not committed**; it should be discarded (`git checkout -- app lib components proxy.ts` and delete
+  `app/admin`). The held `heic2any` dependency lines in the root `package.json`/`package-lock.json` are also still uncommitted.
+
 ## 2026-10-10 (later) — Claude (Windows) added "Mark all as read" to web notifications
 
 - Wires the backend's `POST /api/v1/notifications/read-all` (mockup approved first). A "Mark all as read" link
