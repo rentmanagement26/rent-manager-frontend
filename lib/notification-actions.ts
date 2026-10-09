@@ -6,7 +6,7 @@ import { markNotificationRead } from "@/lib/notifications-api";
 import type { ActionFailure } from "@/lib/types";
 
 export async function markNotificationReadAction(id: number): Promise<{ ok: true } | ActionFailure> {
-  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const session = await requireBackendToken();
 
   try {
     await markNotificationRead(session.backendToken, Number(id));

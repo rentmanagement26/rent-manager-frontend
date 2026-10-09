@@ -22,7 +22,7 @@ function cleanCode(value: string) {
 }
 
 export async function regenerateRecoveryCodesAction(code: string): Promise<{ recoveryCodes: string[] } | ActionFailure> {
-  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const session = await requireBackendToken();
 
   try {
     const recoveryCodes = await regenerateRecoveryCodes(session.backendToken, cleanCode(code));
@@ -37,7 +37,7 @@ export async function startAuthenticatorReplacementAction(
   code: string,
   recoveryCode: string
 ): Promise<TwoFactorEnrollment | ActionFailure> {
-  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const session = await requireBackendToken();
 
   try {
     return await startAuthenticatorReplacement(session.backendToken, {
@@ -53,7 +53,7 @@ export async function startAuthenticatorReplacementAction(
 export async function confirmAuthenticatorReplacementAction(
   code: string
 ): Promise<{ recoveryCodes: string[] } | ActionFailure> {
-  const session = await requireBackendToken(["Admin", "Landlord"]);
+  const session = await requireBackendToken();
 
   try {
     const result = await confirmAuthenticatorReplacement(session.backendToken, cleanCode(code));

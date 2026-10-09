@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { RecoveryCodes } from "@/components/recovery-codes";
 import { TotpCodeForm } from "@/components/totp-code-form";
-import { confirmAuthenticatorReplacementAction, startAuthenticatorReplacementAction } from "./actions";
+import { confirmAuthenticatorReplacementAction, startAuthenticatorReplacementAction } from "@/lib/security-actions";
 
 type Enrollment = { sharedKey: string; authenticatorUri: string };
 type Step = { name: "verify" } | { name: "scan"; enrollment: Enrollment } | { name: "codes"; codes: string[] };

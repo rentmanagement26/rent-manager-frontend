@@ -3,19 +3,10 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
+import { getInitials } from "@/lib/format-name";
 import { getTwoFactorStatus } from "@/lib/two-factor-api";
 import type { TwoFactorStatus } from "@/lib/types";
 import { PasswordRow } from "./password-row";
-
-function getInitials(name: string, email: string) {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return email.slice(0, 2).toUpperCase();
-  return words
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-}
 
 export default async function ProfilePage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);

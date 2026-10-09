@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { RecoveryCodes } from "@/components/recovery-codes";
-import { regenerateRecoveryCodesAction } from "./actions";
+import { regenerateRecoveryCodesAction } from "@/lib/security-actions";
 
 export function RegenerateRecoveryCodes({ onClose }: { onClose: (refresh: boolean) => void }) {
   const [error, setError] = useState("");

@@ -137,6 +137,36 @@ export interface TwoFactorEnrollment {
   authenticatorUri: string;
 }
 
+// Rent is deliberately not modelled: the backend sends the unit's asking rent, not what this
+// tenant agreed to pay, so showing it would misstate (and appear to change) their rent.
+export interface TenantTenancy {
+  tenancyId: number;
+  status: "Active" | "Ended";
+  startDate: string;
+  endDate: string | null;
+  unit: {
+    unitId: number;
+    label: string;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    squareFeet: number | null;
+  };
+  property: {
+    propertyId: number;
+    name: string;
+    line1: string;
+    line2: string | null;
+    city: string;
+    region: string;
+    postalCode: string;
+  };
+  landlord: {
+    name: string;
+    businessName: string | null;
+    email: string | null;
+  } | null;
+}
+
 export interface NotificationItem {
   id: number;
   type: string;

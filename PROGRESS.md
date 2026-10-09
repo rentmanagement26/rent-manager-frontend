@@ -25,6 +25,34 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 (night) — Claude (Windows) built the web tenant portal
+
+- **What**: `/tenant` was a "coming soon" stub. It now has a tenant shell (`app/tenant/layout.tsx`: white header with
+  logo, bell, account menu with "Security settings" + "Sign out"; content; pinned footer on desktop) and three pages:
+  **Home** (`/tenant`: "My home" cards for Active tenancies — property, unit, address, bed/bath/size, start date,
+  landlord name/business/email as a `mailto:` link — plus "Past homes" and "No homes yet" empty states),
+  **Notifications** (`/tenant/notifications`), **Security settings** (`/tenant/settings`, the same 2FA card landlords
+  have). Data: `GET /api/v1/tenants/me/tenancies` (`lib/tenant-api.ts`, `Tenant` role only). The design is a first
+  pass — the owner plans to redesign it later.
+- **Rent is deliberately NOT shown** (compliance, not an oversight): the endpoint's `Rent` is the unit's
+  `AskingRent` (`GetTenantUnitDetailsQuery`), and a `Tenancy` stores no rent of its own. Showing it as "your rent"
+  would change whenever the landlord edits the unit's asking price, looking like a rent increase without the
+  statutory notice (Ontario RTA: 90 days / Form N1; Manitoba RTA: 3 months). Add rent only after tenancies store the
+  agreed rent. **Mobile's tenant dashboard still shows `unit.rent`** (`rent-management-mobile`
+  `tenant-dashboard.tsx`) — flagged to the owner, not changed from this repo.
+- **Shared code refactor** so landlords and tenants use one implementation: `components/notification-list.tsx`,
+  `components/notifications-view.tsx` (server view taking `basePath`), `lib/notification-actions.ts`,
+  `components/security/*` (2FA card + flows + `SecuritySection`), `lib/security-actions.ts`; `NotificationBell`
+  takes a `viewAllHref`. The notification/security server actions no longer restrict to Admin/Landlord (they only
+  act on the caller's own account; page access is still role-guarded by each layout).
+- **Verified**: `tsc` + ESLint clean (0 errors). Landlord regression in the logged-in browser: settings,
+  notifications, profile all load and the bell still links to `/landlord/notifications`; a landlord session visiting
+  `/tenant` or `/tenant/settings` is bounced to `/landlord`. **Not verified**: any tenant page — it needs a tenant
+  login (+ that account's 2FA code), which agents don't enter. First thing to check: log in as a tenant (e.g. the
+  account that accepted an invite) and click through Home, the bell/Notifications, and Security settings; also
+  confirm the backend's tenancies endpoint is actually deployed (mobile has a 404 fallback because it once was not).
+- **Next step**: owner tests as a tenant; then commit. Still open vs mobile: invite-list pagination.
+
 ## 2026-10-09 (evening) — Claude (Windows) added web notifications and a read-only Profile page
 
 - **Notifications** (mockup approved first): the header bell now shows an unread badge ("9+" cap) and a

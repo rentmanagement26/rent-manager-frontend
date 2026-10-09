@@ -39,6 +39,12 @@ built — same trigger as `AGENTS.md`'s standing compliance-review rule.
   `secure` flag in production. Security settings (regenerate recovery codes / replace authenticator,
   same day) re-authenticate with password + a code, collect no new personal data, and warn that a
   replacement signs out other devices (the backend sends its own transactional security notice).
+- **Tenant portal** (2026-10-09) — PIPEDA: a tenant sees only their own tenancies (address, unit specs, dates)
+  and their landlord's name, business name, and email, which the tenant already received through the
+  landlord's invite; nothing new is collected. **RTA/RTB: rent is intentionally not displayed** — the backend
+  only has the unit's asking rent, not the agreed rent, and presenting it would misstate the tenant's rent and
+  could appear to be an increase without the required notice (Ontario: 90 days, Form N1; Manitoba: 3 months).
+  Revisit when tenancies/leases store the real rent. Mobile still shows the asking rent (open item).
 - **Notifications / Profile page** (2026-10-09) — PIPEDA: only re-displays the signed-in user's own
   notifications, name, email, and role (all already held); no new collection, no tracking. CASL: the bell
   is in-app only (no messages sent); "Send reset link" triggers the existing transactional password-reset

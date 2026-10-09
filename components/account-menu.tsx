@@ -37,7 +37,7 @@ export function AccountMenu({ email, role }: AccountMenuProps) {
       >
         Upgrade
       </Link>
-      <NotificationBell />
+      <NotificationBell viewAllHref="/landlord/notifications" />
       <div className="hidden sm:block w-px h-6 bg-slate-200" />
       <div className="relative" ref={ref}>
         <button type="button" onClick={() => setOpen((v) => !v)} className="flex items-center gap-2">

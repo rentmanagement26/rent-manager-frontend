@@ -5,7 +5,7 @@ import { useState } from "react";
 import { formatRelativeTime } from "@/lib/format-time";
 import { refreshUnreadCount } from "@/lib/notification-store";
 import type { NotificationItem } from "@/lib/types";
-import { markNotificationReadAction } from "./actions";
+import { markNotificationReadAction } from "@/lib/notification-actions";
 
 export function NotificationList({ items, emptyMessage }: { items: NotificationItem[]; emptyMessage: string }) {
   const router = useRouter();

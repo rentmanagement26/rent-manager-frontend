@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { markNotificationReadAction } from "@/app/landlord/notifications/actions";
+import { markNotificationReadAction } from "@/lib/notification-actions";
 import { formatRelativeTime } from "@/lib/format-time";
 import {
   adjustUnreadCount,
@@ -14,7 +14,7 @@ import type { NotificationItem } from "@/lib/types";
 
 const DROPDOWN_LIMIT = 6;
 
-export function NotificationBell() {
+export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
   const [open, setOpen] = useState(false);
   const count = useSyncExternalStore(subscribeToUnreadCount, getUnreadCountSnapshot, () => 0);
   const [items, setItems] = useState<NotificationItem[] | null>(null);
@@ -87,7 +87,7 @@ export function NotificationBell() {
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">Notifications</p>
             <Link
-              href="/landlord/notifications"
+              href={viewAllHref}
               onClick={() => setOpen(false)}
               className="text-xs font-semibold text-accent hover:text-accent-dark"
             >

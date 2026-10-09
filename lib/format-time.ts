@@ -1,3 +1,8 @@
+// For date-only values such as a tenancy start date: read in UTC so the day never shifts with the viewer's time zone.
+export function formatCalendarDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+}
+
 export function formatRelativeTime(iso: string, now: number = Date.now()): string {
   const then = new Date(iso);
   const minutes = Math.floor((now - then.getTime()) / 60_000);
