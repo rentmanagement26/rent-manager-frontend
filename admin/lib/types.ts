@@ -47,3 +47,57 @@ export interface ActionFailure {
   error: string;
   expired: boolean;
 }
+
+export type AuditOutcome = "Success" | "Failure" | "Warning";
+export type AuditMode = "Disabled" | "Summary" | "Full";
+
+export interface AuditLogEntry {
+  id: number;
+  occurredAt: string;
+  requestId: string | null;
+  actorEmail: string | null;
+  actorRoles: string | null;
+  ipAddress: string | null;
+  source: string | null;
+  module: string;
+  action: string;
+  outcome: AuditOutcome;
+  entityType: string | null;
+  entityId: string | null;
+  summary: string;
+  changes: string | null;
+}
+
+export interface AuditLogPage {
+  items: AuditLogEntry[];
+  nextBeforeId: number | null;
+}
+
+export interface AuditSettingItem {
+  action: string;
+  module: string;
+  mode: AuditMode;
+  defaultMode: AuditMode;
+  isProtected: boolean;
+  controlledBy: string;
+  entriesLast30Days: number;
+}
+
+export interface AuditOverride {
+  key: string;
+  mode: AuditMode;
+  updatedAt: string;
+  updatedByUserId: string | null;
+}
+
+export interface AuditSettings {
+  actions: AuditSettingItem[];
+  overrides: AuditOverride[];
+}
+
+// What a console data call gives back, so pages can show a friendly state instead of crashing.
+export type ApiResult<T> =
+  | { status: "ok"; data: T }
+  | { status: "forbidden" }
+  | { status: "expired" }
+  | { status: "error" };

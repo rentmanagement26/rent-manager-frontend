@@ -25,6 +25,46 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (later) — Claude (Windows) built the admin Audit log page (`/audit-log`)
+
+- **Built** (owner-approved design, same session): `app/(console)/audit-log/page.tsx` + `components/console/audit-log-table.tsx`
+  + shared `components/console/ui.tsx` (Overview now imports `Pill`/`Notice`/`cardClass` from it). The sidebar's Audit log item
+  is now a link.
+- **Behaviour**: All / Failed (outcome=Failure) / Admin (source=admin) tabs; a Filter panel (module, status, from/to dates, a
+  plain GET form, no JS); 25 per page with "Older entries" / "Back to newest" via the backend's `beforeId`; all state lives in
+  the URL. Click a row for the detail strip (summary, request ID, IP, source, module, entity). "Export page" downloads the
+  rows on screen as CSV (formula-injection safe). Backend: `GET /admin/audit-logs` and `/admin/audit-settings` (module list).
+- **Privacy choice**: the recorded `changes` JSON is shown to **SuperAdmin only** (data minimization - it can hold personal
+  data); Support/Billing see a note instead. Export includes emails/IPs and is not itself audited - decide if it should be.
+- **Verified**: `tsc` + ESLint clean; `/audit-log` without a session redirects to sign-in. **Not verified signed in**
+  (needs the owner): tabs, filter panel, paging, row detail, CSV, dark mode, phone width, 403 note for a role without access.
+- **Not built**: search by user/action text (backend only filters exact values), Audit settings page (next).
+
+## 2026-10-12 — Claude (Windows) built the admin console shell and the Overview from the owner's orange design (`admin/`)
+
+- **Owner override**: the owner said "implement it now" after approving mockups, so Claude wrote these files directly
+  (guided-coding mode waived for this task only).
+- **Design**: from the owner's `admin_dashboard_orange_v2_brighter.html` (Outfit, orange accent, sliding nav highlight, count-up
+  numbers, growing bars, hover lift, light/dark). Tokens are scoped under `.console` in `admin/app/globals.css`, so the red
+  sign-in is untouched. **Open question**: the logo is red but the console accent is orange - confirm or swap the `--c-ac` tokens.
+  Dark mode uses `public/domouspro-white-logo.png` (all white); light uses `domuspro-logo.png`.
+- **Built**: `components/console/console-shell.tsx` (sidebar with sliding pill, header with theme toggle, mobile drawer,
+  initials avatar, sign out), `app/(console)/layout.tsx` (reads the `admin_theme` cookie so there is no flash),
+  `app/(console)/overview/page.tsx`, `components/console/count-up.tsx`, `lib/audit-api.ts`, `lib/format.ts`, audit types in
+  `lib/types.ts`, and `app/session-expired/route.ts` (clears a dead cookie; `/login` skips itself when a cookie exists).
+  Added the `lucide-react` dependency for icons.
+- **Overview shows only real data**, all from `GET /admin/audit-settings` and `/admin/audit-logs`: audited events (30 days),
+  failures and warnings (capped at 100 per outcome, shown with "+"), policy overrides, actions audited, events by module,
+  auditing health, failures list, latest activity. 401 redirects to `/session-expired`; 403 shows "Your role doesn't have
+  access". Landlords, Tenants, Properties, Billing, Support, plans, revenue, system health and search have **no admin
+  endpoints**, so they are in a "Coming next" card and greyed "Soon" nav items - nothing is faked.
+- **Verified**: `tsc` and ESLint clean in `admin/`; dev server starts with no errors; `/overview` without a session redirects
+  to `/login`. **Not verified**: the signed-in console (needs the owner's password and authenticator code) - check the layout,
+  dark mode, mobile drawer, the numbers, and that Support/Billing roles get the "no access" notes where expected.
+- **Next steps**: owner signs in and reviews; then the Audit log and Audit settings pages (endpoints exist), then a spec for
+  the missing admin endpoints (counts, plans/revenue, support) for owner approval before any backend change.
+- **Uncommitted**: everything above, plus the old held `heic2any` lines in the root `package.json`.
+
 ## 2026-10-11 (later) — Claude (Windows) agreed the repo layout: move the landlord/tenant/marketing app into `web/` (NOT done yet)
 
 - **Decision (owner)**: the repo becomes two sibling projects, `web/` (today's root app: marketing site, landlord pages,

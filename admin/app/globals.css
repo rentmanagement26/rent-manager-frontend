@@ -86,3 +86,109 @@ body {
     transition: none !important;
   }
 }
+
+/* Console (signed-in area): warm neutrals with an orange accent, light and dark. Scoped to .console so the
+   sign-in keeps its own palette. The theme is the data-theme attribute on the console wrapper. */
+.console {
+  --c-bg: #f8f6f2;
+  --c-sf: #ffffff;
+  --c-sf2: #f4f1ec;
+  --c-tx: #1f2a28;
+  --c-tx2: #6b6a66;
+  --c-tx3: #9a9893;
+  --c-bd: #ebe7e1;
+  --c-bd2: #d9d4cc;
+  --c-ac: #f59a23;
+  --c-act: #2b1a00;
+  --c-aci: #fff2dc;
+  --c-act2: #a85e00;
+  --c-ok: #e7f4ec;
+  --c-okt: #2b7a4b;
+  --c-bad: #fdecec;
+  --c-badt: #b01f1f;
+  --c-pu: #f3eef6;
+  --c-put: #7a4a8f;
+  --c-wr: #fdf1d8;
+  --c-wrt: #8a5a0b;
+  --c-sh: 0 10px 28px rgba(80, 50, 20, 0.08);
+}
+
+.console[data-theme="dark"] {
+  --c-bg: #16140f;
+  --c-sf: #1f1c16;
+  --c-sf2: #2a261f;
+  --c-tx: #f1ede6;
+  --c-tx2: #a8a298;
+  --c-tx3: #78736a;
+  --c-bd: #2f2b23;
+  --c-bd2: #433e34;
+  --c-ac: #ffb03b;
+  --c-act: #241500;
+  --c-aci: #3a2c12;
+  --c-act2: #ffc266;
+  --c-ok: #17301f;
+  --c-okt: #6fcf94;
+  --c-bad: #3a1a1a;
+  --c-badt: #f09595;
+  --c-pu: #2c2236;
+  --c-put: #c9a4de;
+  --c-wr: #37290f;
+  --c-wrt: #efc470;
+  --c-sh: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+@theme inline {
+  --color-c-bg: var(--c-bg);
+  --color-c-sf: var(--c-sf);
+  --color-c-sf2: var(--c-sf2);
+  --color-c-tx: var(--c-tx);
+  --color-c-tx2: var(--c-tx2);
+  --color-c-tx3: var(--c-tx3);
+  --color-c-bd: var(--c-bd);
+  --color-c-bd2: var(--c-bd2);
+  --color-c-ac: var(--c-ac);
+  --color-c-act: var(--c-act);
+  --color-c-aci: var(--c-aci);
+  --color-c-act2: var(--c-act2);
+  --color-c-ok: var(--c-ok);
+  --color-c-okt: var(--c-okt);
+  --color-c-bad: var(--c-bad);
+  --color-c-badt: var(--c-badt);
+  --color-c-pu: var(--c-pu);
+  --color-c-put: var(--c-put);
+  --color-c-wr: var(--c-wr);
+  --color-c-wrt: var(--c-wrt);
+  --shadow-c-card: var(--c-sh);
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-up {
+  animation: up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-up {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    width: 0;
+  }
+}
+
+.animate-grow-x {
+  animation: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
