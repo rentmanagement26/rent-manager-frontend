@@ -137,6 +137,16 @@ export interface TwoFactorEnrollment {
   authenticatorUri: string;
 }
 
+export interface ActionFailure {
+  error: string;
+  expired: boolean;
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  recoveryCodesRemaining: number;
+}
+
 export interface TwoFactorEnabledResult {
   auth: BackendAuthResponse;
   recoveryCodes: string[];

@@ -46,8 +46,8 @@ export async function clearTwoFactorCookie() {
   });
 }
 
-// Creates the real session after the second factor passes and returns where to send the user.
-export async function startSession(auth: BackendAuthResponse, redirectTo: string): Promise<string> {
+// Writes the session cookie from a backend auth response and returns the session user.
+export async function saveSession(auth: BackendAuthResponse): Promise<SessionUser> {
   const user: SessionUser = {
     id: auth.userId,
     email: auth.email,
@@ -65,12 +65,19 @@ export async function startSession(auth: BackendAuthResponse, redirectTo: string
     value: await createSession(user),
     ...SESSION_COOKIE_OPTIONS,
   });
+  return user;
+}
+
+// Creates the real session after the second factor passes and returns where to send the user.
+export async function startSession(auth: BackendAuthResponse, redirectTo: string): Promise<string> {
+  const user = await saveSession(auth);
   await clearTwoFactorCookie();
 
   if (isSafeRedirectTarget(redirectTo)) {
     return redirectTo;
   }
 
+  const cookieStore = await cookies();
   const pendingInvite = cookieStore.get("pending_tenant_invite")?.value;
   if (pendingInvite) {
     cookieStore.delete("pending_tenant_invite");

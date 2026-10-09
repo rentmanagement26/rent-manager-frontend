@@ -10,6 +10,7 @@ import {
   startSession,
 } from "@/lib/auth-session";
 import { beginTwoFactorSetup, enableTwoFactor, recoveryLogin, verifyTwoFactor } from "@/lib/two-factor-api";
+import type { ActionFailure, TwoFactorEnrollment } from "@/lib/types";
 
 function loginErrorUrl(message: string) {
   return `/login?${new URLSearchParams({ error: message }).toString()}`;
@@ -22,13 +23,13 @@ function verifyUrl(error: string, redirectTo: string, recovery: boolean) {
   return `/login/two-factor/verify?${params.toString()}`;
 }
 
-async function failure(err: unknown, fallback: string) {
+async function failure(err: unknown, fallback: string): Promise<ActionFailure> {
   const message = err instanceof Error ? err.message : fallback;
   if (isSessionExpiredMessage(message)) {
     await clearTwoFactorCookie();
-    return { error: message, expired: true as const };
+    return { error: message, expired: true };
   }
-  return { error: message, expired: false as const };
+  return { error: message, expired: false };
 }
 
 async function finishSecondFactor(formData: FormData, recovery: boolean) {
@@ -65,9 +66,9 @@ export async function recoveryLoginAction(formData: FormData) {
   await finishSecondFactor(formData, true);
 }
 
-export async function beginTwoFactorSetupAction() {
+export async function beginTwoFactorSetupAction(): Promise<TwoFactorEnrollment | ActionFailure> {
   const token = await getTwoFactorToken();
-  if (!token) return { error: SESSION_EXPIRED_MESSAGE, expired: true as const };
+  if (!token) return { error: SESSION_EXPIRED_MESSAGE, expired: true };
 
   try {
     return await beginTwoFactorSetup(token);
@@ -76,9 +77,12 @@ export async function beginTwoFactorSetupAction() {
   }
 }
 
-export async function enableTwoFactorAction(code: string, redirectTo: string) {
+export async function enableTwoFactorAction(
+  code: string,
+  redirectTo: string
+): Promise<{ recoveryCodes: string[]; destination: string } | ActionFailure> {
   const token = await getTwoFactorToken();
-  if (!token) return { error: SESSION_EXPIRED_MESSAGE, expired: true as const };
+  if (!token) return { error: SESSION_EXPIRED_MESSAGE, expired: true };
 
   try {
     const result = await enableTwoFactor(token, String(code).replace(/\s/g, ""));

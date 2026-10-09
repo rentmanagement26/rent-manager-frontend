@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
-export function RecoveryCodes({ codes, destination }: { codes: string[]; destination: string }) {
-  const router = useRouter();
+interface RecoveryCodesProps {
+  codes: string[];
+  continueLabel: string;
+  onContinue: () => void;
+  compact?: boolean;
+}
+
+export function RecoveryCodes({ codes, continueLabel, onContinue, compact = false }: RecoveryCodesProps) {
   const [acknowledged, setAcknowledged] = useState(false);
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState("");
@@ -33,7 +38,7 @@ export function RecoveryCodes({ codes, destination }: { codes: string[]; destina
       setMessage("Confirm you've saved your recovery codes first.");
       return;
     }
-    router.replace(destination);
+    onContinue();
   }
 
   const secondaryButtonClass =
@@ -41,8 +46,14 @@ export function RecoveryCodes({ codes, destination }: { codes: string[]; destina
 
   return (
     <div>
-      <h2 className="mb-2 font-head text-2xl font-bold text-heading">Save your recovery codes</h2>
-      <p className="mb-6 text-sm text-muted">
+      <h2
+        className={
+          compact ? "mb-1 text-base font-semibold text-heading" : "mb-2 font-head text-2xl font-bold text-heading"
+        }
+      >
+        Save your recovery codes
+      </h2>
+      <p className={`text-sm text-muted ${compact ? "mb-4" : "mb-6"}`}>
         Each code works once if you lose your authenticator. They won&apos;t be shown again.
       </p>
 
@@ -83,7 +94,7 @@ export function RecoveryCodes({ codes, destination }: { codes: string[]; destina
         onClick={handleContinue}
         className="w-full rounded-xl bg-accent px-4 py-3 font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-dark"
       >
-        Continue to dashboard
+        {continueLabel}
       </button>
     </div>
   );

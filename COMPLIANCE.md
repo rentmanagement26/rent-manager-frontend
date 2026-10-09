@@ -36,7 +36,9 @@ built — same trigger as `AGENTS.md`'s standing compliance-review rule.
   backend; the browser only holds it in page memory during setup, never in a URL/localStorage/log).
   The temporary 2FA token lives in a short-lived httpOnly, SameSite=Strict cookie; recovery codes
   are shown once. CASL: no messages sent. No RTA/RTB angle. Session cookie now also gets the
-  `secure` flag in production.
+  `secure` flag in production. Security settings (regenerate recovery codes / replace authenticator,
+  same day) re-authenticate with password + a code, collect no new personal data, and warn that a
+  replacement signs out other devices (the backend sends its own transactional security notice).
 - **Tenant invite list / resend** (2026-09-22) — only re-displays the invited tenant's email,
   unit, and status back to the landlord who entered it (no new collection). Resend re-sends the
   same transactional invite (CASL transactional/existing-relationship, no marketing content).

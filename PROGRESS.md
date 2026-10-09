@@ -25,6 +25,35 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 (later) — Claude (Windows) built the web Security settings page for 2FA
+
+- **Page**: `/landlord/settings` (already linked from the account menu) now shows a Two-factor
+  authentication card: On/Off, "N recovery codes left" (amber at <= 1), and two inline flows (mockup
+  approved first, via `visualize`):
+  - **Regenerate recovery codes** — needs a current authenticator code; shows the new codes once with
+    copy/download/"I've saved these" (old codes stop working).
+  - **Replace authenticator** — step 1 password + authenticator or recovery code (backend requires both),
+    step 2 QR + code (15-minute window), step 3 new recovery codes. Warns up front that finishing signs the
+    user out of every other device: the backend's `ConfirmAuthenticatorReplacement` revokes all refresh
+    tokens and returns a fresh session, which `saveSession` writes so this browser stays signed in.
+- **Backend facts worth knowing**: it issues **3** recovery codes (`TwoFactorDefaults.RecoveryCodeCount`), not
+  10; wrong codes feed `SecondFactorLockout` (5 failures -> 15-minute lockout); `/2fa/*` authed endpoints return
+  400 with a message for wrong proof and an empty 401 for a dead token (mapped to `SessionExpiredError` ->
+  `/session-expired`).
+- **Code**: `app/landlord/settings/{page,actions,security-settings,regenerate-recovery-codes,
+  replace-authenticator}.tsx`; authed calls added to `lib/two-factor-api.ts`; `startSession` split so
+  `saveSession` can be reused (`lib/auth-session.ts`). The recovery-codes screen and QR/code form moved to
+  `components/recovery-codes.tsx` / `components/totp-code-form.tsx` and are now shared with the login setup
+  page (its private copy was deleted). Server actions return an explicit `ActionFailure` union (`lib/types.ts`)
+  because TypeScript otherwise merges the literal result shapes and `"error" in result` stops narrowing.
+- **Verified**: `tsc` and ESLint clean (0 errors); in the real logged-in browser the card renders with live
+  data ("On", "3 left"), both panels open/cancel, the recovery-code toggle swaps the field, and submitting one
+  deliberately wrong code to Regenerate shows the backend's "Invalid code." inline (proves the action ->
+  backend path and DTO names). **Not verified**: a successful regenerate and the full replace flow — they
+  need real codes/password, and replace signs out other devices.
+- **Next step**: owner tries Regenerate with a real code (safe, only rotates recovery codes). Try Replace
+  only when fine with mobile being signed out. Then commit.
+
 ## 2026-10-09 — Claude (Windows) added mandatory TOTP 2FA to the web login and made /login skip itself when signed in
 
 - **Why**: the backend made 2FA mandatory (see mobile `PROGRESS.md`, 2026-10-05): `POST /auth/login` now
@@ -47,10 +76,9 @@ Codex and Claude use this file as the project handoff, across both computers.
   `/session-expired` redirects with the message. **Not verified**: the full login -> setup/verify ->
   dashboard flow and the logged-in `/login` redirect, because agents don't type passwords or TOTP codes —
   the owner needs to log in once in the browser pane.
-- **Not built yet**: Security settings page (2FA status, regenerate recovery codes, replace
-  authenticator) — mobile has it (`security-2fa.tsx`); web `settings` is still a stub.
-- **Next step**: owner logs in through the new flow; then commit. `package.json` now has `qrcode.react`
-  alongside the still-held `heic2any` change — stage only the `qrcode.react` line when committing.
+- **Security settings page**: built in the entry above this one (web `settings` is no longer a stub).
+- **Committed** as `cd21066` with only the `qrcode.react` lines of `package.json`/`package-lock.json`
+  staged (via `git update-index --cacheinfo` from a filtered copy); `heic2any` is still uncommitted.
 - **Still open vs mobile**: in-app notifications, tenant portal (`/tenant` is "coming soon"), invite-list
   pagination, edit profile / change password.
 
