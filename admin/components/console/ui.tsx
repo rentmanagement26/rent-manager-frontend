@@ -16,3 +16,31 @@ export function Pill({ className, children }: { className: string; children: Rea
 export function Notice({ children }: { children: ReactNode }) {
   return <p className="rounded-xl bg-c-sf2 px-4 py-3.5 text-[13px] text-c-tx2">{children}</p>;
 }
+
+export const inputClass =
+  "h-10.5 w-full rounded-[10px] border border-c-bd2 bg-c-bg px-3.5 text-sm text-c-tx outline-none transition placeholder:text-c-tx3 focus:border-c-ac";
+
+export const primaryButtonClass =
+  "h-10 rounded-[10px] bg-c-ac px-4 text-[13px] font-medium text-c-act transition hover:brightness-105 active:scale-[0.97] disabled:opacity-60";
+
+export const secondaryButtonClass =
+  "h-10 rounded-[10px] border border-c-bd2 px-4 text-[13px] text-c-tx transition hover:bg-c-sf2 active:scale-[0.97]";
+
+export function ErrorBox({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="rounded-[10px] bg-c-bad px-3 py-2.5 text-[13px] text-c-badt">
+      {message}
+    </p>
+  );
+}
+
+export function WarningBox({ children }: { children: ReactNode }) {
+  return <p className="rounded-[10px] bg-c-wr px-3 py-2.5 text-[13px] text-c-wrt">{children}</p>;
+}
+
+// Hard navigation on purpose: /session-expired is a route handler that clears the dead session cookie.
+export function goToSessionExpired() {
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign("/session-expired");
+}

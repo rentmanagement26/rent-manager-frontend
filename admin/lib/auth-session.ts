@@ -52,9 +52,9 @@ export async function revokeRefreshToken(refreshToken: string) {
   }).catch(() => {});
 }
 
-// Creates the real session after the second factor passes and returns where to send the user.
-// The role is only known at this point, so a non-admin is rejected here and their tokens revoked.
-export async function startSession(auth: BackendAuthResponse): Promise<string> {
+// Writes the session cookie from a backend auth response. The role is only known from the response, so a
+// non-admin is rejected here and their tokens revoked.
+export async function saveSession(auth: BackendAuthResponse): Promise<void> {
   const role = auth.roles.find(isAdminRole);
   if (!role) {
     await revokeRefreshToken(auth.refreshToken);
@@ -75,6 +75,11 @@ export async function startSession(auth: BackendAuthResponse): Promise<string> {
 
   const cookieStore = await cookies();
   cookieStore.set({ name: SESSION_COOKIE_NAME, value: await createSession(user), ...SESSION_COOKIE_OPTIONS });
+}
+
+// Creates the real session after the second factor passes and returns where to send the user.
+export async function startSession(auth: BackendAuthResponse): Promise<string> {
+  await saveSession(auth);
   await clearTwoFactorCookie();
   return HOME_PATH;
 }

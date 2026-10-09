@@ -101,3 +101,8 @@ export type ApiResult<T> =
   | { status: "forbidden" }
   | { status: "expired" }
   | { status: "error" };
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  recoveryCodesRemaining: number;
+}

@@ -25,6 +25,24 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (evening) — Claude (Windows) built the admin Settings page: two-factor and change password (`/settings`)
+
+- **Built** (ported from the landlord app's Security/Profile code, restyled to the console tokens): `app/(console)/settings/page.tsx`,
+  `components/console/two-factor-card.tsx` (status On/Off, recovery codes left with a low warning, **Regenerate recovery codes**,
+  **Replace authenticator** = password + code/recovery code -> QR -> new recovery codes), `components/console/password-card.tsx`
+  (current / new / confirm, client-side match check, amber "signs you out of every other device" warning),
+  `components/console/recovery-codes.tsx`, shared form styles in `components/console/ui.tsx`. Server side: `lib/security-actions.ts`,
+  `lib/account-api.ts` (`POST /auth/change-password`), authed calls added to `lib/two-factor-api.ts`, `SessionExpiredError` in
+  `lib/api-error.ts`, and `saveSession` split out of `startSession` in `lib/auth-session.ts` (still rejects a non-admin).
+  Sidebar gained an ACCOUNT group with Settings. Same backend endpoints as web: `GET /auth/2fa/status`,
+  `POST /auth/2fa/recovery-codes/regenerate`, `/replace/start`, `/replace/confirm`, `POST /auth/change-password`.
+- **Differences from web**: no "Email me a reset link" (that email links to the landlord site, not the admin console); 429 is
+  mapped to a friendly message everywhere.
+- **Verified**: `tsc` + ESLint clean; `/settings` without a session redirects to sign-in. **Deliberately not exercised** (they
+  change the real account): a successful regenerate, replace, or password change - the last two sign out other devices. Check
+  signed in: the page loads with live status, a wrong code on Regenerate shows the backend's message inline, dark mode, phone width.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-12 (later) — Claude (Windows) built the admin Audit log page (`/audit-log`)
 
 - **Built** (owner-approved design, same session): `app/(console)/audit-log/page.tsx` + `components/console/audit-log-table.tsx`

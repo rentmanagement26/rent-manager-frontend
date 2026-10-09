@@ -11,6 +11,7 @@ import {
   Moon,
   ScrollText,
   Search,
+  Settings,
   ShieldCheck,
   SlidersHorizontal,
   Sun,
@@ -47,6 +48,8 @@ const SECURITY: NavItem[] = [
   { label: "Audit settings", icon: SlidersHorizontal },
   { label: "Admin team", icon: ShieldCheck },
 ];
+
+const ACCOUNT: NavItem[] = [{ label: "Settings", icon: Settings, href: "/settings" }];
 
 const ITEM_HEIGHT_PX = 40;
 
@@ -143,6 +146,7 @@ export function ConsoleShell({
       </div>
       <NavGroup title="MENU" items={MENU} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
       <NavGroup title="SECURITY" items={SECURITY} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+      <NavGroup title="ACCOUNT" items={ACCOUNT} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
     </div>
   );
 

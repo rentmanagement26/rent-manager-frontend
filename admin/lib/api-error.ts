@@ -19,3 +19,10 @@ export async function extractErrorMessage(response: Response): Promise<string> {
 
   return "Something went wrong. Try again.";
 }
+
+// Thrown by authed backend calls when the token is dead, so actions can tell the client to sign in again.
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Your session expired. Sign in again.");
+  }
+}
