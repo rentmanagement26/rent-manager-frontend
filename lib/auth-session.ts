@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getSession } from "@/lib/get-session";
 import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS, createSession } from "@/lib/session";
 import { getDefaultDashboard, isSafeRedirectTarget } from "@/lib/auth-guard";
 import type { BackendAuthResponse, SessionUser } from "@/lib/types";
@@ -66,6 +67,19 @@ export async function saveSession(auth: BackendAuthResponse): Promise<SessionUse
     ...SESSION_COOKIE_OPTIONS,
   });
   return user;
+}
+
+// Keeps the cached display name in the session cookie in step with a profile edit (tokens are untouched).
+export async function updateSessionFullName(fullName: string) {
+  const session = await getSession();
+  if (!session) return;
+
+  const cookieStore = await cookies();
+  cookieStore.set({
+    name: SESSION_COOKIE_NAME,
+    value: await createSession({ ...session, fullName }),
+    ...SESSION_COOKIE_OPTIONS,
+  });
 }
 
 // Creates the real session after the second factor passes and returns where to send the user.

@@ -54,6 +54,13 @@ export function TenantAccountMenu({ fullName, email, role }: TenantAccountMenuPr
               </p>
             </div>
             <Link
+              href="/tenant/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Profile
+            </Link>
+            <Link
               href="/tenant/settings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"

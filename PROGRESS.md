@@ -25,6 +25,28 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-10 — Claude (Windows) wired editable name and change password into the web Profile page
+
+- **Done** (mockup approved first): `/landlord/profile` and a new `/tenant/profile` (linked from the tenant account
+  menu) share `components/profile/*`. **Name**: Edit opens first / last / optional middle (prefilled from
+  `GET /auth/profile`), saves via `PUT /auth/profile`, then rewrites the cached `fullName` in the session cookie
+  (`updateSessionFullName`) and refreshes so the header/welcome update. **Password**: Change opens current / new /
+  confirm (client-side match check, rules hint, amber "signs you out of every other device" warning); on success
+  the returned fresh session is saved (`saveSession`) so this browser stays signed in. The old "Send reset link"
+  survives as a small "Forgot your current password?" link inside the form. 429 is mapped to a friendly message.
+  Code: `lib/profile-api.ts`, `lib/profile-actions.ts` (also holds the moved reset-link action), the shared
+  `lib/session-expired-client.ts`; the old landlord-only `password-row.tsx`/`actions.ts` were deleted.
+- **The web app talks to the deployed Azure backend** (`BACKEND_API_URL` in `.env.local`, not localhost). Its
+  deploy of the new endpoints finished: they answer 401 without a token (a fake route 404s).
+- **Verified**: `tsc` + ESLint clean (0 errors). In the owner's real logged-in session the page loads through the
+  live `GET /auth/profile` (it split the single stored name into Hardeep / Singh), the name form prefills, the
+  password form shows its fields/hint/warning/reset link, both panels cancel cleanly, and a landlord is bounced
+  from `/tenant/profile`. **Deliberately not exercised** (they change the real account): saving a name,
+  changing the password (signs out other devices, sends the security email), and the reset-link email. Those
+  need the owner — ideally a throwaway account first.
+- **Still not wired**: "Mark all as read" (backend endpoint exists), mobile equivalents, notification preferences
+  (no endpoint).
+
 ## 2026-10-09 (end of day) — Claude (Windows) built the backend endpoints for profile, change password, and mark-all-read
 
 - Work was done in the **backend repo** (`Rent Management Back-End/PropertyManagementRepo`, branch `master`,

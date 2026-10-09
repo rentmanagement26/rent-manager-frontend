@@ -177,6 +177,14 @@ export interface NotificationItem {
   createdAt: string;
 }
 
+export interface UserProfile {
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
+  fullName: string;
+  email: string;
+}
+
 export interface ActionFailure {
   error: string;
   expired: boolean;
