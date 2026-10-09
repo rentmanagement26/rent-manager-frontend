@@ -287,8 +287,8 @@ function HealthCard({ settings }: { settings: ApiResult<AuditSettings> }) {
         title="Auditing health"
         subtitle="Policy versus defaults"
         aside={
-          <Link href="/overview" aria-disabled className="pointer-events-none text-[13px] text-c-tx3">
-            Manage soon
+          <Link href="/audit-settings" className="text-[13px] text-c-act2 hover:underline">
+            Manage
           </Link>
         }
       />

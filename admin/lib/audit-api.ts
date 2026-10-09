@@ -1,5 +1,6 @@
 import { backendFetch } from "@/lib/api-client";
-import type { ApiResult, AuditLogPage, AuditOutcome, AuditSettings } from "@/lib/types";
+import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
+import type { ApiResult, AuditLogPage, AuditMode, AuditOutcome, AuditSettings } from "@/lib/types";
 
 async function getJson<T>(path: string, token: string): Promise<ApiResult<T>> {
   try {
@@ -37,4 +38,23 @@ export function getAuditLogs(token: string, query: AuditLogQuery = {}) {
   if (query.beforeId) params.set("beforeId", String(query.beforeId));
   params.set("limit", String(query.limit ?? 50));
   return getJson<AuditLogPage>(`/api/v1/admin/audit-logs?${params}`, token);
+}
+
+async function writeAuditSetting(path: string, token: string, init: RequestInit): Promise<void> {
+  const response = await backendFetch(path, token, init);
+  if (response.status === 401) throw new SessionExpiredError();
+  if (response.status === 403) throw new Error("Your role can't change audit settings.");
+  if (response.status === 429) throw new Error("Too many attempts. Wait a minute and try again.");
+  if (!response.ok) throw new Error(await extractErrorMessage(response));
+}
+
+export function setAuditMode(token: string, key: string, mode: AuditMode) {
+  return writeAuditSetting(`/api/v1/admin/audit-settings/${encodeURIComponent(key)}`, token, {
+    method: "PUT",
+    body: JSON.stringify({ Mode: mode }),
+  });
+}
+
+export function removeAuditOverride(token: string, key: string) {
+  return writeAuditSetting(`/api/v1/admin/audit-settings/${encodeURIComponent(key)}`, token, { method: "DELETE" });
 }

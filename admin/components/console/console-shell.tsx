@@ -45,7 +45,7 @@ const MENU: NavItem[] = [
 
 const SECURITY: NavItem[] = [
   { label: "Audit log", icon: ScrollText, href: "/audit-log" },
-  { label: "Audit settings", icon: SlidersHorizontal },
+  { label: "Audit settings", icon: SlidersHorizontal, href: "/audit-settings" },
   { label: "Admin team", icon: ShieldCheck },
 ];
 

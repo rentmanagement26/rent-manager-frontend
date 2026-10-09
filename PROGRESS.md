@@ -25,6 +25,22 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (night) — Claude (Windows) built the admin Audit settings page (`/audit-settings`)
+
+- **Built**: `app/(console)/audit-settings/page.tsx`, `components/console/audit-settings-list.tsx`, `lib/audit-actions.ts`, and
+  `setAuditMode` / `removeAuditOverride` in `lib/audit-api.ts`. With this, **every admin audit endpoint the backend has is wired**
+  (`GET audit-logs`, `GET/PUT/DELETE audit-settings/{key}`); the landlord-only `GET /activity` belongs to the landlord app.
+- **Behaviour**: actions grouped by module; each module and each action has an Off / Summary / Full toggle (sliding thumb). A
+  module-level setting applies to its actions unless an action has its own override ("Set by module" pill; "Reset" /
+  "Reset module" calls DELETE). "Changed from default" pill, events-in-30-days count, protected actions can't be set Off
+  (the backend also refuses: it falls back to Summary). The backend's keys are the lower-cased action or module name.
+  Only **SuperAdmin** can change anything (backend `Audit.Manage` is SuperAdmin-only); Support sees a read-only page. The
+  Overview's "Manage" link now goes here.
+- **Verified**: `tsc` + ESLint clean; `/audit-settings` without a session redirects to sign-in. **Not verified signed in**:
+  loading live data, changing a mode (it changes real audit policy and is itself audited), reset, the read-only view for
+  Support, and dark/phone layouts. Suggest testing on a low-risk action and resetting it.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-12 (evening) — Claude (Windows) built the admin Settings page: two-factor and change password (`/settings`)
 
 - **Built** (ported from the landlord app's Security/Profile code, restyled to the console tokens): `app/(console)/settings/page.tsx`,
