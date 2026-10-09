@@ -1,9 +1,9 @@
 "use server";
 
+import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { saveSession } from "@/lib/auth-session";
 import {
-  SessionExpiredError,
   confirmAuthenticatorReplacement,
   regenerateRecoveryCodes,
   startAuthenticatorReplacement,

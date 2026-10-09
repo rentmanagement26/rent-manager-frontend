@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
-import { SessionExpiredError, getTwoFactorStatus } from "@/lib/two-factor-api";
+import { getTwoFactorStatus } from "@/lib/two-factor-api";
 import type { TwoFactorStatus } from "@/lib/types";
 import { SecuritySettings } from "./security-settings";
 

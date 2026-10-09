@@ -1,17 +1,11 @@
 import { backendFetch } from "@/lib/api-client";
-import { extractErrorMessage } from "@/lib/api-error";
+import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
 import type {
   BackendAuthResponse,
   TwoFactorEnabledResult,
   TwoFactorEnrollment,
   TwoFactorStatus,
 } from "@/lib/types";
-
-export class SessionExpiredError extends Error {
-  constructor() {
-    super("Your session expired. Please log in again.");
-  }
-}
 
 async function authedTwoFactor<T>(path: string, token: string, init?: RequestInit): Promise<T> {
   const response = await backendFetch(`/api/v1/auth/2fa/${path}`, token, init);

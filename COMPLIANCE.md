@@ -39,6 +39,10 @@ built — same trigger as `AGENTS.md`'s standing compliance-review rule.
   `secure` flag in production. Security settings (regenerate recovery codes / replace authenticator,
   same day) re-authenticate with password + a code, collect no new personal data, and warn that a
   replacement signs out other devices (the backend sends its own transactional security notice).
+- **Notifications / Profile page** (2026-10-09) — PIPEDA: only re-displays the signed-in user's own
+  notifications, name, email, and role (all already held); no new collection, no tracking. CASL: the bell
+  is in-app only (no messages sent); "Send reset link" triggers the existing transactional password-reset
+  email to the user's own address, on their own request. No RTA/RTB angle.
 - **Tenant invite list / resend** (2026-09-22) — only re-displays the invited tenant's email,
   unit, and status back to the landlord who entered it (no new collection). Resend re-sends the
   same transactional invite (CASL transactional/existing-relationship, no marketing content).

@@ -56,5 +56,12 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/landlord/:path*", "/tenant/:path*", "/contractor/:path*", "/admin/:path*"],
+  matcher: [
+    "/landlord/:path*",
+    "/tenant/:path*",
+    "/contractor/:path*",
+    "/admin/:path*",
+    // Bell polling hits these while a page sits open, so they need the same token refresh.
+    "/api/notifications/:path*",
+  ],
 };

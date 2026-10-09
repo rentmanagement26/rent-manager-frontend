@@ -137,6 +137,16 @@ export interface TwoFactorEnrollment {
   authenticatorUri: string;
 }
 
+export interface NotificationItem {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  data: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface ActionFailure {
   error: string;
   expired: boolean;

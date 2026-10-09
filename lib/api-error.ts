@@ -21,3 +21,9 @@ export async function extractErrorMessage(response: Response): Promise<string> {
 
   return "Something went wrong. Please try again.";
 }
+
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Your session expired. Please log in again.");
+  }
+}

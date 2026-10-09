@@ -25,6 +25,31 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-09 (evening) — Claude (Windows) added web notifications and a read-only Profile page
+
+- **Notifications** (mockup approved first): the header bell now shows an unread badge ("9+" cap) and a
+  dropdown of the 6 latest (click marks one read; "View all" links to the new `/landlord/notifications`
+  page with All / Unread tabs, unread rows have an accent left border). Backend endpoints used:
+  `GET /notifications[?unreadOnly=]`, `GET /notifications/unread-count`, `POST /notifications/{id}/read`.
+  Reads go through new Route Handlers (`app/api/notifications/**`), the mark-read mutation is a server action;
+  `/api/notifications/:path*` was added to the `proxy.ts` matcher so token refresh also runs for bell polling.
+- **Unread count store** (`lib/notification-store.ts`): one module-level poller (60s + on window focus) read via
+  `useSyncExternalStore`. Chosen because the landlord header renders `AccountMenu` twice (desktop + mobile
+  layouts) and ESLint's `react-hooks/set-state-in-effect` rejects calling loaders from effects.
+- **Profile** (`/landlord/profile`): read-only name, email, role (from the session), plus a "Send reset link"
+  button (existing `forgot-password` endpoint, always uses the signed-in user's own email) and a 2FA status row
+  linking to Settings. **Backend gaps** (no endpoints exist — mobile shows "coming soon" for the same reason):
+  edit profile, change password with current password, "mark all notifications read", notification
+  preferences. Build those in `Rent Management Back-End` first if wanted.
+- **Settings** is no longer "coming soon" (Security card shipped earlier). Billing still is.
+- **Refactor**: `SessionExpiredError` moved to `lib/api-error.ts`.
+- **Verified**: `tsc` + ESLint clean (0 errors); logged-in browser: API routes return real data (3 read
+  notifications), dropdown + page render, Unread tab shows the empty state, badge shows 4 / "9+" / hidden when
+  the count response is faked in-page, mobile dropdown fits 375px. **Not verified**: an actually unread
+  notification (none exist; click-to-mark-read untested end to end) and "Send reset link" (would send a real
+  email).
+- **Still open vs mobile**: tenant portal (`/tenant` is "coming soon"), invite-list pagination.
+
 ## 2026-10-09 (later) — Claude (Windows) built the web Security settings page for 2FA
 
 - **Page**: `/landlord/settings` (already linked from the account menu) now shows a Two-factor
