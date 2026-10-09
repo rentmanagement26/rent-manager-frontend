@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: { default: "DomusPRO Admin", template: "%s | DomusPRO Admin" },
   // The admin console is not a public site.
   robots: { index: false, follow: false },
+  icons: { icon: "/app-logo-symbol.png" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

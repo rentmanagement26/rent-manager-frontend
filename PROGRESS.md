@@ -25,6 +25,20 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (late) — Claude (Windows) upgraded the landlord app from `next@16.3.1` to `16.4.0`
+
+- Fixes the critical Next.js advisory noted in the 2026-10-11 admin entry (affected 16.0.0-16.3.7). `next` and
+  `eslint-config-next` are now pinned to `16.4.0` in the root `package.json` (React unchanged); the admin project was already on `^16.4.0`.
+- **Verified**: landlord-app `tsc` and ESLint (run on `app components lib proxy.ts`, because the root configs also
+  pick up `admin/`, which only type-checks from inside `admin/` - this goes away with the planned `web/` move) show 0 errors
+  (2 old unused-variable warnings); dev server starts with no errors and `/login` renders with no console errors.
+  **Not verified**: a signed-in click-through - worth one pass on the live site after deploy.
+- `npm audit` still lists high findings in the **dev-only lint chain** (`braces` via `eslint-config-next`), not in `next`; the
+  suggested "fix" would downgrade `eslint-config-next` to 14, so it was not applied.
+- **Commit note**: the root `package.json`/`package-lock.json` also contain the held, uncommitted `heic2any` lines. Stage only the
+  `next` / `eslint-config-next` changes (filtered copy + `git update-index --cacheinfo`, as in `cd21066`) unless the owner wants `heic2any` shipped.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-12 (night) — Claude (Windows) built the admin Audit settings page (`/audit-settings`)
 
 - **Built**: `app/(console)/audit-settings/page.tsx`, `components/console/audit-settings-list.tsx`, `lib/audit-actions.ts`, and
