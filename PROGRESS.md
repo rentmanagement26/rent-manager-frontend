@@ -25,6 +25,29 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-11 (later) — Claude (Windows) agreed the repo layout: move the landlord/tenant/marketing app into `web/` (NOT done yet)
+
+- **Decision (owner)**: the repo becomes two sibling projects, `web/` (today's root app: marketing site, landlord pages,
+  tenant portal) and `admin/` (the admin console, already committed in `875a524`). The owner will change the existing
+  Vercel project's Root Directory to `web`.
+- **Status: planned only — no files have moved.** It waits on the owner discarding the stale landlord-app edits (see the
+  "Uncommitted" bullet in the entry below) so they are not carried into the move.
+- **Plan**: `git mv` (keeps history) `app`, `components`, `lib`, `public`, `proxy.ts`, `next.config.ts`, `tsconfig.json`,
+  `postcss.config.mjs`, `eslint.config.mjs`, `package.json`, `package-lock.json` into `web/`; rename the untracked
+  `node_modules` and `.env.local` into `web/` too; root keeps `PROGRESS.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `.claude/`.
+  Then: move the `.gitignore` patterns into `web/.gitignore` (the root ones are anchored, e.g. `/node_modules`), point the
+  `rent-manager-web` entry in `.claude/launch.json` at `web/` (`npm --prefix web run dev`), fix the paths mentioned in
+  `AGENTS.md` / `CLAUDE.md` / `README.md` (e.g. "scoped to `app/` and `lib/`", `node_modules/next/dist/docs`), and re-run
+  `tsc` + ESLint + the dev server in `web/`.
+- **Vercel order**: (1) set the existing project's Root Directory to `web` first (takes effect on the next build); (2) then
+  push the move — a failed build never replaces production, so the live site stays up either way; (3) create a second
+  project for `admin` (Root Directory `admin`, env vars `BACKEND_API_URL` + its own `SESSION_SECRET`, an admin subdomain);
+  (4) in each project's Git settings skip builds when nothing in its folder changed.
+- **Other machine (MacBook)**: after the move lands, `git pull`, then `npm install` inside `web/` and `admin/` (and recreate
+  `web/.env.local` and `admin/.env.local`; neither is in git).
+- **Next step**: owner runs the discard command and confirms the folder name `web/`; then do the move, verify, commit; push
+  only after the owner confirms the Vercel Root Directory is set.
+
 ## 2026-10-11 — Claude (Windows) started the separate admin console project (`admin/`) with the admin sign-in
 
 - **Decision (owner)**: the admin console is a **separate Next.js project in this repo** (`admin/`, own `package.json`,
