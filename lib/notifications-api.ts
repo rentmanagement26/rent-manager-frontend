@@ -24,6 +24,10 @@ export async function getUnreadNotificationCount(token: string): Promise<number>
   return data.count;
 }
 
+export async function markAllNotificationsRead(token: string): Promise<void> {
+  await notificationsRequest("/read-all", token, { method: "POST" });
+}
+
 export async function markNotificationRead(token: string, id: number): Promise<void> {
   await notificationsRequest(`/${id}/read`, token, { method: "POST" });
 }

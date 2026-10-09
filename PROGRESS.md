@@ -25,6 +25,23 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-10 (later) — Claude (Windows) added "Mark all as read" to web notifications
+
+- Wires the backend's `POST /api/v1/notifications/read-all` (mockup approved first). A "Mark all as read" link
+  sits at the right end of the All / Unread tab row on `/landlord/notifications` and `/tenant/notifications`
+  (`components/mark-all-read-button.tsx`, rendered by `NotificationsView` only when there are unread items), and
+  a "Mark all read" link sits beside "View all" in the bell dropdown header while the unread count is > 0
+  (`components/notification-bell.tsx`). Both call `markAllNotificationsReadAction`, clear the shared unread count
+  (`clearUnreadCount` in `lib/notification-store.ts`), re-poll for the real count, and `router.refresh()`.
+  No confirmation prompt on purpose (harmless, nothing is lost).
+- **Verified**: `tsc` + ESLint clean. With all of the owner's real notifications already read, the page button is
+  correctly absent. The bell flow was tested by faking the unread list/count in the page only: badge "3 unread" and
+  the "Mark all read" link appeared, clicking it ran the **real** server action against the deployed backend
+  (POST 200, a no-op since nothing was truly unread), then dots, badge, and link cleared. **Not verified**: a real
+  unread-to-read change and the page-level button with real unread items — a new notification (e.g. an invite
+  acceptance) is needed. Note: the poller skips checks while the tab is hidden (`document.visibilityState`), which
+  is why headless/hidden-pane tests have to override it.
+
 ## 2026-10-10 — Claude (Windows) wired editable name and change password into the web Profile page
 
 - **Done** (mockup approved first): `/landlord/profile` and a new `/tenant/profile` (linked from the tenant account

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { markNotificationReadAction } from "@/lib/notification-actions";
+import { markAllNotificationsReadAction, markNotificationReadAction } from "@/lib/notification-actions";
 import { formatRelativeTime } from "@/lib/format-time";
 import {
   adjustUnreadCount,
+  clearUnreadCount,
   getUnreadCountSnapshot,
   refreshUnreadCount,
   subscribeToUnreadCount,
@@ -15,6 +17,7 @@ import type { NotificationItem } from "@/lib/types";
 const DROPDOWN_LIMIT = 6;
 
 export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const count = useSyncExternalStore(subscribeToUnreadCount, getUnreadCountSnapshot, () => 0);
   const [items, setItems] = useState<NotificationItem[] | null>(null);
@@ -62,6 +65,18 @@ export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
     refreshUnreadCount();
   }
 
+  async function handleMarkAll() {
+    setItems((current) => current?.map((n) => ({ ...n, isRead: true })) ?? null);
+    clearUnreadCount();
+
+    const result = await markAllNotificationsReadAction();
+    if ("error" in result) {
+      loadItems();
+    }
+    refreshUnreadCount();
+    router.refresh();
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -86,13 +101,24 @@ export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
         <div className="max-sm:fixed max-sm:inset-x-4 max-sm:top-16 sm:absolute sm:right-0 sm:mt-2 sm:w-80 rounded-xl border border-slate-200 bg-white shadow-lg z-40 overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <p className="text-sm font-semibold text-slate-900">Notifications</p>
-            <Link
-              href={viewAllHref}
-              onClick={() => setOpen(false)}
-              className="text-xs font-semibold text-accent hover:text-accent-dark"
-            >
-              View all
-            </Link>
+            <div className="flex items-center gap-3">
+              {count > 0 && (
+                <button
+                  type="button"
+                  onClick={handleMarkAll}
+                  className="text-xs font-semibold text-accent hover:text-accent-dark"
+                >
+                  Mark all read
+                </button>
+              )}
+              <Link
+                href={viewAllHref}
+                onClick={() => setOpen(false)}
+                className="text-xs font-semibold text-accent hover:text-accent-dark"
+              >
+                View all
+              </Link>
+            </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">

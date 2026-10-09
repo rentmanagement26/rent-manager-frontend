@@ -22,6 +22,11 @@ export async function refreshUnreadCount() {
   }
 }
 
+export function clearUnreadCount() {
+  unreadCount = 0;
+  emit();
+}
+
 export function adjustUnreadCount(delta: number) {
   unreadCount = Math.max(0, unreadCount + delta);
   emit();

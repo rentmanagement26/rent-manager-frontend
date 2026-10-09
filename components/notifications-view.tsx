@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MarkAllReadButton } from "@/components/mark-all-read-button";
 import { NotificationList } from "@/components/notification-list";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
@@ -29,13 +30,16 @@ export async function NotificationsView({ basePath, unreadOnly }: { basePath: st
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-2">
-        <Link href={basePath} className={tabClass(!unreadOnly)}>
-          All
-        </Link>
-        <Link href={`${basePath}?filter=unread`} className={tabClass(unreadOnly)}>
-          Unread · {unreadCount}
-        </Link>
+      <div className="flex max-w-2xl items-center justify-between gap-4">
+        <div className="flex gap-2">
+          <Link href={basePath} className={tabClass(!unreadOnly)}>
+            All
+          </Link>
+          <Link href={`${basePath}?filter=unread`} className={tabClass(unreadOnly)}>
+            Unread · {unreadCount}
+          </Link>
+        </div>
+        {unreadCount > 0 && <MarkAllReadButton />}
       </div>
 
       <NotificationList
