@@ -25,6 +25,19 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (fix) — Claude (Windows) fixed the landlord app's Vercel build failing on `admin/` files
+
+- **Problem**: the landlord (root) Vercel build ran `tsc` over the whole repo, including `admin/**`, whose files import
+  `@/lib/...` paths that resolve to the *root* app (and `lucide-react`, which only `admin/` installs), so `npm run build`
+  failed with ~30 "Cannot find module / no exported member" errors. I had seen the same noise locally earlier and only
+  filtered it out of my checks instead of fixing it - that was a miss. The root build has probably been failing since the
+  admin project was first added (`875a524`); check the Vercel deployment history for the landlord project.
+- **Fix**: root `tsconfig.json` now has `"exclude": ["node_modules", "admin"]` and `eslint.config.mjs` ignores `admin/**`.
+  The admin project keeps its own `tsconfig` and lint run.
+- **Verified**: root `tsc` 0 errors, root ESLint 0 errors (2 old warnings), root `npm run build` completes; `admin/` `tsc` and ESLint still clean.
+  This goes away as a concern when the planned `web/` move separates the two projects.
+- **Next step**: confirm the landlord Vercel project redeploys green.
+
 ## 2026-10-12 (end of day) — Claude (Windows) found the backend barely records audit events; admin deployed and favicon live
 
 - **Admin is deployed** at https://rent-manager-frontend-sand.vercel.app/ (sign-in loads, `/overview` redirects to `/login`).

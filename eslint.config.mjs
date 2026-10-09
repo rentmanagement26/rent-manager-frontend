@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The admin console is its own project (its own tsconfig, aliases and lint run).
+    "admin/**",
   ]),
 ]);
 
