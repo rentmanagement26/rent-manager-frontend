@@ -25,6 +25,25 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-12 (end of day) — Claude (Windows) found the backend barely records audit events; admin deployed and favicon live
+
+- **Admin is deployed** at https://rent-manager-frontend-sand.vercel.app/ (sign-in loads, `/overview` redirects to `/login`).
+  The favicon (`/app-logo-symbol.png`, same symbol as the landlord app) is live there: the `<link rel="icon">` tag is in the
+  HTML and the file returns 200. `/favicon.ico` returns 404 (harmless; modern browsers use the tag). Next step for the owner: sign in
+  on the live site and click through Overview, Audit log, Settings (2FA/password) and Audit settings.
+- **Finding (backend, source read, live DB not queried)**: the audit **infrastructure** is built (log table with partitions,
+  write queue + batch writer, policy engine, `GET /admin/audit-logs`, `GET/PUT/DELETE /admin/audit-settings/{key}`) and ~27 actions
+  are *declared* in `SharedKernel/AuditActions.cs`, but the **only code that writes an event is `AuditSettingsController`**
+  (`audit.settings.changed`). Nothing records logins, failed logins, 2FA, password changes, property/unit edits, tenant invites or
+  leases. So the admin Audit log will be empty apart from settings changes (including any made while testing the Audit settings page),
+  Overview's failures card will be empty, and most actions show "0 events in 30 days".
+- **Decision needed (owner)**: approve a backend change to call `IAuditLogger` from the auth handlers first (login ok/fail,
+  lockout, 2FA, password change, authenticator replaced), then property/unit/tenant-invite/lease handlers. Do not write
+  passwords, tokens or codes into audit entries; mind PIPEDA data minimization for emails/IPs and set a retention period.
+  Nothing was changed in the backend repo.
+- **Still not built in the admin console** (no admin endpoints exist): Landlords, Tenants, Properties, Billing/plans, Support,
+  Admin team, system health, counts/trends, free-text audit search.
+
 ## 2026-10-12 (late) — Claude (Windows) upgraded the landlord app from `next@16.3.1` to `16.4.0`
 
 - Fixes the critical Next.js advisory noted in the 2026-10-11 admin entry (affected 16.0.0-16.3.7). `next` and
