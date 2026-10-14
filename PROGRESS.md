@@ -34,6 +34,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-14 (later) — Claude (Windows) tried an admin Properties page + backend endpoint; BOTH WITHDRAWN, nothing of it is in the repo
+
+- **What happened**: Claude added `GET /api/v1/admin/properties` and a `properties.view` permission to the backend and built an admin
+  `/properties` page on it. The owner then said someone else is working on the backend, so the backend commit (`277467c`) was
+  undone with a revert commit (`478e854`, pushed) and the admin Properties page was **left out of the front-end commit**.
+- **Current state**: the backend has no admin properties endpoint; the admin console's Properties sidebar item is still "Soon".
+  The page code is not in git. The backend original is recoverable from `277467c` in the backend history.
+- **If this is picked up again**: coordinate with whoever owns the backend first. Design that was used: read-only list over all
+  landlords (name, type, address, non-archived unit count, owner, archived flag), search by name/address/ID, `landlordId` filter,
+  `beforeId` paging, new `properties.view` permission for Support/Billing with a startup backfill for already-seeded roles
+  (the existing seed skips any role that already has claims). Consider whether Billing needs it at all (PIPEDA data minimization).
+
 ## 2026-10-14 — Claude (Windows) built admin Landlords, Plans and the Change plan popup (`admin/`)
 
 - **Owner override**: the owner approved the design (mockups, same session) and said "write code yourself", so Claude wrote
