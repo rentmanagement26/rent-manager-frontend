@@ -5,6 +5,7 @@ import {
   Building2,
   CreditCard,
   House,
+  Layers,
   LayoutGrid,
   LifeBuoy,
   Menu,
@@ -36,7 +37,8 @@ interface NavItem {
 
 const MENU: NavItem[] = [
   { label: "Overview", icon: LayoutGrid, href: "/overview" },
-  { label: "Landlords", icon: Users },
+  { label: "Landlords", icon: Users, href: "/landlords" },
+  { label: "Plans", icon: Layers, href: "/plans" },
   { label: "Tenants", icon: House },
   { label: "Properties", icon: Building2 },
   { label: "Billing", icon: CreditCard },

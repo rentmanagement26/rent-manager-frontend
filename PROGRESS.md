@@ -34,6 +34,33 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-14 — Claude (Windows) built admin Landlords, Plans and the Change plan popup (`admin/`)
+
+- **Owner override**: the owner approved the design (mockups, same session) and said "write code yourself", so Claude wrote
+  these files directly (guided-coding mode waived for this task only).
+- **Built**: `/landlords` (searchable list, "Older landlords" paging via `beforeId`, columns Landlord / Plan / Status / Action
+  with a **Change plan** button on every row), `/plans` (read-only catalog cards: price, limits, features, version) and
+  `components/console/change-plan.tsx` (the popup). Sidebar: Landlords is live and a new Plans item was added.
+  Data layer: `lib/subscription-api.ts`, `lib/subscription-actions.ts`, `lib/plan-check.ts`, plan types in `lib/types.ts`;
+  `getJson` moved from `audit-api.ts` into `lib/api-client.ts` so both share it.
+- **Popup behaviour**: loads the landlord's usage on open (`GET /admin/landlords/{id}/subscription`), pick a plan, usage is
+  previewed against it (green "fits" or amber "over the limit" lines), then reason + **note**, then `PUT .../subscription`.
+  The backend requires **both** a reason code and a written note for admin changes (so the note is mandatory, unlike the mockup).
+  Only SuperAdmin sees "Skip the usage check". Support sees the list but no button. The preview is advisory - the backend
+  repeats the check and its error (with the broken limits) is shown if it disagrees.
+- **Backend facts**: real seeded plans are Free $0 (1 property, 3 units), Basic $19, Pro $49. There is **no endpoint to create or
+  edit a plan** (`packages.manage` is granted to Billing but no controller uses it), so prices/limits can't be changed from the
+  admin yet. Plan changes take effect immediately and take **no payment** (no payment endpoints exist). Plan changes are not
+  audited yet (see the audit-events decision above).
+- **Verified**: `tsc` + ESLint clean in `admin/`; dev server starts with no errors; `/landlords` and `/plans` redirect to
+  `/login` without a session; the three backend routes answer 401 without a token (a fake route 404s).
+  **Not verified signed in** (needs the owner): the list and paging, search, the popup with real usage, a real plan change,
+  the blocked-downgrade and SuperAdmin override paths, Support's read-only view, dark mode and phone width.
+  Suggest testing a change on a throwaway landlord and switching back.
+- **Not built**: plan editing (needs backend endpoints), per-landlord usage bars in the list (one call per landlord),
+  subscription history view (`GET .../subscription/history` exists), plan-change audit events.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-12 (fix) — Claude (Windows) fixed the landlord app's Vercel build failing on `admin/` files
 
 - **Problem**: the landlord (root) Vercel build ran `tsc` over the whole repo, including `admin/**`, whose files import

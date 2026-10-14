@@ -21,3 +21,18 @@ export function formatWhen(value: string, now = new Date()) {
 export function daysAgo(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
+
+// "$29" for whole prices, "$29.50" otherwise. The backend stores plain numbers with no currency, so only the sign is shown.
+export function formatPrice(amount: number) {
+  return Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+}
+
+// "Hardeep Singh" -> "HS". Used for avatar circles.
+export function initials(fullName: string) {
+  return fullName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}

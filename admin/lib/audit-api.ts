@@ -1,18 +1,6 @@
-import { backendFetch } from "@/lib/api-client";
+import { backendFetch, getJson } from "@/lib/api-client";
 import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
-import type { ApiResult, AuditLogPage, AuditMode, AuditOutcome, AuditSettings } from "@/lib/types";
-
-async function getJson<T>(path: string, token: string): Promise<ApiResult<T>> {
-  try {
-    const response = await backendFetch(path, token, { cache: "no-store" });
-    if (response.status === 401) return { status: "expired" };
-    if (response.status === 403) return { status: "forbidden" };
-    if (!response.ok) return { status: "error" };
-    return { status: "ok", data: (await response.json()) as T };
-  } catch {
-    return { status: "error" };
-  }
-}
+import type { AuditLogPage, AuditMode, AuditOutcome, AuditSettings } from "@/lib/types";
 
 export function getAuditSettings(token: string) {
   return getJson<AuditSettings>("/api/v1/admin/audit-settings", token);
