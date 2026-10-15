@@ -48,12 +48,15 @@ const MENU: NavItem[] = [
 const SECURITY: NavItem[] = [
   { label: "Audit log", icon: ScrollText, href: "/audit-log" },
   { label: "Audit settings", icon: SlidersHorizontal, href: "/audit-settings" },
-  { label: "Admin team", icon: ShieldCheck },
+  // SuperAdmin only: the sidebar below hides this link for other roles.
+  { label: "Admin team", icon: ShieldCheck, href: "/admin-team" },
 ];
 
 const ACCOUNT: NavItem[] = [{ label: "Settings", icon: Settings, href: "/settings" }];
 
-const ITEM_HEIGHT_PX = 40;
+// How far the sliding highlight moves per menu item: the item height (h-10 = 40px) plus the gap between items
+// (gap-1 = 4px). If you change either one in NavGroup, change this too or the highlight drifts off its item.
+const ITEM_HEIGHT_PX = 44;
 
 function initials(fullName: string) {
   return fullName
@@ -70,7 +73,8 @@ function NavGroup({ title, items, pathname, onNavigate }: { title: string; items
   return (
     <div>
       <div className="px-3 py-1.5 text-[11px] tracking-[0.08em] text-c-tx3">{title}</div>
-      <div className="relative">
+      {/* flex-col + gap-1 leaves a small space between items, so hover and active backgrounds don't touch */}
+      <div className="relative flex flex-col gap-1">
         {activeIndex >= 0 && (
           <div
             aria-hidden
@@ -147,7 +151,10 @@ export function ConsoleShell({
         />
       </div>
       <NavGroup title="MENU" items={MENU} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
-      <NavGroup title="SECURITY" items={SECURITY} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+      <NavGroup
+        title="SECURITY"
+        items={SECURITY.filter((item) => item.href !== "/admin-team" || role === "SuperAdmin")}
+        pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
       <NavGroup title="ACCOUNT" items={ACCOUNT} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
     </div>
   );

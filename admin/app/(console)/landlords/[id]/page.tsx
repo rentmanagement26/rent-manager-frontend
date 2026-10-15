@@ -1,0 +1,226 @@
+import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { ChangePlanButton } from "@/components/console/change-plan";
+import { LandlordAccount } from "@/components/console/landlord-account";
+import { Notice, Pill, cardClass } from "@/components/console/ui";
+import { requireAdmin } from "@/lib/auth-guard";
+import { formatPrice, formatWhen, initials } from "@/lib/format";
+import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
+
+export const metadata: Metadata = { title: "Landlord" };
+
+// Landlord detail page: /landlords/<landlordProfileId>
+//
+// This lives in the ADMIN app only. It is separate from the landlord and tenant portals: it has its own
+// login, its own session, and only talks to the backend's /api/v1/admin/... endpoints.
+//
+// It shows four things about one landlord:
+//   1. who they are (header) + the "Change plan" button
+//   2. their current plan and how much of each limit they have used
+//   3. overrides (extra allowances support gave them on top of the plan)
+//   4. the history of their plan changes
+export default async function LandlordDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // Only signed-in admins get past this line; anyone else is sent to the login page.
+  const session = await requireAdmin();
+
+  // The id comes from the URL (/landlords/42). Reject anything that isn't a positive whole number.
+  const landlordProfileId = Number((await params).id);
+  if (!Number.isInteger(landlordProfileId) || landlordProfileId <= 0) notFound();
+
+  // Load everything at once instead of one after another, so the page opens faster.
+  const [detail, history, packages] = await Promise.all([
+    getLandlordSubscription(session.backendToken, landlordProfileId),
+    getLandlordHistory(session.backendToken, landlordProfileId),
+    getPackages(session.backendToken), // the plan catalog, needed by the "Change plan" popup
+  ]);
+
+  // "expired" means the admin's login timed out, so send them to sign in again.
+  if (detail.status === "expired" || history.status === "expired" || packages.status === "expired") {
+    redirect("/session-expired");
+  }
+
+  // Link back to the list, shown on every version of the page below.
+  const backLink = (
+    <Link href="/landlords" className="flex items-center gap-1.5 text-[13px] text-c-act2 hover:underline">
+      <ArrowLeft size={14} /> All landlords
+    </Link>
+  );
+
+  // If the main data didn't load (no permission, landlord not found, server problem), show a message
+  // instead of crashing.
+  if (detail.status !== "ok") {
+    return (
+      <div className="flex max-w-5xl flex-col gap-5">
+        {backLink}
+        <Notice>
+          {detail.status === "forbidden"
+            ? "Your role doesn't have access to landlords."
+            : "Couldn't load this landlord. They may not exist, or try refreshing."}
+        </Notice>
+      </div>
+    );
+  }
+
+  const { landlord, subscription, overrides } = detail.data;
+
+  // Business name is the main title when there is one; the person's own name goes underneath.
+  const displayName = landlord.businessName || landlord.name;
+
+  // Billing and SuperAdmin can change plans; Support can only look. (The backend enforces this too.)
+  const canChangePlan = session.role !== "Support" && packages.status === "ok";
+  // Only a SuperAdmin may skip the "usage must fit the new plan" check.
+  const canOverrideUsage = session.role === "SuperAdmin";
+
+  return (
+    <div className="flex max-w-5xl flex-col gap-5">
+      {backLink}
+
+      {/* 1. Header: avatar, name, email, and the Change plan button */}
+      <section className={`${cardClass} animate-up flex flex-wrap items-center gap-4`}>
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-c-aci text-sm font-medium text-c-act2">
+          {initials(landlord.name)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="flex items-center gap-2 text-2xl font-medium tracking-tight">
+            <span className="truncate">{displayName}</span>
+            {/* Only shown when the account is switched off */}
+            {landlord.isActive === false && <Pill className="bg-c-bad text-c-badt">Deactivated</Pill>}
+          </h1>
+          <p className="truncate text-sm text-c-tx2">
+            {landlord.businessName ? `${landlord.name} · ` : ""}
+            {landlord.email ?? "No email"}
+          </p>
+        </div>
+        {canChangePlan && packages.status === "ok" && (
+          // Same popup the list uses. After a successful change it refreshes this page by itself.
+          <ChangePlanButton
+            landlordProfileId={landlord.landlordProfileId}
+            landlordName={displayName}
+            packages={packages.data}
+            canOverrideUsage={canOverrideUsage}
+          />
+        )}
+      </section>
+
+      {/* Account controls (switch the account on/off, reset two-factor). SuperAdmin only; the backend enforces it too. */}
+      {session.role === "SuperAdmin" && (
+        <LandlordAccount
+          landlordProfileId={landlord.landlordProfileId}
+          userId={landlord.userId}
+          name={displayName}
+          isActive={landlord.isActive}
+        />
+      )}
+
+      {/* 2. Current plan, with usage against each limit */}
+      <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.06s" }}>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-medium">Current plan</h2>
+          {subscription.hasPlan ? (
+            <>
+              <Pill className="bg-c-sf2 text-c-tx">{subscription.packageName}</Pill>
+              {/* Green when Active, amber for anything else */}
+              {subscription.status && (
+                <Pill className={subscription.status === "Active" ? "bg-c-ok text-c-okt" : "bg-c-wr text-c-wrt"}>
+                  {subscription.status}
+                </Pill>
+              )}
+              {subscription.monthlyPrice != null && (
+                <span className="text-sm text-c-tx2">{formatPrice(subscription.monthlyPrice)} / month</span>
+              )}
+            </>
+          ) : (
+            <Pill className="bg-c-sf2 text-c-tx3">No plan</Pill>
+          )}
+        </div>
+
+        {subscription.startedAt && <p className="mb-4 text-xs text-c-tx3">Started {formatWhen(subscription.startedAt)}</p>}
+
+        {/* One tile per limit, e.g. "Properties: 3 of 5". The limit already includes any override. */}
+        {subscription.limits.length > 0 && (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {subscription.limits.map((limit) => (
+              <li key={limit.key} className="rounded-xl bg-c-sf2 px-4 py-3">
+                <div className="text-xs text-c-tx2">{limit.displayName}</div>
+                <div className="text-lg font-medium">
+                  {limit.used} <span className="text-sm font-normal text-c-tx3">of {limit.limit}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Features the plan includes, as small tags */}
+        {subscription.features.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {subscription.features.map((feature) => (
+              <Pill key={feature.key} className="bg-c-sf2 text-c-tx">
+                {feature.displayName}
+              </Pill>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 3. Overrides: extra allowances given on top of the plan */}
+      <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.12s" }}>
+        <h2 className="mb-3 text-lg font-medium">Active overrides</h2>
+        {overrides.length === 0 ? (
+          <Notice>No overrides. This landlord gets exactly what their plan includes.</Notice>
+        ) : (
+          <ul className="flex flex-col divide-y divide-c-bd">
+            {overrides.map((override) => (
+              <li key={`${override.kind}-${override.key}`} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                <span>{override.displayName}</span>
+                <span className="text-c-tx2">
+                  {override.effect}
+                  {override.expiresAt ? ` · until ${formatWhen(override.expiresAt)}` : " · no expiry"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* 4. Plan history, newest first */}
+      <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.18s" }}>
+        <h2 className="mb-3 text-lg font-medium">Plan history</h2>
+        {history.status !== "ok" ? (
+          <Notice>Couldn&apos;t load the history right now.</Notice>
+        ) : history.data.items.length === 0 ? (
+          <Notice>No plan changes yet.</Notice>
+        ) : (
+          <ul className="flex flex-col divide-y divide-c-bd">
+            {history.data.items.map((entry) => (
+              <li key={entry.id} className="py-2.5 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {entry.eventType}
+                    {/* "Starter → Pro" when a plan name is known */}
+                    {(entry.fromPackage || entry.toPackage) && (
+                      <span className="font-normal text-c-tx2">
+                        {" "}
+                        · {entry.fromPackage ?? "none"} → {entry.toPackage ?? "none"}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-c-tx3">{formatWhen(entry.occurredAt)}</span>
+                </div>
+                {/* The reason and note the admin gave, when there are any */}
+                {(entry.reasonCode || entry.note) && (
+                  <p className="mt-0.5 text-xs text-c-tx2">
+                    {entry.reasonCode}
+                    {entry.reasonCode && entry.note ? " — " : ""}
+                    {entry.note}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}

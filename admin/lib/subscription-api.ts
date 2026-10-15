@@ -6,6 +6,7 @@ import type {
   LandlordPage,
   LimitViolation,
   PlanChangeReasonCode,
+  SubscriptionHistoryPage,
 } from "@/lib/types";
 
 const BASE = "/api/v1/admin";
@@ -27,6 +28,11 @@ export function getLandlords(token: string, query: { search?: string; beforeId?:
 // One landlord's plan, with usage against each limit.
 export function getLandlordSubscription(token: string, landlordProfileId: number) {
   return getJson<AdminLandlordSubscription>(`${BASE}/landlords/${landlordProfileId}/subscription`, token);
+}
+
+// A landlord's plan changes (upgrades, downgrades, admin changes), newest first.
+export function getLandlordHistory(token: string, landlordProfileId: number) {
+  return getJson<SubscriptionHistoryPage>(`${BASE}/landlords/${landlordProfileId}/subscription/history?limit=50`, token);
 }
 
 // Thrown when the backend refuses a plan change. `code` is the backend's stable error code

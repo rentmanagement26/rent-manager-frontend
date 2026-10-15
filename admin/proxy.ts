@@ -21,7 +21,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const refreshResponse = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/refresh`, {
+  // Renew the session through the staff door.
+  const refreshResponse = await fetch(`${process.env.BACKEND_API_URL}/api/v1/admin/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ RefreshToken: session.refreshToken }),

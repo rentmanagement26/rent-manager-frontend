@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth-card";
 import { ErrorNote, inputClass, primaryButtonClass } from "@/components/form-bits";
@@ -57,6 +58,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <span aria-hidden="true">→</span>
         </button>
       </form>
+
+      {/* Sends a reset link to the staff email (see /login/forgot-password). */}
+      <p className="mt-4 text-center text-[13px]">
+        <Link href="/login/forgot-password" className="text-brand-text hover:underline">
+          Forgot your password?
+        </Link>
+      </p>
 
       <div className="mt-6 flex items-center gap-3 text-xs text-ink-3 before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line">
         Authorised staff only

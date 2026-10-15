@@ -16,7 +16,8 @@ export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/login`, {
+  // The staff door. (The customer door, /api/v1/auth/login, refuses staff accounts.)
+  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/admin/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ Email: email, Password: password }),
@@ -30,6 +31,9 @@ export async function loginAction(formData: FormData) {
   // The backend only returns a short-lived token here; the real session starts after the second factor.
   const challenge: TwoFactorChallenge = await response.json();
   await setTwoFactorCookie(challenge.twoFactorToken, challenge.setupRequired);
+
+  // First sign-in with a temporary password: the person must choose their own password before 2FA.
+  if (challenge.passwordChangeRequired) redirect("/login/two-factor/new-password");
 
   redirect(`/login/two-factor/${challenge.setupRequired ? "setup" : "verify"}`);
 }

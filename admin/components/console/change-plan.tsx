@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ErrorBox, WarningBox, goToSessionExpired, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/console/ui";
 import { formatPrice, initials } from "@/lib/format";
 import { findViolations } from "@/lib/plan-check";
@@ -122,7 +123,10 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages, ca
         Change plan
       </button>
 
-      {open && (
+      {/* Drawn into the page wrapper (a "portal"), not inside the animated card that holds the button: a card
+          that fades in with a transform would otherwise squash this "fixed" popup into its own corner. */}
+      {open &&
+        createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
           {/* Dimmed backdrop. Clicking it closes the popup. */}
           <button
@@ -278,8 +282,9 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages, ca
               </div>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.querySelector<HTMLElement>(".console") ?? document.body,
+        )}
     </>
   );
 }

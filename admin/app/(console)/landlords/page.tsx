@@ -38,18 +38,26 @@ function LandlordRow({
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-c-aci text-xs font-medium text-c-act2">
           {initials(landlord.name)}
         </div>
-        <div className="min-w-0">
+        {/* The name is a link to this landlord's detail page (plan, usage, overrides, history). */}
+        <Link href={`/landlords/${landlord.landlordProfileId}`} className="min-w-0 hover:underline">
           <div className="truncate text-sm font-medium">{landlord.businessName || landlord.name}</div>
           <div className="truncate text-xs text-c-tx2">
             {landlord.businessName ? `${landlord.name} · ` : ""}
             {landlord.email ?? "No email"}
           </div>
-        </div>
+        </Link>
       </div>
 
       <div>{landlord.planName ? <Pill className="bg-c-sf2 text-c-tx">{landlord.planName}</Pill> : <Pill className="bg-c-sf2 text-c-tx3">No plan</Pill>}</div>
 
-      <div>{landlord.planStatus && <Pill className={statusClass(landlord.planStatus)}>{landlord.planStatus}</Pill>}</div>
+      {/* A switched-off account is flagged first; otherwise the plan status (Active, ...) is shown. */}
+      <div>
+        {!landlord.isActive ? (
+          <Pill className="bg-c-bad text-c-badt">Deactivated</Pill>
+        ) : (
+          landlord.planStatus && <Pill className={statusClass(landlord.planStatus)}>{landlord.planStatus}</Pill>
+        )}
+      </div>
 
       <div>{changePlan}</div>
     </li>

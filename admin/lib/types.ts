@@ -30,6 +30,8 @@ export interface BackendAuthResponse {
 export interface TwoFactorChallenge {
   setupRequired: boolean;
   twoFactorToken: string;
+  // true when the account signed in with a temporary password and must choose a new one first.
+  passwordChangeRequired?: boolean;
 }
 
 export interface TwoFactorEnrollment {
@@ -137,6 +139,8 @@ export interface AdminPackage {
 // One row of the landlords list (GET /admin/landlords). planName/planStatus are null for a landlord with no plan.
 export interface LandlordListItem {
   landlordProfileId: number;
+  // The landlord's sign-in account id (needed to reset their 2FA). Absent on an older backend.
+  userId?: string;
   name: string;
   businessName: string | null;
   email: string | null;
@@ -171,10 +175,78 @@ export interface LandlordSubscription {
   features: PackageFeature[];
 }
 
+// An extra allowance (or feature) support granted to one landlord on top of their plan.
+// kind "limit":   effect looks like "+5" (five more of that limit).
+// kind "feature": effect is "granted" (switched on) or "removed" (switched off).
+export interface ActiveOverride {
+  kind: "feature" | "limit";
+  key: string;
+  displayName: string;
+  effect: string;
+  startsAt: string;
+  expiresAt: string | null; // null = never expires
+}
+
 // GET /admin/landlords/{id}/subscription
 export interface AdminLandlordSubscription {
-  landlord: { landlordProfileId: number; name: string; businessName: string | null; email: string | null };
+  // userId and isActive are absent on a backend that has not been updated yet.
+  landlord: {
+    landlordProfileId: number;
+    userId?: string;
+    name: string;
+    businessName: string | null;
+    email: string | null;
+    isActive?: boolean;
+  };
   subscription: LandlordSubscription;
+  overrides: ActiveOverride[];
+}
+
+// ---- Admin team (staff accounts) ----------------------------------------------------------------------------
+
+// One row of GET /admin/staff.
+export interface StaffMember {
+  userId: string;
+  name: string;
+  email: string | null;
+  roles: string[];
+  // "Active", "Invited" (temporary password not used yet), "Expired" (temporary password ran out) or "Disabled".
+  status: string;
+  twoFactorEnabled: boolean;
+  createdAt: string;
+  temporaryPasswordExpiresAt: string | null;
+}
+
+// Answer to creating a staff account or resetting a password/2FA. Shown to the admin ONCE and never stored.
+export interface TemporaryPassword {
+  userId: string;
+  temporaryPassword: string;
+  expiresAt: string;
+}
+
+// Why an admin resets someone's two-factor (TwoFactorResetReasons.cs). The backend also needs a written note.
+export const TWO_FACTOR_RESET_REASONS = [
+  { code: "lost_device", label: "Lost device" },
+  { code: "new_device", label: "New device" },
+  { code: "suspected_compromise", label: "Suspected compromise" },
+  { code: "other", label: "Other" },
+] as const;
+export type TwoFactorResetReason = (typeof TWO_FACTOR_RESET_REASONS)[number]["code"];
+
+// One entry of a landlord's plan history (GET /admin/landlords/{id}/subscription/history).
+export interface SubscriptionHistoryItem {
+  id: number;
+  occurredAt: string;
+  eventType: string; // what happened, as the backend names it
+  fromPackage: string | null; // plan name before the change (null for the first plan)
+  toPackage: string | null; // plan name after the change
+  reasonCode: string | null; // why an admin made the change
+  note: string | null; // free text the admin wrote
+}
+
+export interface SubscriptionHistoryPage {
+  items: SubscriptionHistoryItem[];
+  nextBeforeId: number | null; // pass as beforeId to load older entries
 }
 
 // The reason codes the backend accepts for an admin plan change (SubscriptionReasonCodes.cs).

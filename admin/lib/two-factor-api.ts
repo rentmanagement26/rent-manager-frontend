@@ -9,7 +9,8 @@ import type {
 } from "@/lib/types";
 
 async function postTwoFactor<T>(path: string, body: Record<string, string>): Promise<T> {
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/2fa/${path}`, {
+  // The staff door's 2FA steps (the customer door refuses staff accounts).
+  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/admin/auth/2fa/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
