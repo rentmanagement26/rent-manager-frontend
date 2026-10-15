@@ -47,8 +47,24 @@ export async function clearTwoFactorCookie() {
   });
 }
 
+// Staff accounts (DomusPRO admins) belong to the separate admin console, never to this portal.
+const STAFF_ROLES = ["SuperAdmin", "Support", "Billing"];
+export const STAFF_NOT_ALLOWED_MESSAGE = "Email or password is incorrect.";
+
 // Writes the session cookie from a backend auth response and returns the session user.
 export async function saveSession(auth: BackendAuthResponse): Promise<SessionUser> {
+  // Safety net: the backend already refuses staff at this portal's sign-in. If one ever got this far anyway,
+  // sign their refresh token out and refuse, rather than letting an admin act as a landlord here.
+  if (auth.roles.some((role) => STAFF_ROLES.includes(role))) {
+    await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ RefreshToken: auth.refreshToken }),
+    }).catch(() => {});
+    await clearTwoFactorCookie();
+    throw new Error(STAFF_NOT_ALLOWED_MESSAGE);
+  }
+
   const user: SessionUser = {
     id: auth.userId,
     email: auth.email,
