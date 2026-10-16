@@ -34,6 +34,20 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-16 (token fix) — Claude (Windows) fixed admin sessions ending around the 15-minute access-token mark
+
+- **Cause (from reading the code, then reproduced with a fake backend)**: `admin/proxy.ts` refreshed the token on every request. Parallel requests
+  (prefetch, page + action) all used the same refresh token; the second use made the backend revoke EVERY refresh token for the user
+  (`RefreshTokenCommand` reuse rule), ending the session. Also the request that triggered a refresh still sent the old, expired token.
+- **Frontend fix** (`admin/proxy.ts`): one refresh per refresh token, shared for 15 s in memory, and the new cookie is applied to the request
+  being handled as well as the response. **Test**: 3 parallel requests with an expired token made 1 backend refresh call, and the backend
+  saw the new access token in that same request.
+- **Backend fix** (`Users/Application/Commands/RefreshTokenCommand.cs`, backend repo, **uncommitted, needs the backend owner's OK**): reuse of a token rotated
+  within the last 30 s (`RotationGraceSeconds`) is refused but no longer revokes all the user's sessions. Reuse after that still revokes
+  everything. `dotnet build` clean. Not run against a database.
+- **Still true**: on several server instances the frontend sharing only works per instance; the backend grace window covers that case.
+- **Noticed**: the backend build warns about a known high-severity vulnerability in `System.Security.Cryptography.Pkcs` 10.0.0 (NU1903). Not touched.
+
 ## 2026-10-16 (even later) — Claude (Windows) added the animated house loader (`components/house-loader.tsx`, `admin/components/house-loader.tsx`)
 
 - **Built**: `HouseLoader` (SVG house in a ring, orange arc spins, windows pulse; `size` prop; respects reduced motion). One copy per app,
