@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import Link from "next/link";
 import { getSession } from "@/lib/get-session";
 import { getTenantInvitePreview } from "@/lib/tenant-invite-api";
@@ -152,6 +153,7 @@ export default async function RegisterTenantPage({
         {introCard}
 
         <form action={loginAction} className="flex flex-col gap-4">
+<PendingOverlay />
           <input type="hidden" name="redirect" value={backHref} />
 
           <div className="flex flex-col gap-1.5">
@@ -204,6 +206,7 @@ export default async function RegisterTenantPage({
       )}
 
       <form action={registerTenantAction} className="flex flex-col gap-4">
+<PendingOverlay />
         <input type="hidden" name="token" value={token} />
 
         <div className="flex flex-col gap-1.5">

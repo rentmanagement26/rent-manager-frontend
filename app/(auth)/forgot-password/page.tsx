@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import Link from "next/link";
 import { forgotPasswordAction } from "@/app/(auth)/forgot-password/actions";
 
@@ -29,6 +30,7 @@ export default async function ForgotPasswordPage({
         )}
 
         <form action={forgotPasswordAction} className="flex flex-col gap-4">
+<PendingOverlay />
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-semibold text-body">
               Email

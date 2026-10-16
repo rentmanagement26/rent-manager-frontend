@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import Link from "next/link";
 import { registerAction } from "./actions";
 import Image from "next/image";
@@ -41,6 +42,7 @@ export default async function RegisterPage({
           )}
 
           <form action={registerAction} className="flex flex-col gap-4">
+<PendingOverlay />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="fullName" className="text-sm font-semibold text-body">
                 Full name

@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import { resetPasswordAction } from "@/app/(auth)/reset-password/actions";
 
 export default async function ResetPasswordPage({
@@ -30,6 +31,7 @@ export default async function ResetPasswordPage({
         )}
 
         <form action={resetPasswordAction} className="flex flex-col gap-4">
+<PendingOverlay />
           <input type="hidden" name="userId" value={userId} />
           <input type="hidden" name="token" value={token} />
 

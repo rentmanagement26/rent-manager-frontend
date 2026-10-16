@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
@@ -48,6 +49,7 @@ export default async function TwoFactorVerifyPage({
         action={recovery ? recoveryLoginAction : verifyTwoFactorAction}
         className="flex flex-col gap-4"
       >
+<PendingOverlay />
         <input type="hidden" name="redirect" value={redirectTo} />
         <div className="flex flex-col gap-1.5">
           <label htmlFor={recovery ? "recoveryCode" : "code"} className="text-sm font-semibold text-body">

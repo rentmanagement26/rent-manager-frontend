@@ -40,7 +40,10 @@ Codex and Claude use this file as the project handoff, across both computers.
   since admin shares no code with the landlord app. Used as the route loading screen via `loading.tsx` in `admin/app/(console)/`,
   `app/landlord/` and `app/tenant/` (none existed before), and in the notification bell instead of the "Loading…" text.
 - **Verified**: `tsc` clean in both apps, eslint no new warnings. Looked at in a standalone preview, **not yet in the running app**.
-- **Next**: use it on the long-running buttons/forms if wanted, and on the login and marketing pages.
+- **Added later the same day**: `PendingOverlay` (`components/pending-overlay.tsx`, copy in `admin/components/`) covers the page with the loader
+  while a form is being sent. In every sign-in, register, forgot/reset password and two-factor form (admin and landlord). Checked on the admin
+  sign-in page: the loader appears on submit. Not on the many `onSubmit` forms (profile, security cards), only `action={...}` forms.
+- **Next**: marketing pages and the `onSubmit` forms, if wanted.
 - **Uncommitted** at the time of writing.
 
 ## 2026-10-16 (later) — Claude (Windows) added the admin Roles (permissions) page (`admin/`)

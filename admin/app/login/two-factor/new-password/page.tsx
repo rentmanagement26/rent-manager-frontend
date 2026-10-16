@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -28,6 +29,7 @@ export default async function NewPasswordPage({ searchParams }: { searchParams: 
       <ErrorNote message={error} />
 
       <form action={newPasswordAction} className="flex flex-col">
+<PendingOverlay />
         <label htmlFor="newPassword" className="mb-1.5 text-[13px] text-ink-2">
           New password
         </label>

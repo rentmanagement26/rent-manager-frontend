@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -36,6 +37,7 @@ export default async function VerifyPage({
       <ErrorNote message={error} />
 
       <form action={recovery ? recoveryLoginAction : verifyTwoFactorAction} className="flex flex-col">
+<PendingOverlay />
         {recovery ? (
           <>
             <label htmlFor="recoveryCode" className="mb-1.5 text-[13px] text-ink-2">

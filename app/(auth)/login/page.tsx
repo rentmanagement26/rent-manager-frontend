@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loginAction } from "@/app/(auth)/login/actions";
@@ -63,6 +64,7 @@ export default async function LoginPage({
           )}
 
           <form action={loginAction} className="flex flex-col gap-4">
+<PendingOverlay />
             <input type="hidden" name="redirect" value={redirectTo ?? ""} />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm font-semibold text-body">

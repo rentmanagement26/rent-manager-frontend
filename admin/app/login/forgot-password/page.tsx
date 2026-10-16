@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth-card";
@@ -35,6 +36,7 @@ export default async function ForgotPasswordPage({
           <ErrorNote message={error} />
 
           <form action={forgotPasswordAction} className="flex flex-col">
+<PendingOverlay />
             <label htmlFor="email" className="mb-1.5 text-[13px] text-ink-2">
               Work email
             </label>

@@ -1,3 +1,4 @@
+import { PendingOverlay } from "@/components/pending-overlay";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth-card";
@@ -53,6 +54,7 @@ export default async function ResetPasswordPage({
       <ErrorNote message={error} />
 
       <form action={resetPasswordAction} className="flex flex-col">
+<PendingOverlay />
         {/* Values from the emailed link, sent back with the form. */}
         <input type="hidden" name="userId" value={userId} />
         <input type="hidden" name="token" value={token} />
