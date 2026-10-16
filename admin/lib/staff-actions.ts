@@ -2,6 +2,7 @@
 
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
+import { setRolePermissions } from "@/lib/roles-api";
 import {
   createStaff,
   deactivateStaff,
@@ -206,5 +207,30 @@ export async function setLandlordActiveAction(
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't change the account. Try again.");
+  }
+}
+
+// ---- Roles and permissions ----------------------------------------------------------------------------------
+
+// Saves the permissions of one role (Support or Billing). The backend refuses SuperAdmin-only permissions,
+// unknown ones, and an empty list, so those checks are not repeated here.
+export async function setRolePermissionsAction(
+  role: string,
+  permissions: string[],
+  code: string,
+): Promise<Done | ActionFailure> {
+  const auth = await superAdminToken();
+  if ("error" in auth) return auth;
+
+  try {
+    await setRolePermissions(
+      auth.token,
+      String(role),
+      Array.from(new Set((permissions ?? []).map((p) => String(p)))),
+      cleanCode(code),
+    );
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't save the permissions. Try again.");
   }
 }

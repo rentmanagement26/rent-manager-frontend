@@ -34,6 +34,17 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-16 (later) — Claude (Windows) added the admin Roles (permissions) page (`admin/`)
+
+- **Built**: `/roles` (SuperAdmin only, sidebar link under SECURITY): one card per role (SuperAdmin, Support, Billing) with member count and
+  a permissions bar. Opening a card shows the permissions as switches grouped by area; SuperAdmin-only permissions are locked.
+  Saving needs an authenticator code. Files: `app/(console)/roles/page.tsx`, `components/console/roles-editor.tsx`, `lib/roles-api.ts`,
+  `setRolePermissionsAction` in `lib/staff-actions.ts`, role types in `lib/types.ts`. Uses the backend's `GET /admin/roles` and
+  `PUT /admin/roles/{role}/permissions` (already built). `send` in `lib/staff-api.ts` is now exported for reuse.
+- **Verified**: `tsc`, eslint and `next build` clean. **Not verified** in the browser (needs a SuperAdmin login with a code).
+- **Note**: the Billing role lacks `subscriptions.change` by default; a SuperAdmin can now add it here instead of SQL.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-16 — Claude (Windows) gave the Admin team page an Actions dropdown and a separate Edit roles page (`admin/`)
 
 - **Built** (owner said "do it yourself", which lifts guided-coding for this task): `components/console/actions-menu.tsx` (borderless

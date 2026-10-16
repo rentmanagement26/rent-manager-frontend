@@ -273,3 +273,28 @@ export interface ChangePlanFailure extends ActionFailure {
   code?: string;
   violations?: LimitViolation[];
 }
+
+// ---- Roles and permissions (GET /api/v1/admin/roles) --------------------------------------------------------
+
+// One staff role with the permissions it holds today. SuperAdmin is never editable and holds everything.
+export interface RoleInfo {
+  name: string;
+  editable: boolean;
+  hasAllPermissions: boolean;
+  permissions: string[];
+  members: number;
+}
+
+// One permission in the catalogue. `area` is the part before the dot, e.g. "landlords" for "landlords.view".
+// SuperAdmin-only permissions can never be given to another role.
+export interface PermissionInfo {
+  key: string;
+  area: string;
+  description: string;
+  superAdminOnly: boolean;
+}
+
+export interface RolesOverview {
+  roles: RoleInfo[];
+  permissions: PermissionInfo[];
+}

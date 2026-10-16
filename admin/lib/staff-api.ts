@@ -10,7 +10,7 @@ const ADMIN = "/api/v1/admin";
 
 // Sends one write request and turns every kind of answer into a value or a readable error.
 // Returns the parsed JSON body, or null when the backend answers "204 No Content".
-async function send<T>(method: "POST" | "PUT", path: string, token: string, body?: unknown): Promise<T | null> {
+export async function send<T>(method: "POST" | "PUT", path: string, token: string, body?: unknown): Promise<T | null> {
   const response = await backendFetch(path, token, {
     method,
     body: body === undefined ? undefined : JSON.stringify(body),

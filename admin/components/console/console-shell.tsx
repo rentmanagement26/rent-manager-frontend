@@ -5,6 +5,7 @@ import {
   Building2,
   CreditCard,
   House,
+  KeyRound,
   Layers,
   LayoutGrid,
   LifeBuoy,
@@ -48,9 +49,13 @@ const MENU: NavItem[] = [
 const SECURITY: NavItem[] = [
   { label: "Audit log", icon: ScrollText, href: "/audit-log" },
   { label: "Audit settings", icon: SlidersHorizontal, href: "/audit-settings" },
-  // SuperAdmin only: the sidebar below hides this link for other roles.
+  // SuperAdmin only (Admin team and Roles): the sidebar below hides these links for other roles.
   { label: "Admin team", icon: ShieldCheck, href: "/admin-team" },
+  { label: "Roles", icon: KeyRound, href: "/roles" },
 ];
+
+// Sidebar links only a SuperAdmin sees.
+const SUPER_ADMIN_ONLY = ["/admin-team", "/roles"];
 
 const ACCOUNT: NavItem[] = [{ label: "Settings", icon: Settings, href: "/settings" }];
 
@@ -153,7 +158,7 @@ export function ConsoleShell({
       <NavGroup title="MENU" items={MENU} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
       <NavGroup
         title="SECURITY"
-        items={SECURITY.filter((item) => item.href !== "/admin-team" || role === "SuperAdmin")}
+        items={SECURITY.filter((item) => !SUPER_ADMIN_ONLY.includes(item.href ?? "") || role === "SuperAdmin")}
         pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
       <NavGroup title="ACCOUNT" items={ACCOUNT} pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
     </div>
