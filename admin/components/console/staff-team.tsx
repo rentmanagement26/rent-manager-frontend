@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { KeyRound, Plus, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import { ActionsMenu, type MenuEntry } from "@/components/console/actions-menu";
 import { Modal } from "@/components/console/modal";
 import { TemporaryPasswordModal } from "@/components/console/temporary-password-modal";
 import { TwoFactorResetModal } from "@/components/console/two-factor-reset-modal";
@@ -22,7 +23,6 @@ import {
   reactivateStaffAction,
   resetStaffPasswordAction,
   resetStaffTwoFactorAction,
-  setStaffRolesAction,
 } from "@/lib/staff-actions";
 import { ADMIN_ROLES } from "@/lib/types";
 import type { ActionFailure, StaffMember, TemporaryPassword } from "@/lib/types";
@@ -44,7 +44,6 @@ const STATUS_STYLE: Record<string, string> = {
 // Which popup is open, and for whom.
 type Dialog =
   | { kind: "create" }
-  | { kind: "roles"; member: StaffMember }
   | { kind: "password"; member: StaffMember }
   | { kind: "twofactor"; member: StaffMember }
   | { kind: "deactivate"; member: StaffMember }
@@ -76,6 +75,27 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
     if (password) setShownPassword({ who, password });
   }
 
+  // What the "Actions" dropdown offers for one staff member. A disabled account can only be reactivated.
+  function entriesFor(member: StaffMember): MenuEntry[] {
+    if (member.status === "Disabled") {
+      return [
+        { label: "Reactivate", icon: <UserCheck size={16} />, onSelect: () => setDialog({ kind: "reactivate", member }) },
+      ];
+    }
+    return [
+      // Roles have their own page, because picking roles is bigger than a quick popup.
+      { label: "Edit roles", icon: <Users size={16} />, onSelect: () => router.push(`/admin-team/${member.userId}/roles`) },
+      "separator",
+      { label: "Reset password", icon: <KeyRound size={16} />, onSelect: () => setDialog({ kind: "password", member }) },
+      {
+        label: "Reset two-factor",
+        icon: <ShieldCheck size={16} />,
+        onSelect: () => setDialog({ kind: "twofactor", member }),
+      },
+      { label: "Deactivate", icon: <UserX size={16} />, onSelect: () => setDialog({ kind: "deactivate", member }) },
+    ];
+  }
+
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -97,7 +117,6 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
         <ul className="flex flex-col divide-y divide-c-bd">
           {staff.map((member) => {
             const isMe = member.userId === currentUserId;
-            const disabled = member.status === "Disabled";
             return (
               <li key={member.userId} className="flex flex-col gap-3 py-4">
                 <div className="flex flex-wrap items-center gap-3">
@@ -119,6 +138,8 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
                       </Pill>
                     ))}
                   </div>
+                  {/* You can't change your own account here (the backend refuses it as well). */}
+                  {!isMe && <ActionsMenu entries={entriesFor(member)} />}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-0 text-xs text-c-tx3 sm:pl-13">
@@ -128,27 +149,6 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
                     <span>Temporary password until {formatWhen(member.temporaryPasswordExpiresAt)}</span>
                   )}
                 </div>
-
-                {/* You can't change your own account here (the backend refuses it as well). */}
-                {!isMe && (
-                  <div className="flex flex-wrap gap-2 sm:pl-13">
-                    {!disabled && (
-                      <>
-                        <SmallButton onClick={() => setDialog({ kind: "roles", member })}>Change roles</SmallButton>
-                        <SmallButton onClick={() => setDialog({ kind: "password", member })}>
-                          Reset password
-                        </SmallButton>
-                        <SmallButton onClick={() => setDialog({ kind: "twofactor", member })}>
-                          Reset two-factor
-                        </SmallButton>
-                        <SmallButton onClick={() => setDialog({ kind: "deactivate", member })}>Deactivate</SmallButton>
-                      </>
-                    )}
-                    {disabled && (
-                      <SmallButton onClick={() => setDialog({ kind: "reactivate", member })}>Reactivate</SmallButton>
-                    )}
-                  </div>
-                )}
               </li>
             );
           })}
@@ -158,8 +158,6 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
       {dialog?.kind === "create" && (
         <CreateStaffModal onClose={close} onCreated={(password, name) => finishedWithPassword(name, password)} />
       )}
-
-      {dialog?.kind === "roles" && <ChangeRolesModal member={dialog.member} onClose={close} onDone={finished} />}
 
       {dialog?.kind === "password" && (
         <CodeConfirmModal
@@ -208,17 +206,8 @@ export function StaffTeam({ staff, currentUserId }: { staff: StaffMember[]; curr
   );
 }
 
-// A compact button for the row actions.
-function SmallButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" onClick={onClick} className={`${secondaryButtonClass} h-8 px-3 text-xs`}>
-      {children}
-    </button>
-  );
-}
-
 // The "your authenticator code" field that several actions need (proof that it really is the admin acting).
-function CodeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function CodeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor="staff-code" className="text-xs text-c-tx2">
@@ -238,10 +227,10 @@ function CodeField({ value, onChange }: { value: string; onChange: (value: strin
   );
 }
 
-const codeLooksValid = (code: string) => code.replace(/\s/g, "").length >= 6;
+export const codeLooksValid = (code: string) => code.replace(/\s/g, "").length >= 6;
 
 // A checkbox per role, with a one-line description of what the role can do.
-function RoleChecks({ selected, onChange }: { selected: string[]; onChange: (roles: string[]) => void }) {
+export function RoleChecks({ selected, onChange }: { selected: string[]; onChange: (roles: string[]) => void }) {
   function toggle(role: string) {
     onChange(selected.includes(role) ? selected.filter((r) => r !== role) : [...selected, role]);
   }
@@ -271,7 +260,7 @@ function RoleChecks({ selected, onChange }: { selected: string[]; onChange: (rol
 }
 
 // Runs a server action and handles the common outcomes: failure message, expired session, or success.
-function useAction() {
+export function useAction() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -355,47 +344,6 @@ function CreateStaffModal({
             className={primaryButtonClass}
           >
             {busy ? "Creating…" : "Create account"}
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-function ChangeRolesModal({
-  member,
-  onClose,
-  onDone,
-}: {
-  member: StaffMember;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  // Start from the roles they have now.
-  const [roles, setRoles] = useState<string[]>(member.roles);
-  const [code, setCode] = useState("");
-  const { busy, error, run } = useAction();
-
-  const canSubmit = roles.length > 0 && codeLooksValid(code) && !busy;
-
-  return (
-    <Modal title="Change roles" subtitle={member.name} busy={busy} onClose={onClose}>
-      <div className="flex flex-col gap-4">
-        <RoleChecks selected={roles} onChange={setRoles} />
-        <CodeField value={code} onChange={setCode} />
-        <ErrorBox message={error} />
-
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!canSubmit}
-            onClick={() => run(() => setStaffRolesAction(member.userId, roles, code), onDone)}
-            className={primaryButtonClass}
-          >
-            {busy ? "Saving…" : "Save roles"}
           </button>
         </div>
       </div>

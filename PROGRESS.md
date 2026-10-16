@@ -34,6 +34,19 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-16 — Claude (Windows) gave the Admin team page an Actions dropdown and a separate Edit roles page (`admin/`)
+
+- **Built** (owner said "do it yourself", which lifts guided-coding for this task): `components/console/actions-menu.tsx` (borderless
+  dropdown), staff rows now use it (Edit roles, Reset password, Reset two-factor, Deactivate; Reactivate for disabled accounts),
+  and `/admin-team/[userId]/roles` (`staff-roles-form.tsx`) replaces the old Change roles popup. Your own row has no menu.
+- **New rule** in `AGENTS.md`: keep code clean and commented (every new file and exported function gets a comment).
+- **Verified**: `tsc --noEmit` and eslint clean. **Not verified in the browser** (needs a SuperAdmin login with an authenticator code).
+- **Not built, needs backend first**: Edit details, Delete account, and a code on Deactivate. Spec for the backend owner:
+  `admin/STAFF-EDIT-DELETE-BACKEND-SPEC.md`. Next step: once those endpoints exist, add them to `lib/staff-api.ts`,
+  `lib/staff-actions.ts` and the dropdown (Edit details first, Delete last in red).
+- Audit: every existing staff action already writes an audit entry (source read, not run).
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-14 (later) — Claude (Windows) tried an admin Properties page + backend endpoint; BOTH WITHDRAWN, nothing of it is in the repo
 
 - **What happened**: Claude added `GET /api/v1/admin/properties` and a `properties.view` permission to the backend and built an admin

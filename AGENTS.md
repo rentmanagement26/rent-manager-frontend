@@ -12,6 +12,14 @@ since you last looked.
 Next.js/React/TypeScript. Explain what file to create/edit, give the exact code, and why — don't
 write application source files directly. (Scoped to `app/`, `lib/`, and similar source
 directories — updating `PROGRESS.md` itself, or config/docs, is fine to do directly.)
+The owner can lift this for a task by saying "do it yourself" / "implement it"; then write the code directly.
+
+**Code quality rule (applies to all code, by any agent)**: keep code clean and commented.
+- Small, single-purpose components and functions; reuse existing helpers in `components/console/ui.tsx`
+  and `lib/` instead of duplicating them.
+- Every new file starts with a short comment saying what it is for. Every exported component or function
+  gets a plain-English comment; non-obvious logic gets a "why" comment. No commented-out code.
+- Match the surrounding code's naming, Tailwind tokens (`c-*`) and structure.
 
 **Canadian & Provincial Tenancy Law Compliance (Federal, Ontario, Manitoba)**:
 Whenever proposing or developing any feature (e.g. lease agreements, rent payments, security/damage deposits,
