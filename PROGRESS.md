@@ -34,6 +34,15 @@ Codex and Claude use this file as the project handoff, across both computers.
   upgrade `829f0a1`), stage only the intended lines - build filtered copies without `heic2any` and use
   `git update-index --cacheinfo`, as in `cd21066` and `829f0a1`. Another machine will not have it; run `npm install heic2any` there only when needed.
 
+## 2026-10-16 (even later) — Claude (Windows) added the animated house loader (`components/house-loader.tsx`, `admin/components/house-loader.tsx`)
+
+- **Built**: `HouseLoader` (SVG house in a ring, orange arc spins, windows pulse; `size` prop; respects reduced motion). One copy per app,
+  since admin shares no code with the landlord app. Used as the route loading screen via `loading.tsx` in `admin/app/(console)/`,
+  `app/landlord/` and `app/tenant/` (none existed before), and in the notification bell instead of the "Loading…" text.
+- **Verified**: `tsc` clean in both apps, eslint no new warnings. Looked at in a standalone preview, **not yet in the running app**.
+- **Next**: use it on the long-running buttons/forms if wanted, and on the login and marketing pages.
+- **Uncommitted** at the time of writing.
+
 ## 2026-10-16 (later) — Claude (Windows) added the admin Roles (permissions) page (`admin/`)
 
 - **Built**: `/roles` (SuperAdmin only, sidebar link under SECURITY): one card per role (SuperAdmin, Support, Billing) with member count and

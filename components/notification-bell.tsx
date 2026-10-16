@@ -1,5 +1,6 @@
 "use client";
 
+import { HouseLoader } from "@/components/house-loader";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -123,7 +124,7 @@ export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
 
           <div className="max-h-96 overflow-y-auto">
             {loadFailed && <p className="px-4 py-6 text-center text-sm text-muted">Couldn&apos;t load notifications.</p>}
-            {!loadFailed && items === null && <p className="px-4 py-6 text-center text-sm text-muted">Loading…</p>}
+            {!loadFailed && items === null && <div className="flex justify-center px-4 py-6"><HouseLoader size={44} /></div>}
             {!loadFailed && items?.length === 0 && (
               <p className="px-4 py-6 text-center text-sm text-muted">You&apos;re all caught up.</p>
             )}
