@@ -4,9 +4,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ChangePlanButton } from "@/components/console/change-plan";
 import { LandlordAccount } from "@/components/console/landlord-account";
+import { OverridesManager } from "@/components/console/overrides-manager";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
 import { requireAdmin } from "@/lib/auth-guard";
+import { getCatalog } from "@/lib/catalog-api";
 import { formatPrice, formatWhen, initials } from "@/lib/format";
+import { getOverrides } from "@/lib/override-api";
 import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
 
 export const metadata: Metadata = { title: "Landlord" };
@@ -30,14 +33,16 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   if (!Number.isInteger(landlordProfileId) || landlordProfileId <= 0) notFound();
 
   // Load everything at once instead of one after another, so the page opens faster.
-  const [detail, history, packages] = await Promise.all([
+  const [detail, history, packages, overrideList, catalog] = await Promise.all([
     getLandlordSubscription(session.backendToken, landlordProfileId),
     getLandlordHistory(session.backendToken, landlordProfileId),
     getPackages(session.backendToken), // the plan catalog, needed by the "Change plan" popup
+    getOverrides(session.backendToken, landlordProfileId), // every override, including expired and removed ones
+    getCatalog(session.backendToken), // the limit and feature lists for the "Add override" popup
   ]);
 
   // "expired" means the admin's login timed out, so send them to sign in again.
-  if (detail.status === "expired" || history.status === "expired" || packages.status === "expired") {
+  if (detail.status === "expired" || history.status === "expired" || packages.status === "expired" || overrideList.status === "expired") {
     redirect("/session-expired");
   }
 
@@ -63,13 +68,15 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
     );
   }
 
-  const { landlord, subscription, overrides } = detail.data;
+  const { landlord, subscription } = detail.data;
 
   // Business name is the main title when there is one; the person's own name goes underneath.
   const displayName = landlord.businessName || landlord.name;
 
   // Billing and SuperAdmin can change plans; Support can only look. (The backend enforces this too.)
   const canChangePlan = session.role !== "Support" && packages.status === "ok";
+  // Adding or removing overrides: Support and SuperAdmin by default (Billing has no override permissions).
+  const overrideCatalog = session.role !== "Billing" && catalog.status === "ok" ? catalog.data : null;
   // Only a SuperAdmin may skip the "usage must fit the new plan" check.
   const canOverrideUsage = session.role === "SuperAdmin";
 
@@ -164,25 +171,24 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
         )}
       </section>
 
-      {/* 3. Overrides: extra allowances given on top of the plan */}
-      <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.12s" }}>
-        <h2 className="mb-3 text-lg font-medium">Active overrides</h2>
-        {overrides.length === 0 ? (
-          <Notice>No overrides. This landlord gets exactly what their plan includes.</Notice>
-        ) : (
-          <ul className="flex flex-col divide-y divide-c-bd">
-            {overrides.map((override) => (
-              <li key={`${override.kind}-${override.key}`} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
-                <span>{override.displayName}</span>
-                <span className="text-c-tx2">
-                  {override.effect}
-                  {override.expiresAt ? ` · until ${formatWhen(override.expiresAt)}` : " · no expiry"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* 3. Overrides: extra allowances and feature switches given on top of the plan */}
+      {overrideList.status === "ok" ? (
+        <OverridesManager
+          landlordProfileId={landlord.landlordProfileId}
+          landlordName={displayName}
+          overrides={overrideList.data}
+          catalog={overrideCatalog}
+        />
+      ) : (
+        <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.12s" }}>
+          <h2 className="mb-3 text-lg font-medium">Overrides</h2>
+          <Notice>
+            {overrideList.status === "forbidden"
+              ? "Your role can't see overrides."
+              : "Couldn't load overrides right now. Refresh to try again."}
+          </Notice>
+        </section>
+      )}
 
       {/* 4. Plan history, newest first */}
       <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.18s" }}>

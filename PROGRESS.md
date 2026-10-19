@@ -25,6 +25,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-19 (evening) — Claude (Windows) added landlord overrides to the admin landlord page
+
+- **What**: the "Overrides" card on `/landlords/[id]` now lists every override (Active, Scheduled, Expired, Revoked) with reason, note,
+  who added/removed it; "Add override" (extra of a limit, switch a feature on or off, optional end date, reason code + note) and
+  "Remove" (note required) on Active/Scheduled ones. Uses `GET/POST /admin/landlords/{id}/overrides[...]`.
+  Files: `lib/override-api.ts`, `lib/override-actions.ts`, `components/console/overrides-manager.tsx`, the landlord page, types.
+- **Rules mirrored**: extra amount whole number 1-1000; end date in the future and within five years (sent as end of that day, UTC);
+  reason code from the same list as plan changes; note required up to 500; the backend refuses a duplicate active feature override.
+- **Verified**: `tsc` and `eslint` clean. **Not run against the live backend.** Buttons hidden for Billing (the backend gives Billing no
+  override permissions by default); the backend permission is the real check. Reason-code list assumed equal to the plan-change list.
+- **Next**: `GET /admin/me` to drive button visibility from real permissions; plan version history view.
+
 ## 2026-10-19 (later) — Claude (Windows) added Plans editing to the admin console
 
 - **What**: on `/plans`: "Add plan" (name, order, price, every limit, features), per-card "New version" (price/limits/features plus a

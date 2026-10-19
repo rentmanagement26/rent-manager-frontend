@@ -323,3 +323,25 @@ export interface Catalog {
   features: CatalogFeature[];
   limits: CatalogLimit[];
 }
+
+// ---- Landlord overrides (GET /api/v1/admin/landlords/{id}/overrides) -----------------------------------------
+
+// One extra allowance ("limit") or feature switch ("feature") an admin gave one landlord on top of their plan.
+// `effect` is "+5" for a limit, or "granted" / "removed" for a feature. `status` is Active, Scheduled, Expired or Revoked.
+export interface LandlordOverride {
+  id: number;
+  kind: "limit" | "feature";
+  key: string;
+  displayName: string;
+  effect: string;
+  status: "Active" | "Scheduled" | "Expired" | "Revoked";
+  reasonCode: string | null;
+  note: string | null;
+  startsAt: string;
+  expiresAt: string | null;
+  createdAt: string;
+  createdBy: string | null;
+  revokedAt: string | null;
+  revokedBy: string | null;
+  revokedReason: string | null;
+}
