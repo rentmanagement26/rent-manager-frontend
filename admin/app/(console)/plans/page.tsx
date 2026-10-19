@@ -1,16 +1,18 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AddPlanButton, PlanCardActions } from "@/components/console/plan-editor";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
+import { getCatalog } from "@/lib/catalog-api";
 import { requireAdmin } from "@/lib/auth-guard";
 import { formatPrice } from "@/lib/format";
 import { getPackages } from "@/lib/subscription-api";
-import type { AdminPackage } from "@/lib/types";
+import type { AdminPackage, Catalog } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Plans" };
 
-// One plan: name, price, what it limits, and what it includes. Read-only.
-function PlanCard({ plan }: { plan: AdminPackage }) {
+// One plan: name, price, what it limits, and what it includes. `catalog` is set only when this admin can edit.
+function PlanCard({ plan, catalog }: { plan: AdminPackage; catalog: Catalog | null }) {
   return (
     <article className={`${cardClass} flex flex-col gap-4`}>
       <div className="flex items-start justify-between gap-2">
@@ -49,13 +51,16 @@ function PlanCard({ plan }: { plan: AdminPackage }) {
       </ul>
 
       <p className="mt-auto text-xs text-c-tx3">Version {plan.version}</p>
+      {catalog && <PlanCardActions plan={plan} catalog={catalog} />}
     </article>
   );
 }
 
 export default async function PlansPage() {
   const session = await requireAdmin();
-  const packages = await getPackages(session.backendToken);
+  const [packages, catalog] = await Promise.all([getPackages(session.backendToken), getCatalog(session.backendToken)]);
+  // Editing needs the catalog (for the limit and feature lists). Support can only look; the backend enforces this too.
+  const editCatalog = session.role !== "Support" && catalog.status === "ok" ? catalog.data : null;
 
   if (packages.status === "expired") {
     redirect("/session-expired");
@@ -66,6 +71,11 @@ export default async function PlansPage() {
       <div className="animate-up">
         <h1 className="text-2xl font-medium tracking-tight">Plans</h1>
         <p className="mt-1 text-c-tx2">What each plan costs and includes. To move a landlord to a plan, use Landlords.</p>
+        {editCatalog && (
+          <div className="mt-4">
+            <AddPlanButton catalog={editCatalog} />
+          </div>
+        )}
       </div>
 
       <div className="animate-up flex flex-col gap-5" style={{ animationDelay: "0.06s" }}>
@@ -75,10 +85,13 @@ export default async function PlansPage() {
               {[...packages.data]
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((plan) => (
-                  <PlanCard key={plan.packageId} plan={plan} />
+                  <PlanCard key={plan.packageId} plan={plan} catalog={editCatalog} />
                 ))}
             </div>
-            <Notice>Prices, limits and features can&apos;t be edited here yet. The backend has no endpoint for changing plans.</Notice>
+            <Notice>
+              A new version changes the price, limits and features of a plan and keeps the old version in the history. Features
+              and limits come from the Catalog.
+            </Notice>
           </>
         ) : (
           <section className={cardClass}>

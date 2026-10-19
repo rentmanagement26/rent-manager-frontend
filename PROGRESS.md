@@ -25,6 +25,19 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-19 (later) — Claude (Windows) added Plans editing to the admin console
+
+- **What**: on `/plans`: "Add plan" (name, order, price, every limit, features), per-card "New version" (price/limits/features plus a
+  required note; the old version stays in history) and "Edit details" (name, order, active, default). Uses the backend's
+  `POST /admin/packages`, `POST /admin/packages/{id}/versions`, `PUT /admin/packages/{id}`.
+  Files: `lib/package-api.ts`, `lib/package-actions.ts`, `components/console/plan-editor.tsx`, `app/(console)/plans/page.tsx`.
+- **Rules mirrored**: name 2-60; price 0-100,000 and limits 0-1,000,000, max two decimals; every catalog limit gets a value; exactly one
+  default plan (move it by making another plan default); an identical new version is refused by the backend.
+- **Verified**: `tsc` and `eslint` clean. **Not run against the live backend.** Buttons hidden for Support only; the backend
+  `Packages.Manage` permission is the real check (SuperAdmin and Billing).
+- **Not built**: per-plan version history view (`GET /admin/packages/{id}` exists), landlord overrides. Unknown: whether existing
+  landlords move to a new version automatically - check before publishing on a live plan.
+
 ## 2026-10-19 — Claude (Windows) built the admin Catalog page (features and limits)
 
 - **What**: new `/catalog` page in `admin/` on the backend's `/api/v1/admin/catalog` endpoints (pulled in `41a25c4`). Lists features and
