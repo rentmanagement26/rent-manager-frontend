@@ -134,6 +134,32 @@ export interface AdminPackage {
   monthlyPrice: number;
   limits: PackageLimit[];
   features: PackageFeature[];
+  // Landlords on any version of this plan, and how many of them are not on the current version.
+  // Absent on a backend that has not been updated yet.
+  landlords?: number;
+  landlordsOnOlderVersions?: number;
+}
+
+// One version of a plan (GET /admin/packages/{id}): its price, limits, features and how many landlords are on it.
+export interface PackageVersionDetail {
+  packageVersionId: number;
+  version: number;
+  isCurrent: boolean;
+  monthlyPrice: number;
+  createdAt: string;
+  landlords: number;
+  limits: PackageLimit[];
+  features: PackageFeature[];
+}
+
+// A plan with every version it has had, newest first.
+export interface AdminPackageDetail {
+  packageId: number;
+  name: string;
+  isActive: boolean;
+  isDefault: boolean;
+  sortOrder: number;
+  versions: PackageVersionDetail[];
 }
 
 // One row of the landlords list (GET /admin/landlords). planName/planStatus are null for a landlord with no plan.
@@ -179,6 +205,7 @@ export interface LandlordSubscription {
 // kind "limit":   effect looks like "+5" (five more of that limit).
 // kind "feature": effect is "granted" (switched on) or "removed" (switched off).
 export interface ActiveOverride {
+  id?: number; // absent on a backend that has not been updated yet
   kind: "feature" | "limit";
   key: string;
   displayName: string;

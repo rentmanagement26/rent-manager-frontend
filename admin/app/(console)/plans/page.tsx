@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AddPlanButton, PlanCardActions } from "@/components/console/plan-editor";
+import { PlanVersionsButton } from "@/components/console/plan-versions";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
 import { getCatalog } from "@/lib/catalog-api";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
@@ -51,7 +52,18 @@ function PlanCard({ plan, catalog }: { plan: AdminPackage; catalog: Catalog | nu
         {plan.features.length === 0 && <li className="text-c-tx3">No extra features.</li>}
       </ul>
 
-      <p className="mt-auto text-xs text-c-tx3">Version {plan.version}</p>
+      <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-c-tx3">
+        <span>Version {plan.version}</span>
+        {plan.landlords != null && (
+          <span>
+            · {plan.landlords} {plan.landlords === 1 ? "landlord" : "landlords"}
+          </span>
+        )}
+        {!!plan.landlordsOnOlderVersions && (
+          <Pill className="bg-c-wr text-c-wrt">{plan.landlordsOnOlderVersions} on an older version</Pill>
+        )}
+      </div>
+      <PlanVersionsButton packageId={plan.packageId} planName={plan.name} />
       {catalog && <PlanCardActions plan={plan} catalog={catalog} />}
     </article>
   );
@@ -94,8 +106,8 @@ export default async function PlansPage() {
                 ))}
             </div>
             <Notice>
-              A new version changes the price, limits and features of a plan and keeps the old version in the history. Features
-              and limits come from the Catalog.
+              A new version changes the price, limits and features of a plan and keeps the old version in the history (see Versions on
+              each plan). Landlords already on the plan keep their version. Features and limits come from the Catalog.
             </Notice>
           </>
         ) : (

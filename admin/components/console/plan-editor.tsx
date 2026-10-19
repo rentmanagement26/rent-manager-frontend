@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Modal } from "@/components/console/modal";
-import { ErrorBox, goToSessionExpired, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/console/ui";
+import { ErrorBox, WarningBox, goToSessionExpired, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/console/ui";
 import { createPlanAction, publishPlanVersionAction, updatePlanDetailsAction } from "@/lib/package-actions";
 import type { ActionFailure, AdminPackage, Catalog } from "@/lib/types";
 
@@ -226,6 +226,11 @@ function NewVersionModal({
   return (
     <Modal title="Publish new version" subtitle={`${plan.name} · now on version ${plan.version}`} busy={submitting} onClose={onClose}>
       <div className="flex flex-col gap-4">
+        {/* A landlord stays on the version they have until they change plan, so a new version only reaches new sign-ups. */}
+        <WarningBox>
+          Landlords already on this plan ({plan.landlords ?? 0}) keep the version they are on. The new version applies to landlords
+          who join or change to this plan from now on.
+        </WarningBox>
         <ContentFields catalog={catalog} values={values} onChange={setValues} />
         <div className="flex flex-col gap-2">
           <label htmlFor="plan-note" className="text-xs text-c-tx2">

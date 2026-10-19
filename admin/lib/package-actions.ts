@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
 import { createPackage, publishPackageVersion, updatePackage } from "@/lib/package-api";
+import { getPackageDetail } from "@/lib/subscription-api";
 import type { PlanContentInput } from "@/lib/package-api";
-import type { ActionFailure } from "@/lib/types";
+import type { ActionFailure, AdminPackageDetail } from "@/lib/types";
 
 type Done = { ok: true };
 
@@ -41,6 +42,17 @@ function cleanName(name: string): string | null {
 
 function validOrder(order: number) {
   return Number.isInteger(order) && order >= 0 && order <= 1000;
+}
+
+// Loads a plan's version history when the "Versions" popup opens.
+export async function loadPlanVersionsAction(packageId: number): Promise<{ ok: true; data: AdminPackageDetail } | ActionFailure> {
+  const session = await requireAdmin();
+
+  const result = await getPackageDetail(session.backendToken, Number(packageId));
+  if (result.status === "ok") return { ok: true, data: result.data };
+  if (result.status === "expired") return { error: "Your session expired. Sign in again.", expired: true };
+  if (result.status === "forbidden") return { error: "Your role can't view plan versions.", expired: false };
+  return { error: "Couldn't load the versions. Try again.", expired: false };
 }
 
 export async function createPlanAction(

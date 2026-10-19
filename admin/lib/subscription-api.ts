@@ -3,6 +3,7 @@ import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
 import type {
   AdminLandlordSubscription,
   AdminPackage,
+  AdminPackageDetail,
   LandlordPage,
   LimitViolation,
   PlanChangeReasonCode,
@@ -14,6 +15,11 @@ const BASE = "/api/v1/admin";
 // The plan catalog: every plan with its current price, limits and features.
 export function getPackages(token: string) {
   return getJson<AdminPackage[]>(`${BASE}/packages`, token);
+}
+
+// One plan with every version it has had, and how many landlords are on each.
+export function getPackageDetail(token: string, packageId: number) {
+  return getJson<AdminPackageDetail>(`${BASE}/packages/${packageId}`, token);
 }
 
 // Landlords, newest first, each with their plan name and status. `beforeId` pages to older ones.

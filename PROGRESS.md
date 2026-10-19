@@ -25,6 +25,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-19 (late) — Claude (Windows) Plans page now shows what the backend returns about versions
+
+- **What**: plan cards show `landlords` and a "N on an older version" pill (`landlordsOnOlderVersions`); a "Versions" popup on every card
+  loads `GET /admin/packages/{id}` (each version: price, limits, features, created date, landlords, current flag); the "New version" popup
+  warns that landlords already on the plan keep their version. `ActiveOverride` type gained the optional `id`.
+  Files: `components/console/plan-versions.tsx`, `plan-editor.tsx`, `app/(console)/plans/page.tsx`, `lib/package-actions.ts`,
+  `lib/subscription-api.ts`, `lib/types.ts`.
+- **Backend fact found while reading**: a landlord's subscription points to ONE package version (`PackageVersionId`), so publishing a new
+  version does NOT move existing landlords, and there is no endpoint to move them. Backend gaps: move landlords to a new version, list
+  landlords per version, show a landlord's plan version (`MySubscriptionDto` has no version), retire a feature.
+- **Verified**: `tsc` and `eslint` clean. Not run against the live backend.
+
 ## 2026-10-19 (night) — Claude (Windows) admin buttons now follow real permissions (`GET /admin/me`)
 
 - **What**: new `admin/lib/permissions.ts` (`getPermissions(session)` -> `can(permission)`, one `/admin/me` call per request). Replaced the
