@@ -5,12 +5,13 @@ import { CatalogManager } from "@/components/console/catalog-manager";
 import { Notice, cardClass } from "@/components/console/ui";
 import { requireAdmin } from "@/lib/auth-guard";
 import { getCatalog } from "@/lib/catalog-api";
+import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "Catalog" };
 
 export default async function CatalogPage() {
   const session = await requireAdmin();
-  const catalog = await getCatalog(session.backendToken);
+  const [catalog, { can }] = await Promise.all([getCatalog(session.backendToken), getPermissions(session)]);
 
   if (catalog.status === "expired") {
     redirect("/session-expired");
@@ -25,8 +26,8 @@ export default async function CatalogPage() {
 
       <div className="animate-up flex flex-col gap-5" style={{ animationDelay: "0.06s" }}>
         {catalog.status === "ok" ? (
-          // Support can only look. The backend enforces this too; hiding the buttons just avoids dead ends.
-          <CatalogManager catalog={catalog.data} canEdit={session.role !== "Support"} />
+          // The backend enforces catalog.manage too; hiding the buttons just avoids dead ends.
+          <CatalogManager catalog={catalog.data} canEdit={can(PERMISSIONS.catalogManage)} />
         ) : (
           <section className={cardClass}>
             <Notice>

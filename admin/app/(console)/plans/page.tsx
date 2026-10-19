@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AddPlanButton, PlanCardActions } from "@/components/console/plan-editor";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
 import { getCatalog } from "@/lib/catalog-api";
+import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { requireAdmin } from "@/lib/auth-guard";
 import { formatPrice } from "@/lib/format";
 import { getPackages } from "@/lib/subscription-api";
@@ -58,9 +59,13 @@ function PlanCard({ plan, catalog }: { plan: AdminPackage; catalog: Catalog | nu
 
 export default async function PlansPage() {
   const session = await requireAdmin();
-  const [packages, catalog] = await Promise.all([getPackages(session.backendToken), getCatalog(session.backendToken)]);
-  // Editing needs the catalog (for the limit and feature lists). Support can only look; the backend enforces this too.
-  const editCatalog = session.role !== "Support" && catalog.status === "ok" ? catalog.data : null;
+  const [packages, catalog, { can }] = await Promise.all([
+    getPackages(session.backendToken),
+    getCatalog(session.backendToken),
+    getPermissions(session),
+  ]);
+  // Editing needs the catalog (for the limit and feature lists) and the packages.manage permission.
+  const editCatalog = can(PERMISSIONS.packagesManage) && catalog.status === "ok" ? catalog.data : null;
 
   if (packages.status === "expired") {
     redirect("/session-expired");

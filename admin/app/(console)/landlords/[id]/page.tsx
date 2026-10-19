@@ -10,6 +10,7 @@ import { requireAdmin } from "@/lib/auth-guard";
 import { getCatalog } from "@/lib/catalog-api";
 import { formatPrice, formatWhen, initials } from "@/lib/format";
 import { getOverrides } from "@/lib/override-api";
+import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
 
 export const metadata: Metadata = { title: "Landlord" };
@@ -33,12 +34,13 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   if (!Number.isInteger(landlordProfileId) || landlordProfileId <= 0) notFound();
 
   // Load everything at once instead of one after another, so the page opens faster.
-  const [detail, history, packages, overrideList, catalog] = await Promise.all([
+  const [detail, history, packages, overrideList, catalog, { can }] = await Promise.all([
     getLandlordSubscription(session.backendToken, landlordProfileId),
     getLandlordHistory(session.backendToken, landlordProfileId),
     getPackages(session.backendToken), // the plan catalog, needed by the "Change plan" popup
     getOverrides(session.backendToken, landlordProfileId), // every override, including expired and removed ones
     getCatalog(session.backendToken), // the limit and feature lists for the "Add override" popup
+    getPermissions(session), // what this admin may do, to decide which buttons to show
   ]);
 
   // "expired" means the admin's login timed out, so send them to sign in again.
@@ -73,12 +75,13 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   // Business name is the main title when there is one; the person's own name goes underneath.
   const displayName = landlord.businessName || landlord.name;
 
-  // Billing and SuperAdmin can change plans; Support can only look. (The backend enforces this too.)
-  const canChangePlan = session.role !== "Support" && packages.status === "ok";
-  // Adding or removing overrides: Support and SuperAdmin by default (Billing has no override permissions).
-  const overrideCatalog = session.role !== "Billing" && catalog.status === "ok" ? catalog.data : null;
-  // Only a SuperAdmin may skip the "usage must fit the new plan" check.
-  const canOverrideUsage = session.role === "SuperAdmin";
+  // Buttons follow the admin's real permissions. (The backend enforces them too.)
+  const canChangePlan = can(PERMISSIONS.subscriptionsChange) && packages.status === "ok";
+  // "Add override" needs overrides.grant plus the catalog for its lists; "Remove" needs overrides.revoke.
+  const overrideCatalog = can(PERMISSIONS.overridesGrant) && catalog.status === "ok" ? catalog.data : null;
+  const canRevokeOverride = can(PERMISSIONS.overridesRevoke);
+  // Only someone holding subscriptions.override (SuperAdmin) may skip the "usage must fit the new plan" check.
+  const canOverrideUsage = can(PERMISSIONS.subscriptionsOverride);
 
   return (
     <div className="flex max-w-5xl flex-col gap-5">
@@ -178,6 +181,7 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
           landlordName={displayName}
           overrides={overrideList.data}
           catalog={overrideCatalog}
+          canRevoke={canRevokeOverride}
         />
       ) : (
         <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.12s" }}>

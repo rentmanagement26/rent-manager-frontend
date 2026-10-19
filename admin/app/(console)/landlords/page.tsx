@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { ChangePlanButton } from "@/components/console/change-plan";
 import { Notice, Pill, cardClass, inputClass, secondaryButtonClass } from "@/components/console/ui";
 import { requireAdmin } from "@/lib/auth-guard";
+import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { initials } from "@/lib/format";
 import { getLandlords, getPackages } from "@/lib/subscription-api";
 import type { LandlordListItem } from "@/lib/types";
@@ -81,9 +82,10 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
     redirect("/session-expired");
   }
 
-  // Billing and SuperAdmin can change plans; Support can only look. The backend enforces this as well.
-  const canChangePlan = session.role !== "Support" && packages.status === "ok";
-  const canOverrideUsage = session.role === "SuperAdmin";
+  // Buttons follow the admin's real permissions. The backend enforces them as well.
+  const { can } = await getPermissions(session);
+  const canChangePlan = can(PERMISSIONS.subscriptionsChange) && packages.status === "ok";
+  const canOverrideUsage = can(PERMISSIONS.subscriptionsOverride);
 
   // Builds the "Older landlords" link, keeping the search text.
   function pageHref(nextBeforeId: number) {
@@ -166,7 +168,7 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
           </>
         )}
 
-        {session.role === "Support" && <p className="mt-4 text-xs text-c-tx3">Your role can view plans but not change them.</p>}
+        {!can(PERMISSIONS.subscriptionsChange) && <p className="mt-4 text-xs text-c-tx3">Your role can view plans but not change them.</p>}
       </section>
     </div>
   );

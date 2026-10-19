@@ -2,6 +2,7 @@
 
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
+import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { PlanChangeError, changeLandlordPlan, getLandlordSubscription } from "@/lib/subscription-api";
 import { PLAN_CHANGE_REASONS } from "@/lib/types";
 import type { ActionFailure, AdminLandlordSubscription, ChangePlanFailure, PlanChangeReasonCode } from "@/lib/types";
@@ -32,7 +33,8 @@ export async function changePlanAction(input: {
 }): Promise<{ ok: true } | ChangePlanFailure> {
   const session = await requireAdmin();
 
-  if (session.role === "Support") {
+  const { can } = await getPermissions(session);
+  if (!can(PERMISSIONS.subscriptionsChange)) {
     return { error: "Your role can't change plans.", expired: false };
   }
   if (!PLAN_CHANGE_REASONS.some((r) => r.code === input.reasonCode)) {
@@ -42,8 +44,8 @@ export async function changePlanAction(input: {
   if (!note) {
     return { error: "Add a short note explaining the change.", expired: false };
   }
-  // Only a SuperAdmin may skip the usage check (the backend refuses anyone else as well).
-  const overrideUsageCheck = input.overrideUsageCheck === true && session.role === "SuperAdmin";
+  // Only someone with the subscriptions.override permission may skip the usage check (the backend refuses anyone else as well).
+  const overrideUsageCheck = input.overrideUsageCheck === true && can(PERMISSIONS.subscriptionsOverride);
 
   try {
     await changeLandlordPlan(session.backendToken, Number(input.landlordProfileId), {

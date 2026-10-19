@@ -247,17 +247,19 @@ function describe(o: LandlordOverride) {
   return o.kind === "limit" ? `${o.displayName} ${o.effect}` : `${o.displayName} (${o.effect})`;
 }
 
-// The whole card. `catalog` is null when the admin can only look (no add/remove buttons then).
+// The whole card. `catalog` is null when the admin may not add overrides; `canRevoke` says whether they may remove them.
 export function OverridesManager({
   landlordProfileId,
   landlordName,
   overrides,
   catalog,
+  canRevoke,
 }: {
   landlordProfileId: number;
   landlordName: string;
   overrides: LandlordOverride[];
   catalog: Catalog | null;
+  canRevoke: boolean;
 }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -286,7 +288,7 @@ export function OverridesManager({
         <ul className="flex flex-col divide-y divide-c-bd">
           {overrides.map((o) => {
             // Only Active or Scheduled overrides can still be removed.
-            const removable = catalog && (o.status === "Active" || o.status === "Scheduled");
+            const removable = canRevoke && (o.status === "Active" || o.status === "Scheduled");
             return (
               <li key={`${o.kind}-${o.id}`} className="flex flex-wrap items-start gap-x-3 gap-y-1 py-3 text-sm">
                 <div className="min-w-0 flex-1">

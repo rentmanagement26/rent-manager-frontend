@@ -25,6 +25,17 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-19 (night) — Claude (Windows) admin buttons now follow real permissions (`GET /admin/me`)
+
+- **What**: new `admin/lib/permissions.ts` (`getPermissions(session)` -> `can(permission)`, one `/admin/me` call per request). Replaced the
+  guessed role checks (`role !== "Support"` etc.) with permissions on: Catalog (`catalog.manage`), Plans (`packages.manage`), landlords
+  list and detail (`subscriptions.change`, `subscriptions.override`, `overrides.grant`, `overrides.revoke`), and the plan-change server
+  action. SuperAdmin always passes. If `/admin/me` fails, non-SuperAdmins get "no" (buttons hidden); the backend still enforces everything.
+- **Why**: the Roles page lets a SuperAdmin change what Support and Billing may do, so role names were wrong as soon as that was used.
+- **Left on role checks on purpose**: SuperAdmin-only screens (Admin team, Roles, audit settings, landlord account controls, sidebar);
+  those map to SuperAdmin-only permissions and can't be granted to other roles.
+- **Verified**: `tsc` and `eslint` clean. Not run against the live backend.
+
 ## 2026-10-19 (evening) — Claude (Windows) added landlord overrides to the admin landlord page
 
 - **What**: the "Overrides" card on `/landlords/[id]` now lists every override (Active, Scheduled, Expired, Revoked) with reason, note,
