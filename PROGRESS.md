@@ -25,6 +25,19 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-19 — Claude (Windows) built the admin Catalog page (features and limits)
+
+- **What**: new `/catalog` page in `admin/` on the backend's `/api/v1/admin/catalog` endpoints (pulled in `41a25c4`). Lists features and
+  limits with "used by N plans"; add feature (key, name, description), edit feature name/description, rename a limit.
+  Files: `lib/catalog-api.ts`, `lib/catalog-actions.ts`, `components/console/catalog-manager.tsx`, `app/(console)/catalog/page.tsx`,
+  types in `lib/types.ts`, sidebar entry in `console-shell.tsx`.
+- **Rules mirrored from the backend**: key is lower-case dotted words, 3-60 chars, fixed once created; name 2-80; description max 300.
+  Limits can't be added or removed (defined in backend code); a limit with `usageCounted: false` shows "Not enforced".
+- **Verified**: `tsc` and `eslint` clean. **Not run in a browser against the live backend** (needs a staff login with 2FA).
+- **Not built yet**: package editing (create plan, publish new version, edit plan) and per-landlord overrides - both endpoints exist.
+  Edit buttons are hidden only for Support; the backend `Catalog.Manage` permission is the real check (Billing and SuperAdmin hold it).
+- **Next step**: try it with a SuperAdmin or Billing login, then build package editing on this catalog.
+
 ## Standing note — `heic2any` is held back on purpose (owner decision, 2026-10-12)
 
 - The root `package.json` / `package-lock.json` carry a **local, uncommitted** `"heic2any": "^0.0.4"` dependency from the paused

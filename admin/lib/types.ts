@@ -298,3 +298,28 @@ export interface RolesOverview {
   roles: RoleInfo[];
   permissions: PermissionInfo[];
 }
+
+// ---- Catalog (GET /api/v1/admin/catalog) --------------------------------------------------------------------
+
+// A yes/no capability a plan can include. `usedByPackages` counts the current plan versions that include it.
+export interface CatalogFeature {
+  id: number;
+  key: string;
+  displayName: string;
+  description: string | null;
+  usedByPackages: number;
+}
+
+// A numeric cap a plan can set. `usageCounted` is true when the backend really counts a landlord's usage for it.
+export interface CatalogLimit {
+  id: number;
+  key: string;
+  displayName: string;
+  usedByPackages: number;
+  usageCounted: boolean;
+}
+
+export interface Catalog {
+  features: CatalogFeature[];
+  limits: CatalogLimit[];
+}
