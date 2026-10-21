@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBox, WarningBox, goToSessionExpired, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/console/ui";
-import { formatPrice, initials } from "@/lib/format";
+import { formatPrice, initials, limitText } from "@/lib/format";
 import { findViolations } from "@/lib/plan-check";
 import { sendProposalAction } from "@/lib/proposal-actions";
 import { loadLandlordSubscriptionAction } from "@/lib/subscription-actions";
@@ -206,7 +206,7 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages }: 
                           <span>
                             <span className="block text-sm font-medium">{plan.name}</span>
                             <span className="block text-xs text-c-tx2">
-                              {isCurrent ? "Current plan" : plan.limits.map((l) => `${l.value} ${l.displayName.toLowerCase()}`).join(" · ")}
+                              {isCurrent ? "Current plan" : plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}
                             </span>
                           </span>
                           <span className="text-sm">{formatPrice(plan.monthlyPrice)}/mo</span>

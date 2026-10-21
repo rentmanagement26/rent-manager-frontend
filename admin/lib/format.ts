@@ -46,3 +46,11 @@ export function formatDate(value: string) {
 export function tomorrowIso() {
   return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
+
+// "1 property", "5 properties", "1 unit", "20 units": limit names come plural ("Properties", "Units"), so a value of 1 needs the singular.
+export function limitText(value: number, displayName: string) {
+  const name = displayName.toLowerCase();
+  if (value !== 1) return `${value} ${name}`;
+  if (name.endsWith("ies")) return `1 ${name.slice(0, -3)}y`;
+  return name.endsWith("s") ? `1 ${name.slice(0, -1)}` : `1 ${name}`;
+}

@@ -5,6 +5,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { changePlanAction, previewPlanChangeAction } from "@/lib/billing-actions";
+import { limitText } from "@/lib/format-time";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, PlanChangePreview } from "@/lib/types";
 
@@ -67,7 +68,7 @@ export function BillingPlans({ plans, currentPrice }: Props) {
                   <p className="text-sm font-semibold text-heading">
                     {plan.name} <span className="font-normal text-muted">{money(plan.monthlyPrice)}</span>
                   </p>
-                  <p className="text-xs text-muted">{plan.limits.map((l) => `${l.value} ${l.displayName.toLowerCase()}`).join(" · ")}</p>
+                  <p className="text-xs text-muted">{plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}</p>
                 </div>
                 {plan.isCurrent ? (
                   <span className="text-xs font-semibold text-muted">Current plan</span>
