@@ -40,7 +40,7 @@ function LandlordRow({
 }) {
   return (
     // Phone: stacked. Desktop: fixed columns, so the Plan and Action columns line up on every row.
-    <li className="flex flex-col gap-3 rounded-2xl px-3 py-3 hover:bg-c-sf2 sm:grid sm:grid-cols-[minmax(0,1fr)_110px_100px_140px] sm:items-center sm:gap-4">
+    <li className="flex flex-col gap-3 rounded-2xl px-3 py-3 hover:bg-c-sf2 sm:grid sm:grid-cols-[minmax(0,1fr)_110px_170px_140px] sm:items-center sm:gap-4">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-c-aci text-xs font-medium text-c-act2">
           {initials(landlord.name)}
@@ -136,7 +136,7 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
         ) : (
           <>
             {/* Column titles, desktop only (they use the same widths as the rows). */}
-            <div className="hidden grid-cols-[minmax(0,1fr)_110px_100px_140px] gap-4 px-3 pb-2 text-xs text-c-tx3 sm:grid">
+            <div className="hidden grid-cols-[minmax(0,1fr)_110px_170px_140px] gap-4 px-3 pb-2 text-xs text-c-tx3 sm:grid">
               <span>Landlord</span>
               <span>Plan</span>
               <span>Status</span>
