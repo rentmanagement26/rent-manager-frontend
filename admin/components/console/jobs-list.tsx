@@ -25,13 +25,17 @@ function nextDue(job: AdminJob) {
   return minutes < 90 ? `next due in ${minutes} min` : `next due in ${Math.round(minutes / 60)} h`;
 }
 
+// How many runs the popup asks for: 20 first, then 50, then 100 (the most the backend gives in one request).
+const PAGE_SIZES = [20, 50, 100];
+
 export function JobsList({ jobs, canRun }: { jobs: AdminJob[]; canRun: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   // The job whose history is open, and its runs (null while loading).
-  const [history, setHistory] = useState<{ job: AdminJob; runs: AdminJobRun[] | null; error: string } | null>(null);
+  // `limit` is how many runs were asked for; `loadingMore` is true while a bigger list loads (the old one stays on screen).
+  const [history, setHistory] = useState<{ job: AdminJob; runs: AdminJobRun[] | null; error: string; limit: number; loadingMore: boolean } | null>(null);
 
   async function run(job: AdminJob) {
     setBusy(job.name);
@@ -49,15 +53,20 @@ export function JobsList({ jobs, canRun }: { jobs: AdminJob[]; canRun: boolean }
     router.refresh();
   }
 
-  async function openHistory(job: AdminJob) {
-    setHistory({ job, runs: null, error: "" });
-    const result = await loadJobRunsAction(job.name);
+  // Loads a job's runs. The first load asks for FIRST_PAGE; Show more asks for the next size up.
+  async function loadHistory(job: AdminJob, limit: number, previous: AdminJobRun[] | null) {
+    setHistory({ job, runs: previous, error: "", limit, loadingMore: previous !== null });
+    const result = await loadJobRunsAction(job.name, limit);
     if ("error" in result) {
       if (result.expired) return goToSessionExpired();
-      setHistory({ job, runs: [], error: result.error });
+      setHistory({ job, runs: previous ?? [], error: result.error, limit, loadingMore: false });
       return;
     }
-    setHistory({ job, runs: result.data, error: "" });
+    setHistory({ job, runs: result.data, error: "", limit, loadingMore: false });
+  }
+
+  function openHistory(job: AdminJob) {
+    return loadHistory(job, PAGE_SIZES[0], null);
   }
 
   return (
@@ -121,6 +130,20 @@ export function JobsList({ jobs, canRun }: { jobs: AdminJob[]; canRun: boolean }
                 {r.error && <p className="mt-1 text-xs text-c-badt">{r.error}</p>}
               </div>
             ))}
+            {/* More may exist when the list came back full and a bigger size is still allowed. */}
+            {history.runs && history.runs.length >= history.limit && history.limit < PAGE_SIZES[PAGE_SIZES.length - 1] && (
+              <button
+                type="button"
+                disabled={history.loadingMore}
+                onClick={() => loadHistory(history.job, PAGE_SIZES[PAGE_SIZES.indexOf(history.limit) + 1], history.runs)}
+                className={secondaryButtonClass}
+              >
+                {history.loadingMore ? "Loading…" : "Show more"}
+              </button>
+            )}
+            {history.runs && history.runs.length >= PAGE_SIZES[PAGE_SIZES.length - 1] && (
+              <p className="text-xs text-c-tx3">Showing the latest {PAGE_SIZES[PAGE_SIZES.length - 1]} runs, the most that can be shown at once.</p>
+            )}
             <div className="flex justify-end">
               <button type="button" onClick={() => setHistory(null)} className={secondaryButtonClass}>
                 Close

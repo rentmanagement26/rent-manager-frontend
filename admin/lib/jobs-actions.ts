@@ -23,11 +23,12 @@ export async function runJobAction(name: string): Promise<{ ok: true } | ActionF
   }
 }
 
-// Loads the recent runs of one job for the History popup.
-export async function loadJobRunsAction(name: string): Promise<{ ok: true; data: AdminJobRun[] } | ActionFailure> {
+// Loads the recent runs of one job for the History popup (20 by default, up to 100 with Show more).
+export async function loadJobRunsAction(name: string, limit = 20): Promise<{ ok: true; data: AdminJobRun[] } | ActionFailure> {
   const session = await requireAdmin();
 
-  const result = await getJobRuns(session.backendToken, String(name));
+  const count = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 20));
+  const result = await getJobRuns(session.backendToken, String(name), count);
   if (result.status === "ok") return { ok: true, data: result.data };
   if (result.status === "expired") return { error: "Your session expired. Sign in again.", expired: true };
   if (result.status === "forbidden") return { error: "Your role can't view job history.", expired: false };

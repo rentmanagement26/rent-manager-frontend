@@ -10,9 +10,9 @@ export function getJobs(token: string) {
   return getJson<AdminJob[]>(BASE, token);
 }
 
-// The recent runs of one job, newest first (up to 20).
-export function getJobRuns(token: string, name: string) {
-  return getJson<AdminJobRun[]>(`${BASE}/${encodeURIComponent(name)}/runs?limit=20`, token);
+// The recent runs of one job, newest first. The backend allows at most 100 per request.
+export function getJobRuns(token: string, name: string, limit = 20) {
+  return getJson<AdminJobRun[]>(`${BASE}/${encodeURIComponent(name)}/runs?limit=${limit}`, token);
 }
 
 // Asks for a job to run now. It runs in the background within a moment; look at the job's runs to see how it went.
