@@ -20,6 +20,7 @@ import {
   Sun,
   UserCog,
   Users,
+  UsersRound,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -40,6 +41,7 @@ interface NavItem {
 const MENU: NavItem[] = [
   { label: "Overview", icon: LayoutGrid, href: "/overview" },
   { label: "Landlords", icon: Users, href: "/landlords" },
+  { label: "Customers", icon: UsersRound, href: "/customers" },
   { label: "Plans", icon: Layers, href: "/plans" },
   { label: "Catalog", icon: ListChecks, href: "/catalog" },
   { label: "Tenants", icon: House },

@@ -385,3 +385,47 @@ export interface LandlordOverride {
   revokedBy: string | null;
   revokedReason: string | null;
 }
+
+// ---- Customers (landlords, tenants and contractors; GET /api/v1/admin/customers) ---------------------------
+
+export type CustomerRole = "Landlord" | "Tenant" | "Contractor";
+
+// One row of the customers list. Only what the list needs (data minimization): no phone number here.
+export interface CustomerListItem {
+  userId: string;
+  name: string;
+  email: string | null;
+  roles: string[];
+  isActive: boolean;
+  emailConfirmed: boolean;
+  twoFactorEnabled: boolean;
+  createdAt: string;
+  landlordProfileId: number | null;
+  // The landlord's business name or the contractor's company, when there is one.
+  company: string | null;
+}
+
+export interface CustomerPage {
+  items: CustomerListItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+// GET /admin/customers/{userId}
+export interface CustomerDetail {
+  userId: string;
+  name: string;
+  email: string | null;
+  phoneNumber: string | null;
+  roles: string[];
+  isActive: boolean;
+  emailConfirmed: boolean;
+  twoFactorEnabled: boolean;
+  lockedOut: boolean;
+  createdAt: string;
+  landlord: { landlordProfileId: number; businessName: string | null } | null;
+  tenant: { tenantProfileId: number; landlordProfileId: number; landlordName: string | null } | null;
+  contractor: { contractorProfileId: number; companyName: string | null; trade: string | null } | null;
+}

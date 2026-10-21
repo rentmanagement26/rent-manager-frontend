@@ -25,6 +25,17 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-21 (later) — Claude (Windows) built the admin Customers page (owner: "build it yourself", design approved first)
+
+- **What**: `/customers` in `admin/` on the backend's `GET /admin/customers`: search (name, business, email), role tabs (All, Landlords, Tenants, Contractors),
+  status filter, sort links (Newest, Name, Email), 25 per page with Previous/Next, all state in the URL. Each row has an **Actions** menu: View details and
+  Deactivate / Reactivate (`POST /admin/customers/{id}/deactivate|reactivate`, `customers.manage`, SuperAdmin only; Deactivate asks first). `/customers/[userId]` shows role and
+  business, phone, email confirmed, two-factor, locked out, joined, and a link to the landlord's plan page. Sidebar: new Customers link under Landlords.
+  Files: `app/(console)/customers/page.tsx`, `app/(console)/customers/[userId]/page.tsx`, `components/console/customer-actions.tsx`, `lib/customer-api.ts`,
+  `lib/customer-actions.ts`, types in `lib/types.ts`, `customersManage` in `lib/permissions.ts`, `console-shell.tsx`.
+- **Privacy**: the list shows only name, email, company; phone appears on the details page only (PIPEDA data minimization). Support and Billing can view; only a SuperAdmin sees the menu's deactivate.
+- **Verified**: `tsc` and `eslint` clean. **Not seen signed in yet** (the admin session had expired when I went to look).
+
 ## 2026-10-21 — Claude (Windows) admin plan changes are now proposals the customer must approve (owner: "do it yourself")
 
 - **Rule (owner)**: no plan change happens until the customer approves it through an emailed link; the admin must see the answer

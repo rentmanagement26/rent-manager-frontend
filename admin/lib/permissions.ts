@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   overridesRevoke: "overrides.revoke",
   subscriptionsChange: "subscriptions.change",
   subscriptionsOverride: "subscriptions.override",
+  customersManage: "customers.manage",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
