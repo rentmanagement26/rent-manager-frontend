@@ -25,6 +25,17 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-21 (evening) — Claude (Windows) Catalog: Add limit and the "landlords may stay when lowered" switch (design approved first)
+
+- **Backend change it follows** (already pulled, `93dbc06` and `77818f5`): `POST /admin/catalog/limits` creates a limit for something the code can count; `GET /admin/catalog` returns
+  `availableMetrics` (countable things with no limit yet) and `mayStayWhenLowered` per limit; `PUT /admin/catalog/limits/{id}` takes a display name and/or `MayStayWhenLowered`.
+- **Built in `admin/`**: **+ Add limit** on the Limits card (popup: pick from `availableMetrics`, optional name, stay switch off by default; says so when nothing is left to add),
+  each limit row shows a pill ("Landlords may stay when lowered" / "Moved to the new plan when lowered"), and the pencil now opens **Edit limit** (name + the switch, note that it only
+  affects future plan changes). Files: `components/console/limit-modal.tsx` (new), `catalog-manager.tsx`, `lib/catalog-api.ts`, `lib/catalog-actions.ts` (`renameLimitAction` replaced by
+  `editLimitAction`, new `createLimitAction`), types in `lib/types.ts`. Old text "limits can't be added" removed.
+- **Verified**: `tsc` and `eslint` clean; signed in, the popups open with live data (Add limit offered "Tenants"; Edit shows Properties with the switch on). **Not saved/created anything**
+  (would change real catalog data): create a limit, toggle the switch, and the error paths are untested.
+
 ## 2026-10-21 (later) — Claude (Windows) built the admin Customers page (owner: "build it yourself", design approved first)
 
 - **What**: `/customers` in `admin/` on the backend's `GET /admin/customers`: search (name, business, email), role tabs (All, Landlords, Tenants, Contractors),

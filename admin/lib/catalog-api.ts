@@ -26,7 +26,23 @@ export function updateFeature(token: string, featureId: number, input: { display
   });
 }
 
-// Renames a limit. Limits themselves are defined in the backend code and can't be added here.
-export function updateLimitType(token: string, limitTypeId: number, displayName: string) {
-  return send<null>("PUT", `${CATALOG}/limits/${limitTypeId}`, token, { DisplayName: displayName });
+// Creates a limit for something the system can count (see `availableMetrics` in the catalog).
+export function createLimit(token: string, input: { metricKey: string; displayName: string; mayStayWhenLowered: boolean }) {
+  return send<{ id: number }>("POST", `${CATALOG}/limits`, token, {
+    MetricKey: input.metricKey,
+    DisplayName: input.displayName || null,
+    MayStayWhenLowered: input.mayStayWhenLowered,
+  });
+}
+
+// Renames a limit and/or changes whether landlords may stay when it is lowered (future plan changes only).
+export function updateLimitType(
+  token: string,
+  limitTypeId: number,
+  input: { displayName: string; mayStayWhenLowered: boolean },
+) {
+  return send<null>("PUT", `${CATALOG}/limits/${limitTypeId}`, token, {
+    DisplayName: input.displayName,
+    MayStayWhenLowered: input.mayStayWhenLowered,
+  });
 }

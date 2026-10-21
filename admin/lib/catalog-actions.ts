@@ -5,7 +5,7 @@
 import { revalidatePath } from "next/cache";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
-import { createFeature, updateFeature, updateLimitType } from "@/lib/catalog-api";
+import { createFeature, createLimit, updateFeature, updateLimitType } from "@/lib/catalog-api";
 import type { ActionFailure } from "@/lib/types";
 
 type Done = { ok: true };
@@ -76,7 +76,12 @@ export async function updateFeatureAction(input: {
   }
 }
 
-export async function renameLimitAction(input: { limitTypeId: number; displayName: string }): Promise<Done | ActionFailure> {
+// Edits a limit: its display name and whether landlords may stay when it is lowered.
+export async function editLimitAction(input: {
+  limitTypeId: number;
+  displayName: string;
+  mayStayWhenLowered: boolean;
+}): Promise<Done | ActionFailure> {
   const session = await requireAdmin();
   const displayName = String(input.displayName ?? "").trim();
 
@@ -84,10 +89,38 @@ export async function renameLimitAction(input: { limitTypeId: number; displayNam
   if (invalid) return { error: invalid, expired: false };
 
   try {
-    await updateLimitType(session.backendToken, Number(input.limitTypeId), displayName);
+    await updateLimitType(session.backendToken, Number(input.limitTypeId), {
+      displayName,
+      mayStayWhenLowered: input.mayStayWhenLowered === true,
+    });
     revalidatePath("/catalog");
     return { ok: true };
   } catch (err) {
-    return failure(err, "Couldn't rename the limit. Try again.");
+    return failure(err, "Couldn't save the limit. Try again.");
+  }
+}
+
+// Adds a limit for something the system can count. The name is optional (the backend uses its default).
+export async function createLimitAction(input: {
+  metricKey: string;
+  displayName: string;
+  mayStayWhenLowered: boolean;
+}): Promise<Done | ActionFailure> {
+  const session = await requireAdmin();
+  const metricKey = String(input.metricKey ?? "").trim();
+  const displayName = String(input.displayName ?? "").trim();
+
+  if (!metricKey) return { error: "Choose what to limit.", expired: false };
+  if (displayName) {
+    const invalid = checkName(displayName);
+    if (invalid) return { error: invalid, expired: false };
+  }
+
+  try {
+    await createLimit(session.backendToken, { metricKey, displayName, mayStayWhenLowered: input.mayStayWhenLowered === true });
+    revalidatePath("/catalog");
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't add the limit. Try again.");
   }
 }

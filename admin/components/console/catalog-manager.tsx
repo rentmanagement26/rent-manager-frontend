@@ -1,6 +1,7 @@
 "use client";
 
 // The Catalog page body: lists features and limits, with popups to add or edit them.
+// Features use the popup below; limits use the popups in limit-modal.tsx.
 
 import { Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,36 +16,36 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/console/ui";
-import { createFeatureAction, renameLimitAction, updateFeatureAction } from "@/lib/catalog-actions";
+import { AddLimitModal, EditLimitModal } from "@/components/console/limit-modal";
+import { createFeatureAction, updateFeatureAction } from "@/lib/catalog-actions";
 import type { ActionFailure, Catalog, CatalogFeature, CatalogLimit } from "@/lib/types";
 
 // What the popup is doing right now. `null` means closed.
 type Editing =
   | { kind: "new-feature" }
   | { kind: "feature"; feature: CatalogFeature }
+  | { kind: "new-limit" }
   | { kind: "limit"; limit: CatalogLimit }
   | null;
 
-// The popup form. Adding a feature also asks for a key; renaming a limit asks for the name only.
+// The feature popup. Adding a feature also asks for a key.
 function CatalogModal({
   editing,
   onClose,
   onSaved,
 }: {
-  editing: NonNullable<Editing>;
+  editing: { kind: "new-feature" } | { kind: "feature"; feature: CatalogFeature };
   onClose: () => void;
   onSaved: () => void;
 }) {
   const feature = editing.kind === "feature" ? editing.feature : null;
-  const limit = editing.kind === "limit" ? editing.limit : null;
 
   const [key, setKey] = useState("");
-  const [name, setName] = useState(feature?.displayName ?? limit?.displayName ?? "");
+  const [name, setName] = useState(feature?.displayName ?? "");
   const [description, setDescription] = useState(feature?.description ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const isFeature = editing.kind !== "limit";
   const canSubmit = name.trim().length >= 2 && (editing.kind !== "new-feature" || key.trim().length >= 3) && !submitting;
 
   async function submit() {
@@ -53,10 +54,8 @@ function CatalogModal({
     let result: { ok: true } | ActionFailure;
     if (editing.kind === "new-feature") {
       result = await createFeatureAction({ key, displayName: name, description });
-    } else if (feature) {
-      result = await updateFeatureAction({ featureId: feature.id, displayName: name, description });
     } else {
-      result = await renameLimitAction({ limitTypeId: limit!.id, displayName: name });
+      result = await updateFeatureAction({ featureId: feature!.id, displayName: name, description });
     }
     setSubmitting(false);
 
@@ -68,10 +67,10 @@ function CatalogModal({
     onSaved();
   }
 
-  const title = editing.kind === "new-feature" ? "Add feature" : isFeature ? "Edit feature" : "Rename limit";
+  const title = editing.kind === "new-feature" ? "Add feature" : "Edit feature";
 
   return (
-    <Modal title={title} subtitle={feature?.key ?? limit?.key} busy={submitting} onClose={onClose}>
+    <Modal title={title} subtitle={feature?.key} busy={submitting} onClose={onClose}>
       <div className="flex flex-col gap-4">
         {editing.kind === "new-feature" && (
           <div className="flex flex-col gap-2">
@@ -96,21 +95,19 @@ function CatalogModal({
           <input id="catalog-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={inputClass} />
         </div>
 
-        {isFeature && (
-          <div className="flex flex-col gap-2">
-            <label htmlFor="catalog-description" className="text-xs text-c-tx2">
-              Description (optional)
-            </label>
-            <textarea
-              id="catalog-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={300}
-              rows={3}
-              className={`${inputClass} h-auto py-2.5`}
-            />
-          </div>
-        )}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="catalog-description" className="text-xs text-c-tx2">
+            Description (optional)
+          </label>
+          <textarea
+            id="catalog-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={300}
+            rows={3}
+            className={`${inputClass} h-auto py-2.5`}
+          />
+        </div>
 
         <ErrorBox message={error} />
 
@@ -136,6 +133,12 @@ function usedBy(count: number) {
 export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit: boolean }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
+
+  // After any save: close the popup and reload the page data.
+  function saved() {
+    setEditing(null);
+    router.refresh();
+  }
 
   return (
     <>
@@ -178,8 +181,21 @@ export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit
       </section>
 
       <section className={cardClass}>
-        <h2 className="text-base font-medium">Limits</h2>
-        <p className="mt-1 text-[13px] text-c-tx2">Limits are defined in the backend code. You can rename them but not add or remove them.</p>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-medium">Limits</h2>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setEditing({ kind: "new-limit" })}
+              className={`${primaryButtonClass} flex items-center gap-1.5`}
+            >
+              <Plus size={16} /> Add limit
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-[13px] text-c-tx2">
+          A limit can only be added for something the system can count. You can rename limits but not remove them.
+        </p>
         <ul className="mt-4 flex flex-col">
           {catalog.limits.map((limit) => (
             <li key={limit.id} className="flex items-start gap-3 border-t border-c-bd py-3 first:border-t-0 first:pt-0">
@@ -190,11 +206,16 @@ export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit
                 </p>
                 <p className="font-mono text-xs text-c-tx3">{limit.key}</p>
                 <p className="mt-1 text-xs text-c-tx3">{usedBy(limit.usedByPackages)}</p>
+                <p className="mt-1.5">
+                  <Pill className={limit.mayStayWhenLowered ? "bg-c-ok text-c-okt" : "bg-c-sf2 text-c-tx2"}>
+                    {limit.mayStayWhenLowered ? "Landlords may stay when lowered" : "Moved to the new plan when lowered"}
+                  </Pill>
+                </p>
               </div>
               {canEdit && (
                 <button
                   type="button"
-                  aria-label={`Rename ${limit.displayName}`}
+                  aria-label={`Edit ${limit.displayName}`}
                   onClick={() => setEditing({ kind: "limit", limit })}
                   className="flex size-9 shrink-0 items-center justify-center rounded-[10px] text-c-tx2 hover:bg-c-sf2"
                 >
@@ -207,14 +228,15 @@ export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit
         </ul>
       </section>
 
-      {editing && (
+      {editing?.kind === "new-limit" && (
+        <AddLimitModal metrics={catalog.availableMetrics ?? []} onClose={() => setEditing(null)} onSaved={saved} />
+      )}
+      {editing?.kind === "limit" && <EditLimitModal limit={editing.limit} onClose={() => setEditing(null)} onSaved={saved} />}
+      {(editing?.kind === "new-feature" || editing?.kind === "feature") && (
         <CatalogModal
           editing={editing}
           onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            router.refresh();
-          }}
+          onSaved={saved}
         />
       )}
     </>

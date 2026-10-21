@@ -357,11 +357,21 @@ export interface CatalogLimit {
   displayName: string;
   usedByPackages: number;
   usageCounted: boolean;
+  // When a new plan version only lowers this limit, landlords may stay on their current plan.
+  mayStayWhenLowered: boolean;
+}
+
+// Something the system can count that has no limit yet. An admin can create a limit for it.
+export interface CatalogMetric {
+  key: string;
+  displayName: string;
+  description: string;
 }
 
 export interface Catalog {
   features: CatalogFeature[];
   limits: CatalogLimit[];
+  availableMetrics: CatalogMetric[];
 }
 
 // ---- Landlord overrides (GET /api/v1/admin/landlords/{id}/overrides) -----------------------------------------
