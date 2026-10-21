@@ -25,6 +25,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-21 (late night) — Claude (Windows) built the /plan-proposal confirm page the backend's email buttons open (design approved first)
+
+- **Backend change it follows** (`b6c0a01`, Amanjit Singh): proposal emails now have Accept and Decline buttons that open `{Frontend:BaseUrl}/plan-proposal?token=...&action=accept|decline`, no sign-in,
+  secret stored hashed, single use, `ExpiresAt`, new status Expired; endpoints `GET /api/v1/proposal-links/{token}` (read only) and `POST .../accept|decline`. This differs from the earlier
+  spec here (sign-in-required link, one shared endpoint): the backend reuses the same accept/decline rules inside, but there are now two entry paths. Owner chose to build the page.
+- **Built (web app)**: `app/(auth)/plan-proposal/page.tsx` (same split layout as Log in, `noindex`, `referrer: no-referrer`) shows what would change with **Accept** and **Decline**; the `action` in the URL only
+  highlights a button, nothing is sent until one is pressed. States: accepted (log in link), declined, expired, no longer active / answered, load error, and the backend's own message when the plan can't change.
+  Files: `components/plan-proposal-link-card.tsx`, `components/plan-change-summary.tsx` (shared with the signed-in card), `lib/proposal-link-api.ts`, `lib/proposal-link-actions.ts`.
+- **Verified**: `tsc` and `eslint` clean; an unknown token shows "This link is no longer active" and the live backend answers `not_found` for it (the route is deployed). **Not seen with a real token**: needs a proposal sent
+  after this backend change (the test proposal to Amanjit was sent before it, so its email has no button link). The admin Landlords list still loads with the Awaiting customer pill on the live backend.
+- **Still to do**: admin "Send for approval" should offer the expiry choice (`ExpiresInDays`, 1 to 90 or none) and show Expired; the bell can now open the exact proposal (the notification carries `proposalId`).
+
 ## 2026-10-21 (night) — Claude (Windows) Overview now shows landlord, plan, customer and team numbers (design approved first)
 
 - **What**: new top section of `/overview` from `GET /admin/dashboard`: four number tiles (Landlords + active, New this week, Switched off, No plan yet), **Landlords by plan** bars with an

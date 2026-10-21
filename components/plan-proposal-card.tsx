@@ -4,12 +4,10 @@
 // Nothing changes until they press Approve.
 import Link from "next/link";
 import { useState } from "react";
+import { PlanChangeSummary } from "@/components/plan-change-summary";
 import { answerProposalAction } from "@/lib/plan-proposal-actions";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { PendingPlanChange } from "@/lib/types";
-
-const money = (value: number) => `$${value.toFixed(2)}/mo`;
-const amount = (value: number | null) => (value === null ? "Unlimited" : String(value));
 
 export function PlanProposalCard({ change }: { change: PendingPlanChange }) {
   const [working, setWorking] = useState<"accept" | "decline" | null>(null);
@@ -47,8 +45,6 @@ export function PlanProposalCard({ change }: { change: PendingPlanChange }) {
     );
   }
 
-  const { price, limits, featuresAdded, featuresRemoved } = change.changes;
-
   return (
     <div className="max-w-xl space-y-5 rounded-2xl border border-default bg-white p-6 shadow-sm">
       <div>
@@ -60,24 +56,7 @@ export function PlanProposalCard({ change }: { change: PendingPlanChange }) {
 
       {change.message && <p className="rounded-xl bg-subtle px-4 py-3 text-sm text-body">{change.message}</p>}
 
-      <ul className="space-y-2 text-sm text-body">
-        {price && (
-          <li>
-            Price: {money(price.from)} → <span className="font-semibold">{money(price.to)}</span>
-          </li>
-        )}
-        {limits.map((limit) => (
-          <li key={limit.key}>
-            {limit.displayName}: {amount(limit.from)} → <span className="font-semibold">{amount(limit.to)}</span>
-          </li>
-        ))}
-        {featuresAdded.map((feature) => (
-          <li key={feature.key}>You gain: {feature.displayName}</li>
-        ))}
-        {featuresRemoved.map((feature) => (
-          <li key={feature.key}>You lose: {feature.displayName}</li>
-        ))}
-      </ul>
+      <PlanChangeSummary changes={change.changes} />
 
       {error && <p className="text-sm text-red-700">{error}</p>}
 
