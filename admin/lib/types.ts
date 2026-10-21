@@ -150,6 +150,10 @@ export interface PackageVersionDetail {
   landlords: number;
   limits: PackageLimit[];
   features: PackageFeature[];
+  // When older terms end (everyone still on them moves to the newest terms on the first billing date on or after it), null for none.
+  termsEndAt?: string | null;
+  // Landlords on these terms who were told about a newer version and chose to stay.
+  landlordsChoseToStay?: number;
 }
 
 // A plan with every version it has had, newest first.
@@ -511,4 +515,86 @@ export interface AdminJob {
   isRunning: boolean;
   nextDueAt: string | null;
   lastRun: AdminJobRun | null;
+}
+
+// ---- Publish preview and terms end date (POST /admin/packages/{id}/versions/preview, PUT .../end-date) ------------
+
+// What publishing would do to one group of existing landlords (all on the same older terms).
+export interface PublishPreviewGroup {
+  termsNumber: number;
+  landlords: number;
+  rule: string;
+  noticeDays: number;
+  mayStay: boolean;
+  overNewLimits: number;
+  changes: {
+    price: { from: number; to: number } | null;
+    limits: { key: string; displayName: string; from: number | null; to: number | null }[];
+    featuresAdded: { key: string; displayName: string }[];
+    featuresRemoved: { key: string; displayName: string }[];
+  };
+}
+
+export interface PublishPreview {
+  newTermsNumber: number;
+  groups: PublishPreviewGroup[];
+  totalLandlords: number;
+  wouldBeNotified: number;
+}
+
+// Answer to setting or removing an end date for older terms.
+export interface TermsEndResult {
+  landlords: number;
+  noticesQueued: number;
+  replaced: number;
+}
+
+// ---- Proposals to several landlords, and the filtered landlords list --------------------------------------------
+
+// One landlord in a proposal preview. `outcome`: can_propose, over_limits, already_there or not_found.
+export interface BulkPreviewItem {
+  landlordProfileId: number;
+  name: string | null;
+  businessName: string | null;
+  fromPackageName: string | null;
+  outcome: string;
+  message: string | null;
+  violations: LimitViolation[];
+}
+
+// POST /admin/subscriptions/proposals/preview: who could be offered a plan. Nothing is saved or sent.
+export interface BulkProposalPreview {
+  target: { packageId: number; name: string; isActive: boolean; termsNumber: number };
+  summary: { canPropose: number; overLimits: number; alreadyThere: number; notFound: number };
+  items: BulkPreviewItem[];
+}
+
+// POST /admin/subscriptions/proposals with several landlords: how many were sent and who was left out.
+export interface BulkSendResult {
+  summary: { proposed: number; overLimits: number; alreadyThere: number; noPlan: number; notFound: number };
+  items: { landlordProfileId: number; name: string | null; outcome: string; message: string | null }[];
+}
+
+// One landlord of GET /admin/subscriptions (only landlords that are on a plan).
+export interface SubscriptionListItem {
+  landlordProfileId: number;
+  userId: string | null;
+  name: string;
+  businessName: string | null;
+  email: string | null;
+  isActive: boolean;
+  packageId: number;
+  packageName: string;
+  onOlderTerms: boolean;
+  // `status` is told, queued or chose_to_stay.
+  change: { id: number; status: string } | null;
+  proposal: { id: number; expiresAt: string | null } | null;
+}
+
+export interface SubscriptionListPage {
+  items: SubscriptionListItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }

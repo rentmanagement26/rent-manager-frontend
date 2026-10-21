@@ -294,3 +294,23 @@ export interface PlanChangePreview {
   packageName: string | null;
   violations: { limitKey: string; displayName: string; limit: number; used: number }[];
 }
+
+// ---- Activity (GET /api/v1/activity): what happened on the landlord's account -----------------------------------
+
+export interface ActivityItem {
+  id: number;
+  occurredAt: string;
+  action: string;
+  // A sentence ready to show, for example "Plan changed from Free to Basic".
+  summary: string;
+  entityType: string | null;
+  entityId: string | null;
+  // "You", "DomusPRO support", "System" or another person's email.
+  actorLabel: string;
+}
+
+export interface ActivityPage {
+  items: ActivityItem[];
+  // Pass as beforeId to load older entries; null when there are none.
+  nextBeforeId: number | null;
+}

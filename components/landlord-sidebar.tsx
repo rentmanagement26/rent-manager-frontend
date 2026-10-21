@@ -88,6 +88,17 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
               </svg>
               Tenants
             </Link>
+            <Link
+              href="/landlord/activity"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                pathname.startsWith("/landlord/activity") ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Activity
+            </Link>
           </nav>
 
           <div className="m-3 p-4 rounded-xl bg-heading shadow-lg shadow-heading/20">

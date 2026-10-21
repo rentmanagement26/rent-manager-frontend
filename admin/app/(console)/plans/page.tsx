@@ -63,7 +63,7 @@ function PlanCard({ plan, catalog }: { plan: AdminPackage; catalog: Catalog | nu
           <Pill className="bg-c-wr text-c-wrt">{plan.landlordsOnOlderVersions} on an older version</Pill>
         )}
       </div>
-      <PlanVersionsButton packageId={plan.packageId} planName={plan.name} />
+      <PlanVersionsButton packageId={plan.packageId} planName={plan.name} canManage={!!catalog} />
       {catalog && <PlanCardActions plan={plan} catalog={catalog} />}
     </article>
   );

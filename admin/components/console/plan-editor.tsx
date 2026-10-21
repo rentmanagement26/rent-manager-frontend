@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Modal } from "@/components/console/modal";
 import { ErrorBox, WarningBox, goToSessionExpired, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/console/ui";
-import { createPlanAction, publishPlanVersionAction, updatePlanDetailsAction } from "@/lib/package-actions";
-import type { ActionFailure, AdminPackage, Catalog } from "@/lib/types";
+import { createPlanAction, previewPublishAction, publishPlanVersionAction, updatePlanDetailsAction } from "@/lib/package-actions";
+import type { ActionFailure, AdminPackage, Catalog, PublishPreview } from "@/lib/types";
 
 type Result = { ok: true } | ActionFailure;
 
@@ -205,6 +205,16 @@ function NewPlanModal({ catalog, onClose, onSaved }: { catalog: Catalog; onClose
   );
 }
 
+// What happens to a group of landlords when a version is published, in words (from the backend's rule names).
+const PREVIEW_RULE: Record<string, string> = {
+  price_up: "price rise",
+  limits_changed: "limits changed",
+  features_removed: "feature removed",
+  limits_lowered_may_stay: "lower limits",
+  courtesy: "courtesy note only",
+  no_change: "nothing changes for them",
+};
+
 // Popup for publishing a new version of a plan's price, limits and features.
 function NewVersionModal({
   plan,
@@ -220,18 +230,65 @@ function NewVersionModal({
   const [values, setValues] = useState(() => initialValues(catalog, plan));
   const [note, setNote] = useState("");
   const { submitting, error, run } = useSubmit(onSaved);
+  // What publishing would do to existing landlords. Publish stays off until it has been looked at, and any edit clears it.
+  const [preview, setPreview] = useState<PublishPreview | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState("");
 
-  const canSubmit = note.trim().length > 0 && contentComplete(values, catalog);
+  const complete = contentComplete(values, catalog);
+  const canSubmit = note.trim().length > 0 && complete && preview !== null;
+
+  function changeValues(next: ContentValues) {
+    setValues(next);
+    setPreview(null);
+  }
+
+  async function checkPreview() {
+    setPreviewing(true);
+    setPreviewError("");
+    const result = await previewPublishAction({ packageId: plan.packageId, ...toContent(values, catalog) });
+    setPreviewing(false);
+    if ("error" in result) {
+      if (result.expired) return goToSessionExpired();
+      setPreviewError(result.error);
+      return;
+    }
+    setPreview(result.preview);
+  }
 
   return (
     <Modal title="Publish new version" subtitle={`${plan.name} · now on version ${plan.version}`} busy={submitting} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        {/* A landlord stays on the version they have until they change plan, so a new version only reaches new sign-ups. */}
         <WarningBox>
-          Landlords already on this plan ({plan.landlords ?? 0}) keep the version they are on. The new version applies to landlords
-          who join or change to this plan from now on.
+          Landlords already on this plan ({plan.landlords ?? 0}) are told about the change and move to it after their notice period, or
+          can stay when it only lowers properties or units. Check who would be told before you publish.
         </WarningBox>
-        <ContentFields catalog={catalog} values={values} onChange={setValues} />
+        <ContentFields catalog={catalog} values={values} onChange={changeValues} />
+
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={checkPreview} disabled={!complete || previewing} className={secondaryButtonClass}>
+            {previewing ? "Checking…" : preview ? "Check again" : "Preview who would be told"}
+          </button>
+          <ErrorBox message={previewError} />
+          {preview && (
+            <div className="rounded-xl bg-c-sf2 px-4 py-3 text-[13px]">
+              <p className="font-medium">
+                Would be notified: {preview.wouldBeNotified} of {preview.totalLandlords}{" "}
+                {preview.totalLandlords === 1 ? "landlord" : "landlords"}
+              </p>
+              {preview.groups.map((group) => (
+                <p key={group.termsNumber} className="mt-1.5 text-c-tx2">
+                  {group.landlords} {group.landlords === 1 ? "landlord" : "landlords"} on terms {group.termsNumber}:{" "}
+                  {PREVIEW_RULE[group.rule] ?? group.rule}
+                  {group.noticeDays > 0 && `, ${group.noticeDays} days notice`}
+                  {group.mayStay && ", may stay"}
+                  {group.overNewLimits > 0 && ` · ${group.overNewLimits} over the new limits`}
+                </p>
+              ))}
+              {preview.groups.length === 0 && <p className="mt-1 text-c-tx2">Nobody is on older terms, so nobody needs telling.</p>}
+            </div>
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="plan-note" className="text-xs text-c-tx2">
             Note (kept in the audit log)

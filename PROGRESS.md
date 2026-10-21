@@ -25,6 +25,21 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-22 (evening) — Claude (Windows) proposals to several landlords, landlord filters, Plans end date and publish preview, Activity page (designs approved first)
+
+- **Admin Landlords page**: checkbox per row and a select-all for the page; a bar "N selected / Propose plan to N" opens a popup (`bulk-proposal-modal.tsx`, `bulk-select.tsx`): pick a plan, the backend's
+  preview says how many can be offered, are over the limits or already there (and who is left out), add message, private note and how long they have to answer, then **Send to N**; each landlord is emailed and
+  answers for themselves. New plan, terms (older/newest) and plan-change status (proposed, told, queued, chose to stay, none) filters: with a filter the list comes from `GET /admin/subscriptions`
+  (`lib/subscription-list-api.ts`, page numbers, only landlords that are on a plan, and the page says so); without one it is the full list with landlords that have no plan. The page was rewritten around one `Row` shape for both sources.
+- **Admin Plans**: the Versions popup shows "Ends <date>" and how many chose to stay on older terms, with **Set end date / Change date / Remove** (`PUT .../versions/{id}/end-date`, `POST .../end-date/cancel`; at least 60 days away, note required,
+  result "N landlords, N notices queued"); the New version popup has **Preview who would be told** (`POST .../versions/preview`) and Publish stays off until it has been looked at (any edit clears it). The old warning that landlords keep their version
+  was wrong since the rollout work and was replaced. Files: `plan-versions.tsx`, `plan-editor.tsx`, `lib/package-api.ts`, `lib/package-actions.ts`.
+- **Landlord site**: new **Activity** page (`/landlord/activity`, sidebar item) from `GET /activity` with area filter (plan and billing, sign-in and security, properties, units, tenants, leases), time filter and "Older activity".
+  Files: `app/landlord/activity/page.tsx`, `lib/activity-api.ts`, `components/landlord-sidebar.tsx`.
+- **Verified**: `tsc` and `eslint` clean in both apps. Signed in: the Landlords page with selection and the bulk popup (preview "2 can be offered", nothing sent), the `status=proposed` filter (Amanjit's open proposal, "Until Nov 4"),
+  and the landlord Activity page (empty: the backend records few audit events, so this account has none, even for all time). **Not exercised**: Send to N, Set end date, Preview publish, an Activity list with entries.
+- **Left out on purpose**: tenant rent display (needs the agreed rent stored; Ontario/Manitoba rent-increase notice rules), the paused HEIC upload, the tenant portal redesign, notification preferences (no endpoint).
+
 ## 2026-10-22 (later) — Claude (Windows) built rollout controls, the Jobs page, the plan-update notice and the Billing page (designs approved first)
 
 - **Admin, rollout controls** (`components/console/plan-changes-card.tsx`): a "Plan changes" card on the landlord detail page lists proposals and rollouts (Queued, Told, Chose to stay, Awaiting customer,

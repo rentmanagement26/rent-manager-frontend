@@ -2,7 +2,7 @@
 // and nothing changes until they do. Staff can never approve on a customer's behalf.
 import { backendFetch, getJson } from "@/lib/api-client";
 import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
-import type { ApiResult, AwaitingProposal, SendProposalResult } from "@/lib/types";
+import type { ApiResult, AwaitingProposal, BulkProposalPreview, BulkSendResult, SendProposalResult } from "@/lib/types";
 
 const BASE = "/api/v1/admin/subscriptions";
 
@@ -116,4 +116,34 @@ export async function getRolloutStatuses(token: string): Promise<Map<number, "to
     if (result.status === "ok") for (const item of result.data.items) map.set(item.landlordProfileId, statuses[index]);
   });
   return map;
+}
+
+// Who could be offered a plan, among these landlords. Changes nothing.
+export async function previewProposals(token: string, landlordProfileIds: number[], toPackageId: number): Promise<BulkProposalPreview> {
+  const response = await backendFetch(`${BASE}/proposals/preview`, token, {
+    method: "POST",
+    body: JSON.stringify({ LandlordProfileIds: landlordProfileIds, ToPackageId: toPackageId }),
+  });
+  if (!response.ok) return failWith(response, "Your role can't send plan proposals.");
+  return response.json();
+}
+
+// Offers a plan to several landlords at once. Each is emailed and answers for themselves; those who could not accept it
+// (over the limits), are already there or have no plan are left out and reported.
+export async function sendProposals(
+  token: string,
+  input: { landlordProfileIds: number[]; toPackageId: number; message: string; staffNote: string; expiresInDays: number | null },
+): Promise<BulkSendResult> {
+  const response = await backendFetch(`${BASE}/proposals`, token, {
+    method: "POST",
+    body: JSON.stringify({
+      LandlordProfileIds: input.landlordProfileIds,
+      ToPackageId: input.toPackageId,
+      Message: input.message || null,
+      StaffNote: input.staffNote || null,
+      ExpiresInDays: input.expiresInDays,
+    }),
+  });
+  if (!response.ok) return failWith(response, "Your role can't send plan proposals.");
+  return response.json();
 }

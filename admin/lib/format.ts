@@ -54,3 +54,8 @@ export function limitText(value: number, displayName: string) {
   if (name.endsWith("ies")) return `1 ${name.slice(0, -3)}y`;
   return name.endsWith("s") ? `1 ${name.slice(0, -1)}` : `1 ${name}`;
 }
+
+// "yyyy-mm-dd" (UTC) for a day this many days from now, the earliest date a date picker may offer.
+export function daysFromNowIso(days: number) {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}

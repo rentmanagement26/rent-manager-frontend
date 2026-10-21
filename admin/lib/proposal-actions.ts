@@ -9,10 +9,12 @@ import {
   cancelPlannedChange,
   getAwaitingProposals,
   postponePlannedChange,
+  previewProposals,
   sendProposal,
+  sendProposals,
   withdrawProposal,
 } from "@/lib/proposal-api";
-import type { ActionFailure, AwaitingProposal, SendProposalResult } from "@/lib/types";
+import type { ActionFailure, AwaitingProposal, BulkProposalPreview, BulkSendResult, SendProposalResult } from "@/lib/types";
 
 // Turns a thrown error into the { error, expired } shape the client narrows on.
 function failure(err: unknown, fallback: string): ActionFailure {
@@ -115,5 +117,63 @@ export async function postponePlannedChangeAction(changeId: number, until: strin
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't postpone the change. Try again.");
+  }
+}
+
+// The backend takes up to 500 landlords at once; the list page offers at most 25.
+function cleanIds(ids: number[]): number[] | null {
+  const list = Array.from(new Set((ids ?? []).map((id) => Number(id))));
+  return list.length > 0 && list.length <= 500 && list.every((id) => Number.isInteger(id) && id > 0) ? list : null;
+}
+
+// Shows who could be offered a plan among the selected landlords, without sending anything.
+export async function previewBulkProposalsAction(
+  landlordProfileIds: number[],
+  packageId: number,
+): Promise<{ ok: true; preview: BulkProposalPreview } | ActionFailure> {
+  const session = await requireAdmin();
+
+  const { can } = await getPermissions(session);
+  if (!can(PERMISSIONS.subscriptionsChange)) return { error: "Your role can't send plan proposals.", expired: false };
+  const ids = cleanIds(landlordProfileIds);
+  if (!ids) return { error: "Select between 1 and 500 landlords.", expired: false };
+
+  try {
+    return { ok: true, preview: await previewProposals(session.backendToken, ids, Number(packageId)) };
+  } catch (err) {
+    return failure(err, "Couldn't check the selection. Try again.");
+  }
+}
+
+// Sends the proposal to the selected landlords (those who can't accept it are left out and reported).
+export async function sendBulkProposalsAction(input: {
+  landlordProfileIds: number[];
+  packageId: number;
+  message: string;
+  staffNote: string;
+  expiresInDays: number | null;
+}): Promise<{ ok: true; result: BulkSendResult } | ActionFailure> {
+  const session = await requireAdmin();
+
+  const { can } = await getPermissions(session);
+  if (!can(PERMISSIONS.subscriptionsChange)) return { error: "Your role can't send plan proposals.", expired: false };
+  const ids = cleanIds(input.landlordProfileIds);
+  if (!ids) return { error: "Select between 1 and 500 landlords.", expired: false };
+  const days = input.expiresInDays === null ? null : Number(input.expiresInDays);
+  if (days !== null && (!Number.isInteger(days) || days < 1 || days > 90)) {
+    return { error: "A proposal can stay open for 1 to 90 days.", expired: false };
+  }
+
+  try {
+    const result = await sendProposals(session.backendToken, {
+      landlordProfileIds: ids,
+      toPackageId: Number(input.packageId),
+      message: String(input.message ?? "").trim().slice(0, 500),
+      staffNote: String(input.staffNote ?? "").trim().slice(0, 500),
+      expiresInDays: days,
+    });
+    return { ok: true, result };
+  } catch (err) {
+    return failure(err, "Couldn't send the proposals. Try again.");
   }
 }

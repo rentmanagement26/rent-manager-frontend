@@ -1,5 +1,6 @@
 // Calls for changing plans (packages): create one, publish a new version of its price/limits/features, edit its details.
 import { send } from "@/lib/staff-api";
+import type { PublishPreview, TermsEndResult } from "@/lib/types";
 
 const PACKAGES = "/api/v1/admin/packages";
 
@@ -40,4 +41,19 @@ export function updatePackage(
     IsActive: input.isActive,
     IsDefault: input.isDefault,
   });
+}
+
+// A dry run of publishing: who would be told what, and when. Nothing is saved or sent.
+export function previewPublish(token: string, packageId: number, content: PlanContentInput) {
+  return send<PublishPreview>("POST", `${PACKAGES}/${packageId}/versions/preview`, token, toBody(content));
+}
+
+// Sets or changes the end date of older terms (a yyyy-mm-dd date at least the price-rise notice, 60 days, away).
+export function setTermsEndDate(token: string, packageId: number, versionId: number, endsAt: string, note: string) {
+  return send<TermsEndResult>("PUT", `${PACKAGES}/${packageId}/versions/${versionId}/end-date`, token, { EndsAt: endsAt, Note: note });
+}
+
+// Takes the end date off older terms. The landlords on them go back to the usual rules and are told.
+export function clearTermsEndDate(token: string, packageId: number, versionId: number, note: string) {
+  return send<TermsEndResult>("POST", `${PACKAGES}/${packageId}/versions/${versionId}/end-date/cancel`, token, { Note: note });
 }

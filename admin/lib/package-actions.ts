@@ -5,10 +5,17 @@
 import { revalidatePath } from "next/cache";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
-import { createPackage, publishPackageVersion, updatePackage } from "@/lib/package-api";
+import {
+  clearTermsEndDate,
+  createPackage,
+  previewPublish,
+  publishPackageVersion,
+  setTermsEndDate,
+  updatePackage,
+} from "@/lib/package-api";
 import { getPackageDetail } from "@/lib/subscription-api";
 import type { PlanContentInput } from "@/lib/package-api";
-import type { ActionFailure, AdminPackageDetail } from "@/lib/types";
+import type { ActionFailure, AdminPackageDetail, PublishPreview, TermsEndResult } from "@/lib/types";
 
 type Done = { ok: true };
 
@@ -117,5 +124,68 @@ export async function updatePlanDetailsAction(input: {
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't save the plan. Try again.");
+  }
+}
+
+// Shows what publishing a version would do to existing landlords, without publishing.
+export async function previewPublishAction(
+  input: PlanContentInput & { packageId: number },
+): Promise<{ ok: true; preview: PublishPreview } | ActionFailure> {
+  const session = await requireAdmin();
+  const content = cleanContent(input);
+  if (typeof content === "string") return { error: content, expired: false };
+
+  try {
+    const preview = await previewPublish(session.backendToken, Number(input.packageId), content);
+    if (!preview) return { error: "Couldn't check the new version. Try again.", expired: false };
+    return { ok: true, preview };
+  } catch (err) {
+    return failure(err, "Couldn't check the new version. Try again.");
+  }
+}
+
+// A note is required and at most 500 characters.
+function cleanNote(note: string): string | null {
+  const cleaned = String(note ?? "").trim();
+  return cleaned && cleaned.length <= 500 ? cleaned : null;
+}
+
+// Sets or changes the end date of older terms. `endsAt` is a yyyy-mm-dd date from the date picker.
+export async function setTermsEndDateAction(input: {
+  packageId: number;
+  versionId: number;
+  endsAt: string;
+  note: string;
+}): Promise<{ ok: true; result: TermsEndResult } | ActionFailure> {
+  const session = await requireAdmin();
+  const note = cleanNote(input.note);
+  if (!note) return { error: "Add a note (up to 500 characters) explaining the change.", expired: false };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(input.endsAt))) return { error: "Choose a date.", expired: false };
+
+  try {
+    const result = await setTermsEndDate(session.backendToken, Number(input.packageId), Number(input.versionId), input.endsAt, note);
+    revalidatePath("/plans");
+    return { ok: true, result: result ?? { landlords: 0, noticesQueued: 0, replaced: 0 } };
+  } catch (err) {
+    return failure(err, "Couldn't set the end date. Try again.");
+  }
+}
+
+// Takes the end date off older terms.
+export async function clearTermsEndDateAction(input: {
+  packageId: number;
+  versionId: number;
+  note: string;
+}): Promise<{ ok: true; result: TermsEndResult } | ActionFailure> {
+  const session = await requireAdmin();
+  const note = cleanNote(input.note);
+  if (!note) return { error: "Add a note (up to 500 characters) explaining the change.", expired: false };
+
+  try {
+    const result = await clearTermsEndDate(session.backendToken, Number(input.packageId), Number(input.versionId), note);
+    revalidatePath("/plans");
+    return { ok: true, result: result ?? { landlords: 0, noticesQueued: 0, replaced: 0 } };
+  } catch (err) {
+    return failure(err, "Couldn't remove the end date. Try again.");
   }
 }
