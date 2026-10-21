@@ -221,3 +221,36 @@ export interface RegisterTenantResult {
   userId: string;
   email: string;
 }
+
+// ---- Plan proposals from support (the landlord approves or declines) ---------------------------------------
+
+export interface PlanSnapshot {
+  packageId: number;
+  name: string;
+  monthlyPrice: number;
+}
+
+// A limit that differs between the current and proposed plan. A null from/to means unlimited.
+export interface PlanLimitChange {
+  key: string;
+  displayName: string;
+  from: number | null;
+  to: number | null;
+}
+
+// One plan change the landlord has been told about and not settled (GET /subscription/changes).
+// `kind` is "proposal" (approve or decline) or "notice" (their plan is being updated).
+export interface PendingPlanChange {
+  id: number;
+  kind: "proposal" | "notice";
+  message: string | null;
+  sentAt: string;
+  current: PlanSnapshot;
+  target: PlanSnapshot;
+  changes: {
+    price: { from: number; to: number } | null;
+    limits: PlanLimitChange[];
+    featuresAdded: { key: string; displayName: string }[];
+    featuresRemoved: { key: string; displayName: string }[];
+  };
+}

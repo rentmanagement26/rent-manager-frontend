@@ -5,12 +5,15 @@ import { notFound, redirect } from "next/navigation";
 import { ChangePlanButton } from "@/components/console/change-plan";
 import { LandlordAccount } from "@/components/console/landlord-account";
 import { OverridesManager } from "@/components/console/overrides-manager";
+import { ProposalStatus } from "@/components/console/proposal-status";
+import { ProposalWatcher } from "@/components/console/proposal-watcher";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
 import { requireAdmin } from "@/lib/auth-guard";
 import { getCatalog } from "@/lib/catalog-api";
 import { formatPrice, formatWhen, initials } from "@/lib/format";
 import { getOverrides } from "@/lib/override-api";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
+import { getAwaitingProposals } from "@/lib/proposal-api";
 import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
 
 export const metadata: Metadata = { title: "Landlord" };
@@ -80,8 +83,11 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   // "Add override" needs overrides.grant plus the catalog for its lists; "Remove" needs overrides.revoke.
   const overrideCatalog = can(PERMISSIONS.overridesGrant) && catalog.status === "ok" ? catalog.data : null;
   const canRevokeOverride = can(PERMISSIONS.overridesRevoke);
-  // Only someone holding subscriptions.override (SuperAdmin) may skip the "usage must fit the new plan" check.
-  const canOverrideUsage = can(PERMISSIONS.subscriptionsOverride);
+
+  // Is a plan proposal to this landlord still waiting for their answer? Looked up by email, so the call stays small.
+  const awaitingResult = await getAwaitingProposals(session.backendToken, landlord.email ?? undefined);
+  if (awaitingResult.status === "expired") redirect("/session-expired");
+  const awaiting = awaitingResult.status === "ok" ? awaitingResult.data.filter((p) => p.landlordProfileId === landlord.landlordProfileId) : [];
 
   return (
     <div className="flex max-w-5xl flex-col gap-5">
@@ -103,15 +109,12 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
             {landlord.email ?? "No email"}
           </p>
         </div>
-        {canChangePlan && packages.status === "ok" && (
-          // Same popup the list uses. After a successful change it refreshes this page by itself.
-          <ChangePlanButton
-            landlordProfileId={landlord.landlordProfileId}
-            landlordName={displayName}
-            packages={packages.data}
-            canOverrideUsage={canOverrideUsage}
-          />
+        {awaiting.length > 0 && <ProposalStatus changeId={awaiting[0].changeId} canWithdraw={canChangePlan} />}
+        {canChangePlan && packages.status === "ok" && awaiting.length === 0 && (
+          // Same popup the list uses. After sending it refreshes this page by itself.
+          <ChangePlanButton landlordProfileId={landlord.landlordProfileId} landlordName={displayName} packages={packages.data} />
         )}
+        <ProposalWatcher awaiting={awaiting} search={landlord.email ?? undefined} />
       </section>
 
       {/* Account controls (switch the account on/off, reset two-factor). SuperAdmin only; the backend enforces it too. */}

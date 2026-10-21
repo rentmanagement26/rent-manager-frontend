@@ -294,11 +294,24 @@ export interface LimitViolation {
   used: number;
 }
 
-// What the "change plan" server action answers when it fails: ActionFailure plus the backend's stable
-// error code and, for "over_limits", the limits that were broken.
-export interface ChangePlanFailure extends ActionFailure {
-  code?: string;
-  violations?: LimitViolation[];
+// ---- Plan proposals (the customer must approve every plan change) -------------------------------------------
+
+// A proposal sent to a landlord that they have not answered yet (from GET /admin/subscriptions?status=proposed).
+export interface AwaitingProposal {
+  landlordProfileId: number;
+  landlordName: string;
+  changeId: number;
+}
+
+// Outcome of sending one proposal, as the backend names it.
+export type ProposalOutcome = "proposed" | "over_limits" | "already_there" | "no_plan" | "not_found";
+
+// Answer to sending a proposal to one landlord. `violations` lists the limits that stop them accepting.
+export interface SendProposalResult {
+  outcome: ProposalOutcome;
+  message: string | null;
+  changeId: number | null;
+  violations: LimitViolation[];
 }
 
 // ---- Roles and permissions (GET /api/v1/admin/roles) --------------------------------------------------------

@@ -1,12 +1,9 @@
-import { backendFetch, getJson } from "@/lib/api-client";
-import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
+import { getJson } from "@/lib/api-client";
 import type {
   AdminLandlordSubscription,
   AdminPackage,
   AdminPackageDetail,
   LandlordPage,
-  LimitViolation,
-  PlanChangeReasonCode,
   SubscriptionHistoryPage,
 } from "@/lib/types";
 
@@ -39,63 +36,4 @@ export function getLandlordSubscription(token: string, landlordProfileId: number
 // A landlord's plan changes (upgrades, downgrades, admin changes), newest first.
 export function getLandlordHistory(token: string, landlordProfileId: number) {
   return getJson<SubscriptionHistoryPage>(`${BASE}/landlords/${landlordProfileId}/subscription/history?limit=50`, token);
-}
-
-// Thrown when the backend refuses a plan change. `code` is the backend's stable error code
-// ("over_limits", "already_on_plan", "reason_required", ...) and `violations` lists the broken limits.
-export class PlanChangeError extends Error {
-  constructor(
-    message: string,
-    public readonly code?: string,
-    public readonly violations?: LimitViolation[],
-  ) {
-    super(message);
-  }
-}
-
-export interface ChangePlanInput {
-  packageId: number;
-  reasonCode: PlanChangeReasonCode;
-  note: string;
-  overrideUsageCheck: boolean;
-}
-
-interface PlanChangeErrorBody {
-  code?: string;
-  message?: string;
-  violations?: { limitKey: string; displayName: string; limit: number; used: number }[];
-}
-
-// Moves a landlord to another plan. Returns nothing on success; throws SessionExpiredError or PlanChangeError.
-export async function changeLandlordPlan(token: string, landlordProfileId: number, input: ChangePlanInput): Promise<void> {
-  const response = await backendFetch(`${BASE}/landlords/${landlordProfileId}/subscription`, token, {
-    method: "PUT",
-    body: JSON.stringify({
-      PackageId: input.packageId,
-      ReasonCode: input.reasonCode,
-      Note: input.note,
-      OverrideUsageCheck: input.overrideUsageCheck,
-    }),
-  });
-
-  if (response.ok) return;
-  if (response.status === 401) throw new SessionExpiredError();
-  if (response.status === 429) throw new PlanChangeError("Too many attempts. Wait a minute and try again.");
-
-  // The backend's plan-change errors look like { code, message, violations? }.
-  const text = await response.text();
-  let body: PlanChangeErrorBody | null = null;
-  try {
-    body = JSON.parse(text) as PlanChangeErrorBody;
-  } catch {
-    // Not JSON (for example an empty 403); handled below.
-  }
-
-  if (body?.message) {
-    throw new PlanChangeError(body.message, body.code, body.violations);
-  }
-  if (response.status === 403) {
-    throw new PlanChangeError("Your role can't change plans.");
-  }
-  throw new PlanChangeError(await extractErrorMessage(new Response(text)));
 }

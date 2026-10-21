@@ -25,6 +25,31 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-21 — Claude (Windows) admin plan changes are now proposals the customer must approve (owner: "do it yourself")
+
+- **Rule (owner)**: no plan change happens until the customer approves it through an emailed link; the admin must see the answer
+  quickly. Staff can never approve for the customer.
+- **Built in `admin/`**: the old "Change plan" popup (reason code + note + skip usage check, `PUT .../subscription`) is gone. The popup is now
+  "Propose plan" (`components/console/change-plan.tsx`): pick a plan, usage preview (blocked if the landlord could not accept it), optional
+  message for the landlord and private staff note, **Send for approval** (`POST /admin/subscriptions/proposals`). Landlords with an unanswered
+  proposal show an "Awaiting customer" pill with **Withdraw** (`proposal-status.tsx`); `proposal-watcher.tsx` polls every 10 s (visible tab,
+  only while something waits) and shows a message plus refreshes when an answer arrives. Files: `lib/proposal-api.ts`, `lib/proposal-actions.ts`,
+  landlords list and detail pages, types. Removed the now-dead `changePlanAction` / `changeLandlordPlan`.
+- **Backend facts found**: the backend's `PUT /admin/landlords/{id}/subscription` now needs a staff-typed `Agreement` (phone/email/ticket
+  + reference) - unverifiable, so the console does not use it. Proposals are accepted by the signed-in landlord in-app (`POST /subscription/proposals/{id}/accept`).
+  The proposal email has **no approve link** yet, and there is **no push channel** to the admin side.
+- **Backend request**: `admin/PLAN-APPROVAL-BACKEND-SPEC.md` (approve link, close the staff-typed path, record the approver, admin
+  notifications, optional SSE). The landlord web page that the email link opens (`/landlord/plan-proposals/{id}`) is **not built yet** in this repo.
+- **Verified**: `tsc` and `eslint` clean in `admin/`. **Not run signed in** against the backend. Only the backend's own test database has proposals.
+- **Landlord approval page built (same day, web app)**: `/landlord/plan-proposals/[id]` shows what would change (price, limits, features,
+  staff message) with **Approve** and **Decline**; it uses `GET /subscription/changes` and `POST /subscription/proposals/{id}/accept|decline`.
+  Files: `app/landlord/plan-proposals/[id]/page.tsx`, `components/plan-proposal-card.tsx`, `lib/plan-proposal-api.ts`, `lib/plan-proposal-actions.ts`,
+  types in `lib/types.ts`. Landlord role only. Not linked from the app menu or the bell yet; the email link is the entry (backend must add it).
+  The email link should be `/login?redirect=%2Flandlord%2Fplan-proposals%2F{id}` because the landlord layout sends signed-out visitors to
+  `/login` without remembering the page (spec updated).
+- **Verified**: `tsc` and `eslint` clean. **Not seen signed in** (needs a landlord login with 2FA and a real proposal).
+- **Next step**: owner or backend owner adds the email link; then test with a throwaway landlord: propose in admin, approve on the link, watch admin update.
+
 ## 2026-10-19 (late) — Claude (Windows) Plans page now shows what the backend returns about versions
 
 - **What**: plan cards show `landlords` and a "N on an older version" pill (`landlordsOnOlderVersions`); a "Versions" popup on every card

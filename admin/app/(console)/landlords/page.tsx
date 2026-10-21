@@ -3,10 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChangePlanButton } from "@/components/console/change-plan";
+import { ProposalStatus } from "@/components/console/proposal-status";
+import { ProposalWatcher } from "@/components/console/proposal-watcher";
 import { Notice, Pill, cardClass, inputClass, secondaryButtonClass } from "@/components/console/ui";
 import { requireAdmin } from "@/lib/auth-guard";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { initials } from "@/lib/format";
+import { getAwaitingProposals } from "@/lib/proposal-api";
 import { getLandlords, getPackages } from "@/lib/subscription-api";
 import type { LandlordListItem } from "@/lib/types";
 
@@ -27,8 +30,11 @@ function statusClass(status: string) {
 function LandlordRow({
   landlord,
   changePlan,
+  proposal,
 }: {
   landlord: LandlordListItem;
+  // The proposal pill (with Withdraw) while this landlord has not answered a plan proposal, otherwise null.
+  proposal: React.ReactNode;
   // The "Change plan" button, or null when this admin can't change plans.
   changePlan: React.ReactNode;
 }) {
@@ -55,6 +61,8 @@ function LandlordRow({
       <div>
         {!landlord.isActive ? (
           <Pill className="bg-c-bad text-c-badt">Deactivated</Pill>
+        ) : proposal ? (
+          proposal
         ) : (
           landlord.planStatus && <Pill className={statusClass(landlord.planStatus)}>{landlord.planStatus}</Pill>
         )}
@@ -73,19 +81,22 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
   const beforeId = Number(params.before) > 0 ? Number(params.before) : undefined;
 
   // The list and the plan catalog (the popup needs it) load side by side.
-  const [landlords, packages] = await Promise.all([
+  const [landlords, packages, awaitingResult] = await Promise.all([
     getLandlords(session.backendToken, { search, beforeId, limit: PAGE_SIZE }),
     getPackages(session.backendToken),
+    getAwaitingProposals(session.backendToken), // landlords who have not answered a plan proposal yet
   ]);
 
-  if (landlords.status === "expired" || packages.status === "expired") {
+  if (landlords.status === "expired" || packages.status === "expired" || awaitingResult.status === "expired") {
     redirect("/session-expired");
   }
 
   // Buttons follow the admin's real permissions. The backend enforces them as well.
   const { can } = await getPermissions(session);
   const canChangePlan = can(PERMISSIONS.subscriptionsChange) && packages.status === "ok";
-  const canOverrideUsage = can(PERMISSIONS.subscriptionsOverride);
+  // landlordProfileId -> proposal id, for the pills. Empty when the lookup failed (the list still works).
+  const awaiting = awaitingResult.status === "ok" ? awaitingResult.data : [];
+  const awaitingByLandlord = new Map(awaiting.map((p) => [p.landlordProfileId, p.changeId]));
 
   // Builds the "Older landlords" link, keeping the search text.
   function pageHref(nextBeforeId: number) {
@@ -99,7 +110,7 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
     <div className="flex max-w-5xl flex-col gap-5">
       <div className="animate-up">
         <h1 className="text-2xl font-medium tracking-tight">Landlords</h1>
-        <p className="mt-1 text-c-tx2">See each landlord&apos;s plan and move them to another one.</p>
+        <p className="mt-1 text-c-tx2">See each landlord&apos;s plan and propose a different one. They approve it before it changes.</p>
       </div>
 
       <section className={`${cardClass} animate-up`} style={{ animationDelay: "0.06s" }}>
@@ -143,8 +154,12 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
                         landlordProfileId={landlord.landlordProfileId}
                         landlordName={landlord.businessName || landlord.name}
                         packages={packages.data}
-                        canOverrideUsage={canOverrideUsage}
                       />
+                    ) : null
+                  }
+                  proposal={
+                    awaitingByLandlord.has(landlord.landlordProfileId) ? (
+                      <ProposalStatus changeId={awaitingByLandlord.get(landlord.landlordProfileId)!} canWithdraw={canChangePlan} />
                     ) : null
                   }
                 />
@@ -167,6 +182,9 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
             </div>
           </>
         )}
+
+        {/* Checks for customers' answers while proposals are waiting, and refreshes the list when one arrives. */}
+        <ProposalWatcher awaiting={awaiting} />
 
         {!can(PERMISSIONS.subscriptionsChange) && <p className="mt-4 text-xs text-c-tx3">Your role can view plans but not change them.</p>}
       </section>
