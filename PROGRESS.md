@@ -25,6 +25,16 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-21 (night) — Claude (Windows) Overview now shows landlord, plan, customer and team numbers (design approved first)
+
+- **What**: new top section of `/overview` from `GET /admin/dashboard`: four number tiles (Landlords + active, New this week, Switched off, No plan yet), **Landlords by plan** bars with an
+  "N on older terms" pill and the no-plan count, **New landlords per week** bars, **Customers by role** and **Admin team** (the backend leaves these out when the admin lacks the permission,
+  so the card just doesn't draw). The audit cards stay below under "Audit activity (last 30 days)". "Landlords" removed from the "Coming next" card. If the dashboard fails, a notice shows in
+  that spot and the audit cards still work.
+  Files: `components/console/dashboard-section.tsx` (new), `lib/dashboard-api.ts` (new), `app/(console)/overview/page.tsx`, `CardTitle` and `hoverCardClass` moved into `components/console/ui.tsx`, types in `lib/types.ts`.
+- **Verified**: `tsc` and `eslint` clean; signed in as SuperAdmin the page shows live numbers (5 landlords, 4 with no plan, Free 1, tenants 3, team 2 active).
+- **Noticed, not checked**: customers by role says Contractors 2 while the Customers list shows 1 contractor row; likely one account holds two roles (the list shows only the first role). Worth a look.
+
 ## 2026-10-21 (evening) — Claude (Windows) Catalog: Add limit and the "landlords may stay when lowered" switch (design approved first)
 
 - **Backend change it follows** (already pulled, `93dbc06` and `77818f5`): `POST /admin/catalog/limits` creates a limit for something the code can count; `GET /admin/catalog` returns

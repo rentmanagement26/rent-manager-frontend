@@ -1,11 +1,13 @@
-import { Building2, CreditCard, House, LifeBuoy, Users } from "lucide-react";
+import { Building2, CreditCard, House, LifeBuoy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { CountUp } from "@/components/console/count-up";
-import { Notice, OUTCOME_STYLE, Pill, cardClass } from "@/components/console/ui";
+import { DashboardSection } from "@/components/console/dashboard-section";
+import { CardTitle, Notice, OUTCOME_STYLE, Pill, cardClass, hoverCardClass } from "@/components/console/ui";
 import { getAuditLogs, getAuditSettings } from "@/lib/audit-api";
+import { getDashboard } from "@/lib/dashboard-api";
 import { requireAdmin } from "@/lib/auth-guard";
 import { daysAgo, formatWhen } from "@/lib/format";
 import type { ApiResult, AuditLogEntry, AuditSettings } from "@/lib/types";
@@ -13,20 +15,6 @@ import type { ApiResult, AuditLogEntry, AuditSettings } from "@/lib/types";
 export const metadata: Metadata = { title: "Overview" };
 
 const FAILURE_SAMPLE_SIZE = 100;
-
-const hoverCardClass = `${cardClass} transition-[transform,box-shadow,background-color,border-color] hover:-translate-y-0.5 hover:shadow-c-card`;
-
-function CardTitle({ title, subtitle, aside }: { title: string; subtitle?: string; aside?: ReactNode }) {
-  return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-base font-medium">{title}</h2>
-        {subtitle && <p className="mt-0.75 text-[13px] text-c-tx2">{subtitle}</p>}
-      </div>
-      {aside}
-    </div>
-  );
-}
 
 function unavailableMessage(result: ApiResult<unknown>) {
   return result.status === "forbidden"
@@ -62,7 +50,6 @@ function HealthRow({ label, value }: { label: string; value: string }) {
 }
 
 const COMING_SOON = [
-  { label: "Landlords", icon: Users },
   { label: "Tenants", icon: House },
   { label: "Properties", icon: Building2 },
   { label: "Billing", icon: CreditCard },
@@ -73,15 +60,16 @@ export default async function OverviewPage() {
   const session = await requireAdmin();
   const since = daysAgo(30);
 
-  const [settings, failures, warnings, latest] = await Promise.all([
+  const [settings, failures, warnings, latest, dashboard] = await Promise.all([
     getAuditSettings(session.backendToken),
     getAuditLogs(session.backendToken, { outcome: "Failure", from: since, limit: FAILURE_SAMPLE_SIZE }),
     getAuditLogs(session.backendToken, { outcome: "Warning", from: since, limit: FAILURE_SAMPLE_SIZE }),
     getAuditLogs(session.backendToken, { limit: 6 }),
+    getDashboard(session.backendToken),
   ]);
 
   // A dead token means every call says so; send them to sign in again (it also clears the cookie).
-  if ([settings, failures, warnings, latest].some((result) => result.status === "expired")) {
+  if ([settings, failures, warnings, latest, dashboard].some((result) => result.status === "expired")) {
     redirect("/session-expired");
   }
 
@@ -98,8 +86,13 @@ export default async function OverviewPage() {
     <div className="flex flex-col gap-5">
       <div className="animate-up">
         <h1 className="text-2xl font-medium tracking-tight">Overview</h1>
-        <p className="mt-1 text-c-tx2">How DomusPRO is doing over the last 30 days.</p>
+        <p className="mt-1 text-c-tx2">How DomusPRO is doing.</p>
       </div>
+
+      {/* Landlords, plans, customers and staff, from GET /admin/dashboard. */}
+      <DashboardSection result={dashboard} />
+
+      <h2 className="animate-up text-base font-medium">Audit activity (last 30 days)</h2>
 
       <KpiRow
         settings={settings}

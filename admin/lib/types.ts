@@ -439,3 +439,29 @@ export interface CustomerDetail {
   tenant: { tenantProfileId: number; landlordProfileId: number; landlordName: string | null } | null;
   contractor: { contractorProfileId: number; companyName: string | null; trade: string | null } | null;
 }
+
+// ---- Overview numbers (GET /api/v1/admin/dashboard) ----------------------------------------------------------
+
+// `customers` and `staff` are left out of the answer when the signed-in admin lacks the permission for them.
+export interface AdminDashboard {
+  generatedAt: string;
+  landlords: {
+    total: number;
+    active: number;
+    switchedOff: number;
+    newThisWeek: number;
+    weekStartsAt: string;
+    byPlan: { packageId: number; name: string; isActive: boolean; landlords: number; onOlderVersion: number }[];
+    // Landlords with no plan yet (they get the default plan the first time they add something).
+    noPlan: number;
+    newPerWeek: { weekStart: string; count: number }[];
+  };
+  customers?: { roles: { role: string; total: number; active: number; switchedOff: number }[] };
+  staff?: {
+    active: number;
+    switchedOff: number;
+    temporaryPasswordPending: number;
+    authenticatorNotSetUp: number;
+    byRole: { role: string; count: number }[];
+  };
+}

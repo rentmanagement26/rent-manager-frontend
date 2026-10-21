@@ -3,6 +3,22 @@ import type { AuditOutcome } from "@/lib/types";
 
 export const cardClass = "rounded-2xl border border-c-bd bg-c-sf p-6 transition-colors duration-400";
 
+// A card that lifts slightly on hover; used for the number tiles on the Overview.
+export const hoverCardClass = `${cardClass} transition-[transform,box-shadow,background-color,border-color] hover:-translate-y-0.5 hover:shadow-c-card`;
+
+// Title (and optional subtitle and right-hand link) at the top of an Overview card.
+export function CardTitle({ title, subtitle, aside }: { title: string; subtitle?: string; aside?: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h2 className="text-base font-medium">{title}</h2>
+        {subtitle && <p className="mt-0.75 text-[13px] text-c-tx2">{subtitle}</p>}
+      </div>
+      {aside}
+    </div>
+  );
+}
+
 export const OUTCOME_STYLE: Record<AuditOutcome, { label: string; className: string }> = {
   Success: { label: "Success", className: "bg-c-ok text-c-okt" },
   Failure: { label: "Failed", className: "bg-c-bad text-c-badt" },
