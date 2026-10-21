@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatRelativeTime } from "@/lib/format-time";
 import { refreshUnreadCount } from "@/lib/notification-store";
+import { notificationHref } from "@/lib/notification-target";
 import type { NotificationItem } from "@/lib/types";
 import { markNotificationReadAction } from "@/lib/notification-actions";
 
@@ -12,6 +13,10 @@ export function NotificationList({ items, emptyMessage }: { items: NotificationI
   const [readIds, setReadIds] = useState<Set<number>>(new Set());
 
   async function handleClick(item: NotificationItem) {
+    // A plan proposal opens its page; the notification is still marked read below.
+    const href = notificationHref(item);
+    if (href) router.push(href);
+
     if (item.isRead || readIds.has(item.id)) return;
 
     setReadIds((current) => new Set(current).add(item.id));

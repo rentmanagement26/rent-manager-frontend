@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { PageHeader } from "@/components/page-header";
+import { PlanProposalBanner } from "@/components/plan-proposal-banner";
 import type { Property } from "@/lib/types";
 
 export default async function AdminDashboardPage() {
@@ -23,6 +24,9 @@ export default async function AdminDashboardPage() {
         title="Dashboard"
         description="Welcome back! Here is what is happening with your rental portfolio."
       />
+
+      {/* Shown only while support's plan proposal waits for the landlord's answer */}
+      <PlanProposalBanner token={session.backendToken} />
 
       {/* Welcome banner */}
       <div className="relative overflow-hidden rounded-2xl border border-default bg-gradient-to-br from-brand-green-tint via-accent-tint to-subtle px-6 py-7 sm:px-8 flex items-center justify-between gap-6">

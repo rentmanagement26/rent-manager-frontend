@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/lib/notification-actions";
 import { formatRelativeTime } from "@/lib/format-time";
+import { notificationHref } from "@/lib/notification-target";
 import {
   adjustUnreadCount,
   clearUnreadCount,
@@ -54,6 +55,13 @@ export function NotificationBell({ viewAllHref }: { viewAllHref: string }) {
   }
 
   async function handleItemClick(item: NotificationItem) {
+    // A plan proposal opens its page; the notification is still marked read below.
+    const href = notificationHref(item);
+    if (href) {
+      setOpen(false);
+      router.push(href);
+    }
+
     if (item.isRead) return;
 
     setItems((current) => current?.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)) ?? null);

@@ -48,6 +48,12 @@ Codex and Claude use this file as the project handoff, across both computers.
   The email link should be `/login?redirect=%2Flandlord%2Fplan-proposals%2F{id}` because the landlord layout sends signed-out visitors to
   `/login` without remembering the page (spec updated).
 - **Verified**: `tsc` and `eslint` clean. **Not seen signed in** (needs a landlord login with 2FA and a real proposal).
+- **Entry points built (later the same day, web app)**: dashboard banner "Support suggested a plan change" with **Review proposal** (`components/plan-proposal-banner.tsx`,
+  shown only while a proposal is open, hidden if the lookup fails); `/landlord/plan-proposals` (index: one proposal redirects to it, none shows "No plan proposals are waiting",
+  several list); clicking a `PlanProposal` notification in the bell or the notifications list opens that page (`lib/notification-target.ts`, the notification carries no id,
+  so it goes to the index). Admin list Status column widened so the pill does not overlap the button.
+- **Verified**: `tsc` and `eslint` clean; admin Propose plan sent a real proposal to Amanjit Singh (Free to Basic) and the pill showed; landlord `/landlord/plan-proposals`
+  shows the empty state for a landlord with none. **Not seen**: banner and bell link with a real open proposal (needs Amanjit's login), approve and decline, the admin 10 s update.
 - **Next step**: owner or backend owner adds the email link; then test with a throwaway landlord: propose in admin, approve on the link, watch admin update.
 
 ## 2026-10-19 (late) — Claude (Windows) Plans page now shows what the backend returns about versions

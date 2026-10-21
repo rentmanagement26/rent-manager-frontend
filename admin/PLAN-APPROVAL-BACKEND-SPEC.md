@@ -13,6 +13,9 @@ Today `PlanChangeNoticeHandler` (Users) emails the text of the notice but has **
 - Add the landlord site address to configuration (for example `Web:BaseUrl`, set per environment like the other URLs).
 - In the proposal email only, add a button to `{Web:BaseUrl}/login?redirect=%2Flandlord%2Fplan-proposals%2F{changeId}`. The sign-in page sends a signed-in
   landlord straight on and a signed-out one through sign-in and 2FA to the page (the landlord layout alone would drop the destination).
+- **One path for everything**: the email link, the dashboard banner and the bell notification all open the same page, `/landlord/plan-proposals/{changeId}`,
+  which answers through the same endpoints (`POST /subscription/proposals/{id}/accept|decline`). Do not add a separate email-only approve endpoint or a
+  one-click token route: two ways to approve would mean two sets of rules, checks and audit entries to keep equal.
 - **Do not put a token in the link.** The page requires the landlord to sign in (2FA is already mandatory), and the existing
   `POST /subscription/proposals/{id}/accept|decline` endpoints do the approving as the signed-in landlord. A sign-in-required link
   cannot be forwarded and used by someone else, and needs no new token table.
