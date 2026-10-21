@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { PlanNoticeCard } from "@/components/plan-notice-card";
 import { PlanProposalCard } from "@/components/plan-proposal-card";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
@@ -23,16 +24,16 @@ export default async function PlanProposalPage({ params }: { params: Promise<{ i
   }
   if (!changes) redirect("/session-expired");
 
-  const proposal = changes.find((c) => c.id === changeId && c.kind === "proposal");
+  const change = changes.find((c) => c.id === changeId);
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Plan proposal" description="Review the change support suggested for your plan." />
-      {proposal ? (
-        <PlanProposalCard change={proposal} />
+      <PageHeader title={change?.kind === "notice" ? "Plan update" : "Plan proposal"} description="Review the change to your plan." />
+      {change ? (
+        change.kind === "notice" ? <PlanNoticeCard change={change} /> : <PlanProposalCard change={change} />
       ) : (
         <div className="max-w-xl rounded-2xl border border-default bg-white p-6 text-sm text-muted shadow-sm">
-          This proposal is no longer open. It may have been answered, withdrawn or replaced.
+          This change is no longer open. It may have been answered, withdrawn, expired or replaced.
           <Link href="/landlord" className="mt-3 block font-semibold text-accent hover:text-accent-dark">
             Back to dashboard
           </Link>

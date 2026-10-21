@@ -4,7 +4,14 @@
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
-import { ProposalError, getAwaitingProposals, sendProposal, withdrawProposal } from "@/lib/proposal-api";
+import {
+  ProposalError,
+  cancelPlannedChange,
+  getAwaitingProposals,
+  postponePlannedChange,
+  sendProposal,
+  withdrawProposal,
+} from "@/lib/proposal-api";
 import type { ActionFailure, AwaitingProposal, SendProposalResult } from "@/lib/types";
 
 // Turns a thrown error into the { error, expired } shape the client narrows on.
@@ -20,6 +27,8 @@ export async function sendProposalAction(input: {
   packageId: number;
   message: string;
   staffNote: string;
+  // How many days the landlord has to answer (1 to 90); null for no end.
+  expiresInDays: number | null;
 }): Promise<{ ok: true; result: SendProposalResult } | ActionFailure> {
   const session = await requireAdmin();
 
@@ -28,6 +37,10 @@ export async function sendProposalAction(input: {
 
   const message = String(input.message ?? "").trim().slice(0, 500);
   const staffNote = String(input.staffNote ?? "").trim().slice(0, 500);
+  const days = input.expiresInDays === null ? null : Number(input.expiresInDays);
+  if (days !== null && (!Number.isInteger(days) || days < 1 || days > 90)) {
+    return { error: "A proposal can stay open for 1 to 90 days.", expired: false };
+  }
 
   try {
     const result = await sendProposal(session.backendToken, {
@@ -35,6 +48,7 @@ export async function sendProposalAction(input: {
       toPackageId: Number(input.packageId),
       message,
       staffNote,
+      expiresInDays: days,
     });
     return { ok: true, result };
   } catch (err) {
@@ -65,4 +79,41 @@ export async function loadAwaitingProposalsAction(search?: string): Promise<{ ok
   if (result.status === "ok") return { ok: true, data: result.data };
   if (result.status === "expired") return { error: "Your session expired. Sign in again.", expired: true };
   return { error: "Couldn't check for answers.", expired: false };
+}
+
+// Cancels a planned plan change (a note is required, 500 characters at most).
+export async function cancelPlannedChangeAction(changeId: number, note: string): Promise<{ ok: true } | ActionFailure> {
+  const session = await requireAdmin();
+
+  const { can } = await getPermissions(session);
+  if (!can(PERMISSIONS.subscriptionsChange)) return { error: "Your role can't cancel planned changes.", expired: false };
+
+  const cleaned = String(note ?? "").trim();
+  if (!cleaned || cleaned.length > 500) return { error: "Add a note explaining the change (up to 500 characters).", expired: false };
+
+  try {
+    await cancelPlannedChange(session.backendToken, Number(changeId), cleaned);
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't cancel the change. Try again.");
+  }
+}
+
+// Moves a planned change later. `until` is a yyyy-mm-dd date from the date picker.
+export async function postponePlannedChangeAction(changeId: number, until: string, note: string): Promise<{ ok: true } | ActionFailure> {
+  const session = await requireAdmin();
+
+  const { can } = await getPermissions(session);
+  if (!can(PERMISSIONS.subscriptionsChange)) return { error: "Your role can't postpone planned changes.", expired: false };
+
+  const cleaned = String(note ?? "").trim();
+  if (!cleaned || cleaned.length > 500) return { error: "Add a note explaining the change (up to 500 characters).", expired: false };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(until))) return { error: "Choose a date.", expired: false };
+
+  try {
+    await postponePlannedChange(session.backendToken, Number(changeId), until, cleaned);
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't postpone the change. Try again.");
+  }
 }

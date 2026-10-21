@@ -25,6 +25,29 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-22 (later) — Claude (Windows) built rollout controls, the Jobs page, the plan-update notice and the Billing page (designs approved first)
+
+- **Admin, rollout controls** (`components/console/plan-changes-card.tsx`): a "Plan changes" card on the landlord detail page lists proposals and rollouts (Queued, Told, Chose to stay, Awaiting customer,
+  Applied, Cancelled, Failed). A queued or told rollout can be **Cancelled** or **Postponed** (date picker, note required; POST `/admin/subscriptions/changes/{id}/cancel|postpone`; the landlord is told).
+  The Landlords list shows Told / Queued / Chose to stay pills (`getRolloutStatuses`: one `GET /admin/subscriptions?status=` call per status). **Not built**: a list filter by status (the list pages by `beforeId`
+  on a different endpoint), and the many-landlord proposal preview.
+- **Admin, Jobs page** (`/jobs`, SuperAdmin only, sidebar under Security): each job with schedule, next due, last run result, **Run now** and a **History** popup of the last 20 runs
+  (`GET /admin/jobs`, `/{name}/runs`, `POST /{name}/run`). Permissions `jobs.view` / `jobs.run` added to `lib/permissions.ts`. Files: `lib/jobs-api.ts`, `lib/jobs-actions.ts`, `components/console/jobs-list.tsx`, `app/(console)/jobs/page.tsx`.
+- **Landlord site, plan-update notice**: `/landlord/plan-proposals/[id]` now also shows a notice ("Your Pro plan is being updated") with **Move now** (only when the backend says `canMoveNow`, never for a price rise) and
+  **Keep my plan** (only when `mayStay`); `/landlord/plan-proposals` lists proposals and notices; the dashboard banner and the bell cover both (`PlanChangeNotice` type). Files: `components/plan-notice-card.tsx`, `lib/plan-proposal-api.ts` (`answerNotice`).
+- **Landlord site, Billing page** (`/landlord/billing`, was "coming soon"): your plan with usage bars, and a plan list with Upgrade / Downgrade / Choose that **previews first** (does your usage fit?) then Confirm
+  (`GET /subscription`, `/subscription/packages`, `POST /preview-change`, `/change`). **No payment is taken: payments are not built**, and the page says so. Files: `lib/billing-api.ts`, `lib/billing-actions.ts`, `components/billing-plans.tsx`, `app/landlord/billing/page.tsx`.
+- **Verified**: `tsc` and `eslint` clean in both apps. Signed in as SuperAdmin: the Jobs page loads with both live jobs, and the landlord detail page shows the Plan changes card with Amanjit's open proposal.
+  **Not seen**: Cancel, Postpone, Run now, History, and everything on the landlord site (that session had expired): the notice card, Keep/Move now, and the Billing page with a real plan change. Billing Confirm changes a real plan, so test it on a throwaway landlord.
+
+## 2026-10-22 — Claude (Windows) proposal expiry choice and exact-proposal bell link
+
+- **Admin**: the Propose plan popup has "How long they have to answer" (7, 14 (default), 30, 90 days or no end date) sent as `ExpiresInDays`; the Awaiting customer pill shows "Until <date>"
+  (`expiresAt` from the list); the 10 s watcher now says "proposal is closed" because a proposal can end by answer, withdrawal or expiry. Files: `change-plan.tsx`, `proposal-status.tsx`, `proposal-watcher.tsx`,
+  `lib/proposal-api.ts`, `lib/proposal-actions.ts`, landlords list and detail pages, types.
+- **Landlord site**: a plan-proposal notification now opens `/landlord/plan-proposals/{proposalId}` (the backend puts `{ proposalId, expiresAt }` in the notification's `data`); older ones open the list (`lib/notification-target.ts`).
+- **Verified**: `tsc` and `eslint` clean in both apps. Not exercised against a real proposal yet. Mock-ups for rollout controls, Jobs page, rollout notice and Billing were drawn and are waiting for the owner's approval.
+
 ## 2026-10-21 (late night) — Claude (Windows) built the /plan-proposal confirm page the backend's email buttons open (design approved first)
 
 - **Backend change it follows** (`b6c0a01`, Amanjit Singh): proposal emails now have Accept and Decline buttons that open `{Frontend:BaseUrl}/plan-proposal?token=...&action=accept|decline`, no sign-in,

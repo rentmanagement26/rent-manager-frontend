@@ -32,3 +32,20 @@ export async function answerProposal(token: string, changeId: number, accept: bo
   }
   throw new ProposalAnswerError("Couldn't save your answer. Please try again.");
 }
+
+// Answers a notice that the landlord's plan is being updated: keep the current plan (only when allowed) or move to the updated
+// plan now (with the usual limit checks). Throws ProposalAnswerError with the backend's message when refused.
+export async function answerNotice(token: string, changeId: number, answer: "keep" | "move"): Promise<void> {
+  const response = await backendFetch(`/api/v1/subscription/changes/${changeId}/${answer}`, token, { method: "POST" });
+  if (response.ok) return;
+  if (response.status === 401) throw new SessionExpiredError();
+  if (response.status === 429) throw new ProposalAnswerError("Too many attempts. Wait a minute and try again.");
+
+  try {
+    const body = (await response.json()) as { message?: string };
+    if (body.message) throw new ProposalAnswerError(body.message);
+  } catch (err) {
+    if (err instanceof ProposalAnswerError) throw err;
+  }
+  throw new ProposalAnswerError("Couldn't save your answer. Please try again.");
+}

@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sun,
+  Timer,
   UserCog,
   Users,
   UsersRound,
@@ -56,10 +57,11 @@ const SECURITY: NavItem[] = [
   // SuperAdmin only (Admin team and Roles): the sidebar below hides these links for other roles.
   { label: "Admin team", icon: ShieldCheck, href: "/admin-team" },
   { label: "Roles", icon: KeyRound, href: "/roles" },
+  { label: "Jobs", icon: Timer, href: "/jobs" },
 ];
 
 // Sidebar links only a SuperAdmin sees.
-const SUPER_ADMIN_ONLY = ["/admin-team", "/roles"];
+const SUPER_ADMIN_ONLY = ["/admin-team", "/roles", "/jobs"];
 
 const ACCOUNT: NavItem[] = [{ label: "Settings", icon: Settings, href: "/settings" }];
 

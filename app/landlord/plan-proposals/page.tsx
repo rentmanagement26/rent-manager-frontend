@@ -19,22 +19,23 @@ export default async function PlanProposalsPage() {
   }
   if (!changes) redirect("/session-expired");
 
-  const proposals = changes.filter((c) => c.kind === "proposal");
-  if (proposals.length === 1) redirect(`/landlord/plan-proposals/${proposals[0].id}`);
+  if (changes.length === 1) redirect(`/landlord/plan-proposals/${changes[0].id}`);
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Plan proposals" description="Plan changes support suggested for you." />
+      <PageHeader title="Plan changes" description="Changes to your plan waiting for you." />
       <div className="max-w-xl divide-y divide-default overflow-hidden rounded-2xl border border-default bg-white shadow-sm">
-        {proposals.length === 0 ? (
-          <p className="p-6 text-sm text-muted">No plan proposals are waiting for your answer.</p>
+        {changes.length === 0 ? (
+          <p className="p-6 text-sm text-muted">No plan changes are waiting for you.</p>
         ) : (
-          proposals.map((proposal) => (
+          changes.map((proposal) => (
             <Link key={proposal.id} href={`/landlord/plan-proposals/${proposal.id}`} className="block px-5 py-4 hover:bg-subtle">
               <p className="text-sm font-semibold text-heading">
-                Move from {proposal.current.name} to {proposal.target.name}
+                {proposal.kind === "notice"
+                  ? `Your ${proposal.current.name} plan is being updated`
+                  : `Move from ${proposal.current.name} to ${proposal.target.name}`}
               </p>
-              <p className="mt-0.5 text-sm text-muted">Review and approve or decline.</p>
+              <p className="mt-0.5 text-sm text-muted">{proposal.kind === "notice" ? "Review the update." : "Review and approve or decline."}</p>
             </Link>
           ))
         )}

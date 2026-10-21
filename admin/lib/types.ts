@@ -227,6 +227,28 @@ export interface AdminLandlordSubscription {
   };
   subscription: LandlordSubscription;
   overrides: ActiveOverride[];
+  // Plan changes planned for or proposed to this landlord, newest first (absent on an older backend).
+  changes?: AdminScheduledChange[];
+}
+
+// One proposal or rollout for a landlord. `kind` is "proposal" or "rollout"; `status` is Pending (queued, landlord not told yet),
+// Notified (told), Applied, Declined (for a rollout: they chose to stay), Skipped, Cancelled, Expired or Failed.
+export interface AdminScheduledChange {
+  id: number;
+  kind: "proposal" | "rollout";
+  rule: string | null;
+  status: string;
+  targetPackageName: string;
+  fromTermsNumber: number;
+  targetTermsNumber: number;
+  dueAt: string | null;
+  noticeSentAt: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  message: string | null;
+  staffNote: string | null;
+  failureReason: string | null;
+  expiresAt: string | null;
 }
 
 // ---- Admin team (staff accounts) ----------------------------------------------------------------------------
@@ -301,6 +323,8 @@ export interface AwaitingProposal {
   landlordProfileId: number;
   landlordName: string;
   changeId: number;
+  // When the proposal runs out (null = no end). Expired proposals are left out of the list by the backend.
+  expiresAt: string | null;
 }
 
 // Outcome of sending one proposal, as the backend names it.
@@ -464,4 +488,27 @@ export interface AdminDashboard {
     authenticatorNotSetUp: number;
     byRole: { role: string; count: number }[];
   };
+}
+
+// ---- Scheduled jobs (GET /api/v1/admin/jobs, SuperAdmin only) --------------------------------------------------
+
+export interface AdminJobRun {
+  id: number;
+  trigger: string;
+  instance: string;
+  startedAt: string;
+  finishedAt: string | null;
+  status: string;
+  summary: string | null;
+  error: string | null;
+}
+
+// `nextDueAt` is null while a run is in progress; a time in the past means it is due now.
+export interface AdminJob {
+  name: string;
+  description: string;
+  schedule: string;
+  isRunning: boolean;
+  nextDueAt: string | null;
+  lastRun: AdminJobRun | null;
 }

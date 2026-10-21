@@ -33,6 +33,8 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages }: 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [staffNote, setStaffNote] = useState("");
+  // Days the landlord has to answer; "none" keeps it open until they answer or it is withdrawn.
+  const [openDays, setOpenDays] = useState<string>("14");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +59,7 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages }: 
     setSelectedId(null);
     setMessage("");
     setStaffNote("");
+    setOpenDays("14");
     setError("");
     setRefused(null);
 
@@ -98,7 +101,13 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages }: 
     setError("");
     setRefused(null);
 
-    const result = await sendProposalAction({ landlordProfileId, packageId: selected.packageId, message, staffNote });
+    const result = await sendProposalAction({
+      landlordProfileId,
+      packageId: selected.packageId,
+      message,
+      staffNote,
+      expiresInDays: openDays === "none" ? null : Number(openDays),
+    });
 
     setSubmitting(false);
     if ("error" in result) {
@@ -242,6 +251,19 @@ export function ChangePlanButton({ landlordProfileId, landlordName, packages }: 
                       rows={2}
                       className={`${inputClass} h-auto py-2.5`}
                     />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="proposal-open" className="text-xs text-c-tx2">
+                      How long they have to answer
+                    </label>
+                    <select id="proposal-open" value={openDays} onChange={(e) => setOpenDays(e.target.value)} className={inputClass}>
+                      <option value="7">7 days</option>
+                      <option value="14">14 days</option>
+                      <option value="30">30 days</option>
+                      <option value="90">90 days</option>
+                      <option value="none">No end date</option>
+                    </select>
                   </div>
 
                   <p className="rounded-xl bg-c-wr px-3 py-2.5 text-[13px] text-c-wrt">

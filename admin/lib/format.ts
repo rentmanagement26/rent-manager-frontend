@@ -36,3 +36,13 @@ export function initials(fullName: string) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
+
+// "Oct 12, 2026" in the console's time zone, for dates that are not about "today" (notice sent, applies on, ...).
+export function formatDate(value: string) {
+  return parseUtc(value).toLocaleDateString("en-CA", { timeZone: TIME_ZONE, year: "numeric", month: "short", day: "numeric" });
+}
+
+// Tomorrow as "yyyy-mm-dd" (UTC), the earliest date a date picker may offer for a postponement.
+export function tomorrowIso() {
+  return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}

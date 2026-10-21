@@ -245,6 +245,12 @@ export interface PendingPlanChange {
   kind: "proposal" | "notice";
   message: string | null;
   sentAt: string;
+  // For a notice: when the update applies (null when they may stay as they are), whether they can stay (show Keep my plan)
+  // and whether they can take the update today (show Move now; never for a price rise). For a proposal: when it runs out.
+  effectiveDate: string | null;
+  mayStay: boolean;
+  canMoveNow: boolean;
+  expiresAt: string | null;
   current: PlanSnapshot;
   target: PlanSnapshot;
   changes: {
@@ -253,4 +259,38 @@ export interface PendingPlanChange {
     featuresAdded: { key: string; displayName: string }[];
     featuresRemoved: { key: string; displayName: string }[];
   };
+}
+
+// ---- Billing: the landlord's own plan (GET /api/v1/subscription, /subscription/packages) ----------------------------
+
+export interface MySubscription {
+  hasPlan: boolean;
+  packageId: number | null;
+  packageName: string | null;
+  monthlyPrice: number | null;
+  status: string | null;
+  startedAt: string | null;
+  // `limit` already includes any extra allowance support granted.
+  limits: { key: string; displayName: string; limit: number; used: number }[];
+  features: { key: string; displayName: string }[];
+}
+
+// One plan the landlord can choose (newest terms only).
+export interface AvailablePlan {
+  packageId: number;
+  name: string;
+  monthlyPrice: number;
+  isCurrent: boolean;
+  limits: { key: string; displayName: string; value: number }[];
+  features: { key: string; displayName: string }[];
+}
+
+// POST /subscription/preview-change: what a change would do, before it happens.
+export interface PlanChangePreview {
+  found: boolean;
+  alreadyOnPlan: boolean;
+  canChange: boolean;
+  direction: string | null;
+  packageName: string | null;
+  violations: { limitKey: string; displayName: string; limit: number; used: number }[];
 }

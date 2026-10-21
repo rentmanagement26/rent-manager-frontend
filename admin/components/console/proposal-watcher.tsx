@@ -48,12 +48,13 @@ export function ProposalWatcher({ awaiting, search }: Props) {
       if (answered.length === 0) return;
       known.current = result.data;
 
-      // A proposal leaves the waiting list when approved, declined or withdrawn; the landlord's plan tells which.
+      // A proposal leaves the waiting list when approved, declined, withdrawn or expired; the landlord's plan tells which.
       const lines = await Promise.all(
         answered.map(async (p) => {
           const sub = await loadLandlordSubscriptionAction(p.landlordProfileId);
           const plan = "data" in sub ? (sub.data.subscription.packageName ?? "no plan") : null;
-          return plan ? `${p.landlordName} answered the proposal. Their plan is now ${plan}.` : `${p.landlordName} answered the proposal.`;
+          // A proposal leaves the list when answered, withdrawn or expired, so the wording stays neutral.
+          return plan ? `${p.landlordName}'s proposal is closed. Their plan is now ${plan}.` : `${p.landlordName}'s proposal is closed.`;
         }),
       );
       setMessages((current) => [...current, ...lines]);

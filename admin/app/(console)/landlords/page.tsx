@@ -9,7 +9,7 @@ import { Notice, Pill, cardClass, inputClass, secondaryButtonClass } from "@/com
 import { requireAdmin } from "@/lib/auth-guard";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
 import { initials } from "@/lib/format";
-import { getAwaitingProposals } from "@/lib/proposal-api";
+import { getAwaitingProposals, getRolloutStatuses } from "@/lib/proposal-api";
 import { getLandlords, getPackages } from "@/lib/subscription-api";
 import type { LandlordListItem } from "@/lib/types";
 
@@ -27,14 +27,24 @@ function statusClass(status: string) {
   return status === "Active" ? "bg-c-ok text-c-okt" : "bg-c-wr text-c-wrt";
 }
 
+// Pill for a landlord whose plan is being changed in a rollout.
+const ROLLOUT_STYLE = {
+  told: { label: "Told", className: "bg-c-aci text-c-act2" },
+  queued: { label: "Queued", className: "bg-c-sf2 text-c-tx2" },
+  chose_to_stay: { label: "Chose to stay", className: "bg-c-ok text-c-okt" },
+} as const;
+
 function LandlordRow({
   landlord,
   changePlan,
   proposal,
+  rollout,
 }: {
   landlord: LandlordListItem;
   // The proposal pill (with Withdraw) while this landlord has not answered a plan proposal, otherwise null.
   proposal: React.ReactNode;
+  // "told", "queued" or "chose_to_stay" while a planned plan change is under way for this landlord, otherwise undefined.
+  rollout?: "told" | "queued" | "chose_to_stay";
   // The "Change plan" button, or null when this admin can't change plans.
   changePlan: React.ReactNode;
 }) {
@@ -63,6 +73,8 @@ function LandlordRow({
           <Pill className="bg-c-bad text-c-badt">Deactivated</Pill>
         ) : proposal ? (
           proposal
+        ) : rollout ? (
+          <Pill className={ROLLOUT_STYLE[rollout].className}>{ROLLOUT_STYLE[rollout].label}</Pill>
         ) : (
           landlord.planStatus && <Pill className={statusClass(landlord.planStatus)}>{landlord.planStatus}</Pill>
         )}
@@ -81,10 +93,11 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
   const beforeId = Number(params.before) > 0 ? Number(params.before) : undefined;
 
   // The list and the plan catalog (the popup needs it) load side by side.
-  const [landlords, packages, awaitingResult] = await Promise.all([
+  const [landlords, packages, awaitingResult, rolloutStatuses] = await Promise.all([
     getLandlords(session.backendToken, { search, beforeId, limit: PAGE_SIZE }),
     getPackages(session.backendToken),
     getAwaitingProposals(session.backendToken), // landlords who have not answered a plan proposal yet
+    getRolloutStatuses(session.backendToken), // landlords with a planned plan change: told, queued or chose to stay
   ]);
 
   if (landlords.status === "expired" || packages.status === "expired" || awaitingResult.status === "expired") {
@@ -96,7 +109,7 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
   const canChangePlan = can(PERMISSIONS.subscriptionsChange) && packages.status === "ok";
   // landlordProfileId -> proposal id, for the pills. Empty when the lookup failed (the list still works).
   const awaiting = awaitingResult.status === "ok" ? awaitingResult.data : [];
-  const awaitingByLandlord = new Map(awaiting.map((p) => [p.landlordProfileId, p.changeId]));
+  const awaitingByLandlord = new Map(awaiting.map((p) => [p.landlordProfileId, p]));
 
   // Builds the "Older landlords" link, keeping the search text.
   function pageHref(nextBeforeId: number) {
@@ -157,9 +170,14 @@ export default async function LandlordsPage({ searchParams }: { searchParams: Pr
                       />
                     ) : null
                   }
+                  rollout={rolloutStatuses.get(landlord.landlordProfileId)}
                   proposal={
                     awaitingByLandlord.has(landlord.landlordProfileId) ? (
-                      <ProposalStatus changeId={awaitingByLandlord.get(landlord.landlordProfileId)!} canWithdraw={canChangePlan} />
+                      <ProposalStatus
+                        changeId={awaitingByLandlord.get(landlord.landlordProfileId)!.changeId}
+                        expiresAt={awaitingByLandlord.get(landlord.landlordProfileId)!.expiresAt}
+                        canWithdraw={canChangePlan}
+                      />
                     ) : null
                   }
                 />

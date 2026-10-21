@@ -8,7 +8,7 @@ const BASE = "/api/v1/admin/subscriptions";
 
 // Shape of one row of GET /admin/subscriptions (only what we read).
 interface SubscriptionListBody {
-  items: { landlordProfileId: number; name: string; businessName: string | null; proposal: { id: number } | null }[];
+  items: { landlordProfileId: number; name: string; businessName: string | null; proposal: { id: number; expiresAt?: string | null } | null }[];
 }
 
 // Landlords with a proposal waiting for their answer. `search` narrows it (name, email or business).
@@ -25,6 +25,7 @@ export async function getAwaitingProposals(token: string, search?: string): Prom
       landlordProfileId: item.landlordProfileId,
       landlordName: item.businessName || item.name,
       changeId: item.proposal!.id,
+      expiresAt: item.proposal!.expiresAt ?? null,
     }));
   return { status: "ok", data: awaiting };
 }
@@ -59,7 +60,7 @@ interface SendBody {
 // Offers one landlord a plan. The landlord is emailed and told in the app; the plan changes only when they approve.
 export async function sendProposal(
   token: string,
-  input: { landlordProfileId: number; toPackageId: number; message: string; staffNote: string },
+  input: { landlordProfileId: number; toPackageId: number; message: string; staffNote: string; expiresInDays: number | null },
 ): Promise<SendProposalResult> {
   const response = await backendFetch(`${BASE}/proposals`, token, {
     method: "POST",
@@ -68,6 +69,7 @@ export async function sendProposal(
       ToPackageId: input.toPackageId,
       Message: input.message || null,
       StaffNote: input.staffNote || null,
+      ExpiresInDays: input.expiresInDays,
     }),
   });
   if (!response.ok) return failWith(response, "Your role can't send plan proposals.");
@@ -82,4 +84,36 @@ export async function withdrawProposal(token: string, changeId: number): Promise
   const response = await backendFetch(`${BASE}/proposals/${changeId}/withdraw`, token, { method: "POST" });
   if (response.ok) return;
   await failWith(response, "Your role can't withdraw proposals.");
+}
+
+// Takes back a plan change planned for a landlord. The landlord is told. A note is required.
+export async function cancelPlannedChange(token: string, changeId: number, note: string): Promise<void> {
+  const response = await backendFetch(`${BASE}/changes/${changeId}/cancel`, token, { method: "POST", body: JSON.stringify({ Note: note }) });
+  if (response.ok) return;
+  await failWith(response, "Your role can't cancel planned changes.");
+}
+
+// Moves a planned change to the first billing date on or after `until` (a yyyy-mm-dd date, later than its current date).
+export async function postponePlannedChange(token: string, changeId: number, until: string, note: string): Promise<void> {
+  const response = await backendFetch(`${BASE}/changes/${changeId}/postpone`, token, {
+    method: "POST",
+    body: JSON.stringify({ Until: until, Note: note }),
+  });
+  if (response.ok) return;
+  await failWith(response, "Your role can't postpone planned changes.");
+}
+
+// Landlords by the status of their plan change: told, queued or chose to stay. One call per status, so every row that has a
+// status is covered however many landlords there are (each status has few). Returns landlordProfileId -> status.
+export async function getRolloutStatuses(token: string): Promise<Map<number, "told" | "queued" | "chose_to_stay">> {
+  const statuses = ["told", "queued", "chose_to_stay"] as const;
+  const results = await Promise.all(
+    statuses.map((status) => getJson<{ items: { landlordProfileId: number }[] }>(`${BASE}?status=${status}&pageSize=100`, token)),
+  );
+
+  const map = new Map<number, "told" | "queued" | "chose_to_stay">();
+  results.forEach((result, index) => {
+    if (result.status === "ok") for (const item of result.data.items) map.set(item.landlordProfileId, statuses[index]);
+  });
+  return map;
 }

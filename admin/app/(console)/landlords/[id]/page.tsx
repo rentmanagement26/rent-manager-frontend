@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChangePlanButton } from "@/components/console/change-plan";
 import { LandlordAccount } from "@/components/console/landlord-account";
 import { OverridesManager } from "@/components/console/overrides-manager";
+import { PlanChangesCard } from "@/components/console/plan-changes-card";
 import { ProposalStatus } from "@/components/console/proposal-status";
 import { ProposalWatcher } from "@/components/console/proposal-watcher";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
@@ -109,7 +110,7 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
             {landlord.email ?? "No email"}
           </p>
         </div>
-        {awaiting.length > 0 && <ProposalStatus changeId={awaiting[0].changeId} canWithdraw={canChangePlan} />}
+        {awaiting.length > 0 && <ProposalStatus changeId={awaiting[0].changeId} expiresAt={awaiting[0].expiresAt} canWithdraw={canChangePlan} />}
         {canChangePlan && packages.status === "ok" && awaiting.length === 0 && (
           // Same popup the list uses. After sending it refreshes this page by itself.
           <ChangePlanButton landlordProfileId={landlord.landlordProfileId} landlordName={displayName} packages={packages.data} />
@@ -176,6 +177,11 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
           </div>
         )}
       </section>
+
+      {/* Plan changes planned for or proposed to this landlord, with Cancel and Postpone */}
+      {detail.data.changes && detail.data.changes.length > 0 && (
+        <PlanChangesCard changes={detail.data.changes} canChange={canChangePlan} />
+      )}
 
       {/* 3. Overrides: extra allowances and feature switches given on top of the plan */}
       {overrideList.status === "ok" ? (
