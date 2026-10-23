@@ -92,3 +92,14 @@ export async function acceptTenantInvite(inviteToken: string, token: string): Pr
   }
   return response.json();
 }
+
+// Public: the invited person says no. No sign-in needed, the invite token is the proof.
+export async function declineTenantInvite(inviteToken: string): Promise<void> {
+  const response = await fetch(
+    `${process.env.BACKEND_API_URL}/api/v1/auth/tenant-invites/${encodeURIComponent(inviteToken)}/decline`,
+    { method: "POST" }
+  );
+  if (!response.ok) {
+    throw new Error(await extractErrorMessage(response));
+  }
+}

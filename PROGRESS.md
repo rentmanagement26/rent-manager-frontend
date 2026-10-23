@@ -25,6 +25,14 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-23 — Claude (Windows) tenant invite Decline (owner: "implement all" frontend-only items)
+
+- **Sync check**: both repos up to date. Only unused backend endpoints were `POST /auth/tenant-invites/{token}/decline` (now wired) and `notifications/device-token` (mobile only); `weatherforecast` is a template leftover, skipped on purpose.
+- **Built**: a "Decline this invite" link on `/register/tenant` (choice screen and the signed-in accept screen) calling the public decline endpoint, then an "Invite declined" page.
+  Files: `decline-invite-button.tsx` (new), `actions.ts` (`declineTenantInviteAction`), `page.tsx`, `lib/tenant-invite-api.ts` (`declineTenantInvite`). No mock-up drawn first (small text link).
+- **Verified**: `tsc` and `eslint` clean. **Not exercised** against a real invite (declining uses it up).
+- **Not done (needs backend, a design, or an owner decision)**: payments, leases/maintenance, audit events, admin Tenants/Properties/Support, staff Edit/Delete, notification preferences, tenant rent display.
+
 ## 2026-10-22 (evening) — Claude (Windows) proposals to several landlords, landlord filters, Plans end date and publish preview, Activity page (designs approved first)
 
 - **Admin Landlords page**: checkbox per row and a select-all for the page; a bar "N selected / Propose plan to N" opens a popup (`bulk-proposal-modal.tsx`, `bulk-select.tsx`): pick a plan, the backend's

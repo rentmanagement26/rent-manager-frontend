@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
-import { registerTenant, acceptTenantInvite } from "@/lib/tenant-invite-api";
+import { registerTenant, acceptTenantInvite, declineTenantInvite } from "@/lib/tenant-invite-api";
 
 export async function registerTenantAction(formData: FormData) {
   const token = String(formData.get("token") ?? "");
@@ -50,4 +50,18 @@ export async function acceptTenantInviteAction(formData: FormData) {
   }
 
   redirect(`/register/tenant?token=${encodeURIComponent(token)}&accepted=1`);
+}
+
+// Declines the invite (no account needed) and shows the "declined" confirmation.
+export async function declineTenantInviteAction(formData: FormData) {
+  const token = String(formData.get("token") ?? "");
+
+  try {
+    await declineTenantInvite(token);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Couldn't decline the invite. Please try again.";
+    redirect(`/register/tenant?token=${encodeURIComponent(token)}&error=${encodeURIComponent(message)}`);
+  }
+
+  redirect(`/register/tenant?token=${encodeURIComponent(token)}&declined=1`);
 }

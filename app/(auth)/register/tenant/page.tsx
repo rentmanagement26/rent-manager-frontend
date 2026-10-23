@@ -7,13 +7,14 @@ import { loginAction } from "@/app/(auth)/login/actions";
 import { AuthSplitLayout } from "@/components/auth-split-layout";
 import { registerTenantAction, acceptTenantInviteAction } from "./actions";
 import { InviteChoice } from "./invite-choice";
+import { DeclineInviteButton } from "./decline-invite-button";
 
 export default async function RegisterTenantPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; error?: string; accepted?: string; step?: string }>;
+  searchParams: Promise<{ token?: string; error?: string; accepted?: string; declined?: string; step?: string }>;
 }) {
-  const { token, error, accepted, step } = await searchParams;
+  const { token, error, accepted, declined, step } = await searchParams;
 
   if (!token) {
     return (
@@ -36,6 +37,15 @@ export default async function RegisterTenantPage({
         >
           Go to your portal
         </Link>
+      </main>
+    );
+  }
+
+  if (declined === "1") {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+        <h1 className="mb-4 font-head text-2xl font-bold text-heading">Invite declined</h1>
+        <p className="text-muted">We&apos;ve let the landlord know. You can close this page.</p>
       </main>
     );
   }
@@ -104,6 +114,7 @@ export default async function RegisterTenantPage({
               Accept invite
             </button>
           </form>
+          <DeclineInviteButton token={token} />
         </div>
       </main>
     );
@@ -135,6 +146,10 @@ export default async function RegisterTenantPage({
     return (
       <AuthSplitLayout>
         <InviteChoice token={token} email={preview.email} introCard={introCard} />
+        {error && (
+          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p>
+        )}
+        <DeclineInviteButton token={token} />
       </AuthSplitLayout>
     );
   }
