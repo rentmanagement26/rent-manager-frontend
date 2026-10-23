@@ -25,6 +25,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-23 (later) — Claude (Windows) Plus Jakarta Sans, wider screens, new landlord dashboard (owner: keep our colors)
+
+- **Font**: Plus Jakarta Sans replaces Sora + IBM Plex Sans (landlord/tenant/marketing) and Outfit (admin). One `next/font` variable, `--font-jakarta`, in both `layout.tsx` / `globals.css`.
+- **Wider**: page content cap raised to `max-w-screen-2xl` in `app/landlord/layout.tsx`, `app/tenant/layout.tsx` (header and content) and `admin/components/console/console-shell.tsx`.
+- **Landlord sidebar** (`components/landlord-sidebar.tsx`): our white/orange colors kept; active item has an accent bar, tint and bold text, items are spaced 6px apart, hover is a light grey. Items come from one `NAV_ITEMS` list. (A navy version was tried and reverted: the owner wants no color changes.)
+- **Landlord dashboard** (`app/landlord/page.tsx`, `components/dashboard-cards.tsx`): greeting with Add property / Invite tenant, tiles (properties, units, occupancy, available), Occupancy by property, Plan usage, Tenant invites, Recent activity, and a "rent and payments coming soon" card.
+  Real data only: `/properties/mine` (unit status counts), `/subscription`, `/auth/tenant-invites/stats`, `/activity`; each side card hides itself if its call fails. The old fake tiles ("Occupied n/n", "Maint. 0") and the empty rent overview are gone.
+- **Verified**: `tsc` and `eslint` clean in both apps; sign-in pages render in the new font. **Not seen signed in** (needs a login with 2FA): the dashboard, sidebar and wider layouts.
+- **Tenant home and admin Overview (same day, after the owner said yes)**: tenant home (`app/tenant/page.tsx`, new `tenant-quick-links.tsx`) is now a two-column page: homes on the left (two per row on wide screens), a Quick links card (notifications, profile, security) and a "payments coming soon" card on the right; the max-w-2xl caps are gone.
+  Admin Overview: the four cards under the number tiles (Landlords by plan, New landlords per week, Customers by role, Admin team) are one grid, four across on 2xl screens and two across on laptops (`admin/components/console/dashboard-section.tsx`). Rent is still not shown to tenants (see the 2026-10-09 compliance note).
+- **Verified**: `tsc` and `eslint` clean in both apps; not seen signed in.
+
 ## 2026-10-23 — Claude (Windows) tenant invite Decline (owner: "implement all" frontend-only items)
 
 - **Sync check**: both repos up to date. Only unused backend endpoints were `POST /auth/tenant-invites/{token}/decline` (now wired) and `notifications/device-token` (mobile only); `weatherforecast` is a template leftover, skipped on purpose.

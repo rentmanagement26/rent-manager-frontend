@@ -32,12 +32,12 @@
 --color-brand-green: var(--brand-green);
 --color-brand-green-dark: var(--brand-green-dark);
 --color-brand-green-tint: var(--brand-green-tint);
-  --font-sans: var(--font-body);
-  --font-head: var(--font-head);
+  --font-sans: var(--font-jakarta);
+  --font-head: var(--font-jakarta);
 }
 
 body {
   background: var(--bg);
   color: var(--heading);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
 }

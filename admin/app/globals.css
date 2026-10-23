@@ -39,13 +39,13 @@
   --color-ok-bg: var(--ok-bg);
   --color-ok-text: var(--ok-text);
   --shadow-card: var(--shadow-card);
-  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
 }
 
 @keyframes rise {

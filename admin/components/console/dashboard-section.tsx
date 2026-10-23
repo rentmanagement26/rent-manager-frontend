@@ -69,7 +69,7 @@ export function DashboardSection({ result }: { result: ApiResult<AdminDashboard>
         ))}
       </div>
 
-      <div className="grid animate-up gap-4 lg:grid-cols-2" style={{ animationDelay: "0.1s" }}>
+      <div className="grid animate-up gap-4 lg:grid-cols-2 2xl:grid-cols-4" style={{ animationDelay: "0.1s" }}>
         <section className={cardClass}>
           <CardTitle
             title="Landlords by plan"
@@ -124,41 +124,38 @@ export function DashboardSection({ result }: { result: ApiResult<AdminDashboard>
             </div>
           )}
         </section>
-      </div>
 
-      {(customers || staff) && (
-        <div className="grid animate-up gap-4 lg:grid-cols-2" style={{ animationDelay: "0.15s" }}>
-          {customers && (
-            <section className={cardClass}>
-              <CardTitle
-                title="Customers by role"
-                aside={
-                  <Link href="/customers" className="text-[13px] text-c-act2 hover:underline">
-                    Open customers
-                  </Link>
-                }
-              />
-              {customers.roles.map((role) => (
-                <Line key={role.role} label={`${role.role}s`}>
-                  {role.total} · {role.active} active
-                  {role.switchedOff > 0 && ` · ${role.switchedOff} switched off`}
-                </Line>
-              ))}
-            </section>
-          )}
-          {staff && (
-            <section className={cardClass}>
-              <CardTitle title="Admin team" subtitle="SuperAdmin only" />
-              <Line label="Active">{staff.active}</Line>
-              <Line label="Switched off">{staff.switchedOff}</Line>
-              <Line label="Temporary password not used yet">
-                {staff.temporaryPasswordPending > 0 ? <Pill className="bg-c-wr text-c-wrt">{staff.temporaryPasswordPending}</Pill> : 0}
+
+        {customers && (
+          <section className={cardClass}>
+            <CardTitle
+              title="Customers by role"
+              aside={
+                <Link href="/customers" className="text-[13px] text-c-act2 hover:underline">
+                  Open customers
+                </Link>
+              }
+            />
+            {customers.roles.map((role) => (
+              <Line key={role.role} label={`${role.role}s`}>
+                {role.total} · {role.active} active
+                {role.switchedOff > 0 && ` · ${role.switchedOff} switched off`}
               </Line>
-              <Line label="Authenticator not set up">{staff.authenticatorNotSetUp}</Line>
-            </section>
-          )}
-        </div>
-      )}
+            ))}
+          </section>
+        )}
+        {staff && (
+          <section className={cardClass}>
+            <CardTitle title="Admin team" subtitle="SuperAdmin only" />
+            <Line label="Active">{staff.active}</Line>
+            <Line label="Switched off">{staff.switchedOff}</Line>
+            <Line label="Temporary password not used yet">
+              {staff.temporaryPasswordPending > 0 ? <Pill className="bg-c-wr text-c-wrt">{staff.temporaryPasswordPending}</Pill> : 0}
+            </Line>
+            <Line label="Authenticator not set up">{staff.authenticatorNotSetUp}</Line>
+          </section>
+        )}
+      </div>
     </>
   );
 }

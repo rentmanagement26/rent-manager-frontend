@@ -10,7 +10,7 @@ export default async function TenantLayout({ children }: { children: React.React
   return (
     <div className="flex flex-1 flex-col bg-slate-50 text-slate-900 lg:h-screen lg:overflow-hidden">
       <header className="shrink-0 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-8">
+        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3 sm:px-8">
           <Link href="/tenant">
             <Image
               src="/domuspro-logo.png"
@@ -26,7 +26,7 @@ export default async function TenantLayout({ children }: { children: React.React
       </header>
 
       <main className="flex-1 lg:min-h-0 lg:overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+        <div className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
       </main>
 
       <SiteFooter />

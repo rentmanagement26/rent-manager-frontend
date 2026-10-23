@@ -6,6 +6,7 @@ import { getFirstName } from "@/lib/format-name";
 import { getMyTenancies } from "@/lib/tenant-api";
 import type { TenantTenancy } from "@/lib/types";
 import { CurrentHomeCard, PastHomeRow } from "./tenancy-card";
+import { TenantQuickLinks } from "./tenant-quick-links";
 
 export default async function TenantHomePage() {
   const session = await requireBackendToken(["Tenant"]);
@@ -37,37 +38,49 @@ export default async function TenantHomePage() {
       )}
 
       {tenancies && (
-        <div className="space-y-8">
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-heading">My home</h2>
-            {current.length > 0 ? (
-              <div className="grid max-w-2xl gap-4">
-                {current.map((tenancy) => (
-                  <CurrentHomeCard key={tenancy.tenancyId} tenancy={tenancy} />
-                ))}
-              </div>
-            ) : (
-              <div className="max-w-2xl rounded-2xl border border-default bg-white p-8 text-center shadow-sm">
-                <p className="text-sm font-medium text-heading">
-                  {past.length > 0 ? "No active home" : "No homes yet"}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  Once a landlord&apos;s invite is accepted, your home shows up here.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {past.length > 0 && (
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div className="space-y-8 xl:col-span-2">
             <section>
-              <h2 className="mb-3 text-sm font-semibold text-heading">Past homes</h2>
-              <div className="grid max-w-2xl gap-3">
-                {past.map((tenancy) => (
-                  <PastHomeRow key={tenancy.tenancyId} tenancy={tenancy} />
-                ))}
-              </div>
+              <h2 className="mb-3 text-sm font-semibold text-heading">My home</h2>
+              {current.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                  {current.map((tenancy) => (
+                    <CurrentHomeCard key={tenancy.tenancyId} tenancy={tenancy} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-default bg-white p-8 text-center shadow-sm">
+                  <p className="text-sm font-medium text-heading">
+                    {past.length > 0 ? "No active home" : "No homes yet"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Once a landlord&apos;s invite is accepted, your home shows up here.
+                  </p>
+                </div>
+              )}
             </section>
-          )}
+
+            {past.length > 0 && (
+              <section>
+                <h2 className="mb-3 text-sm font-semibold text-heading">Past homes</h2>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {past.map((tenancy) => (
+                    <PastHomeRow key={tenancy.tenancyId} tenancy={tenancy} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <TenantQuickLinks />
+            <section className="rounded-2xl border border-dashed border-default bg-white/60 p-5">
+              <h2 className="text-sm font-semibold text-heading">Rent and payments</h2>
+              <p className="mt-1 text-sm text-muted">
+                Paying rent online will appear here once it is available.
+              </p>
+            </section>
+          </div>
         </div>
       )}
     </div>

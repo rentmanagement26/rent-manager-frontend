@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 </div>
               </div>
             </div>
-            <div className="max-w-6xl mx-auto">{children}</div>
+            <div className="max-w-screen-2xl mx-auto">{children}</div>
             <div className="lg:hidden -mx-8 mt-8">
               <SiteFooter />
             </div>

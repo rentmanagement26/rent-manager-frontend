@@ -255,7 +255,7 @@ export function ConsoleShell({
             </button>
           </form>
         </header>
-        <main className="mx-auto w-full max-w-7xl p-4 sm:p-8">{children}</main>
+        <main className="mx-auto w-full max-w-screen-2xl p-4 sm:p-8">{children}</main>
       </div>
     </div>
   );

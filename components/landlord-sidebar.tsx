@@ -1,5 +1,7 @@
 "use client";
 
+// Landlord left menu: white panel, an accent bar plus tinted background on the active page,
+// and a light background on hover. Also the slide-in drawer on small screens.
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -9,12 +11,37 @@ interface LandlordSidebarProps {
   email: string;
 }
 
+// The menu entries: where they go, which paths count as "on this page", and the icon drawing.
+const NAV_ITEMS = [
+  {
+    label: "Dashboard",
+    href: "/landlord",
+    exact: true,
+    icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
+  },
+  {
+    label: "Properties",
+    href: "/landlord/properties",
+    exact: false,
+    icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+  },
+  {
+    label: "Tenants",
+    href: "/landlord/tenants",
+    exact: false,
+    icon: "M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z",
+  },
+  {
+    label: "Activity",
+    href: "/landlord/activity",
+    exact: false,
+    icon: "M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z",
+  },
+];
+
 export function LandlordSidebar({ email }: LandlordSidebarProps) {
   const { open, setOpen } = useSidebar();
   const pathname = usePathname();
-  const isDashboardActive = pathname === "/landlord";
-  const isPropertiesActive = pathname.startsWith("/landlord/properties");
-  const isTenantsActive = pathname.startsWith("/landlord/tenants");
 
   return (
     <>
@@ -30,7 +57,7 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
           open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"
         }`}
       >
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-6 max-lg:border-b max-lg:border-slate-100 lg:bg-white">
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-6 lg:bg-white">
           <Link href="/landlord">
             <Image
               src="/domuspro-logo.png"
@@ -54,51 +81,26 @@ export function LandlordSidebar({ email }: LandlordSidebarProps) {
         </div>
 
         <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 lg:row-span-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
-          <nav className="p-4 space-y-1">
-            <Link
-              href="/landlord"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                isDashboardActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-              Dashboard
-            </Link>
-            <Link
-              href="/landlord/properties"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                isPropertiesActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Properties
-            </Link>
-            <Link
-              href="/landlord/tenants"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                isTenantsActive ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              Tenants
-            </Link>
-            <Link
-              href="/landlord/activity"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                pathname.startsWith("/landlord/activity") ? "bg-accent-tint text-accent" : "text-body hover:bg-subtle hover:text-heading"
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Activity
-            </Link>
+          <nav className="flex flex-col gap-1.5 py-3">
+            {NAV_ITEMS.map((item) => {
+              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3.5 border-l-[3px] px-5 py-3.5 text-sm transition ${
+                    active
+                      ? "border-accent bg-accent-tint font-bold text-accent-dark"
+                      : "border-transparent font-medium text-body hover:bg-subtle hover:text-heading"
+                  }`}
+                >
+                  <svg className={`h-[18px] w-[18px] ${active ? "text-accent" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
+                  </svg>
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="m-3 p-4 rounded-xl bg-heading shadow-lg shadow-heading/20">
