@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   customersManage: "customers.manage",
   jobsView: "jobs.view",
   jobsRun: "jobs.run",
+  documentsManage: "documents.manage",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

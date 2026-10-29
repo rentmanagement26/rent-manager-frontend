@@ -25,6 +25,13 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-29 (later) — Claude (Windows) admin Documents page: online signing by province (mock-up approved first)
+
+- **What**: `/documents` in `admin/` (SuperAdmin only, sidebar under Security): all 13 provinces and territories with an on/off switch, note, and who changed it and when (`GET /admin/documents/provinces`); a switch opens a popup with an optional note (max 500) and saves with `PUT .../{code}` (`documents.manage`). Every province starts off; switching off applies at once, also to documents already sent; paper signing is never affected; the backend audits each change.
+  Files: `admin/lib/document-api.ts`, `document-actions.ts`, `components/console/province-list.tsx`, `app/(console)/documents/page.tsx`, `documentsManage` in `lib/permissions.ts`, sidebar entry in `console-shell.tsx`.
+- **Open**: online signing also needs the plan feature `documents.online_signing`; check that Catalog and Plans can add it and give it to a plan before turning a province on.
+- **Verified**: `tsc` and `eslint` clean in `admin/`. **Not seen signed in**; no switch was flipped.
+
 ## 2026-10-29 — Claude (Windows) lease details, co-tenants and the tenant's "My lease" (mock-ups approved first)
 
 - **Synced**: both repos up to date. Backend news since 10-21: lease details on tenancies, co-tenants (max 6), lease documents with paper and online signing, admin province switch for online signing. This entry covers only lease details and co-tenants; **documents and signing are not built here yet**.

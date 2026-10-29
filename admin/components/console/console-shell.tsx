@@ -9,6 +9,7 @@ import {
   Layers,
   LayoutGrid,
   LifeBuoy,
+  FileSignature,
   ListChecks,
   Menu,
   Moon,
@@ -58,10 +59,11 @@ const SECURITY: NavItem[] = [
   { label: "Admin team", icon: ShieldCheck, href: "/admin-team" },
   { label: "Roles", icon: KeyRound, href: "/roles" },
   { label: "Jobs", icon: Timer, href: "/jobs" },
+  { label: "Documents", icon: FileSignature, href: "/documents" },
 ];
 
 // Sidebar links only a SuperAdmin sees.
-const SUPER_ADMIN_ONLY = ["/admin-team", "/roles", "/jobs"];
+const SUPER_ADMIN_ONLY = ["/admin-team", "/roles", "/jobs", "/documents"];
 
 const ACCOUNT: NavItem[] = [{ label: "Settings", icon: Settings, href: "/settings" }];
 
