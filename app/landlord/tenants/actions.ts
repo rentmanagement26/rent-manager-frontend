@@ -8,9 +8,11 @@ export async function createTenantInviteAction(formData: FormData) {
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const email = String(formData.get("email") ?? "");
   const unitId = Number(formData.get("unitId") ?? 0);
+  // Present only when inviting a co-tenant onto an existing lease.
+  const tenancyId = Number(formData.get("tenancyId") ?? 0) || null;
 
   try {
-    await createTenantInvite(email, unitId, session.backendToken);
+    await createTenantInvite(email, unitId, session.backendToken, tenancyId);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Couldn't send invite. Please try again.";
     redirect(`/landlord/tenants?error=${encodeURIComponent(message)}`);

@@ -4,9 +4,11 @@ import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { getFirstName } from "@/lib/format-name";
 import { getMyTenancies } from "@/lib/tenant-api";
+import { getMyLease } from "@/lib/tenancy-api";
 import type { TenantTenancy } from "@/lib/types";
 import { CurrentHomeCard, PastHomeRow } from "./tenancy-card";
 import { TenantQuickLinks } from "./tenant-quick-links";
+import { LeaseCard } from "./lease-card";
 
 export default async function TenantHomePage() {
   const session = await requireBackendToken(["Tenant"]);
@@ -24,6 +26,10 @@ export default async function TenantHomePage() {
 
   const current = tenancies?.filter((tenancy) => tenancy.status === "Active") ?? [];
   const past = tenancies?.filter((tenancy) => tenancy.status !== "Active") ?? [];
+  // The lease terms for each current home. A failed lookup just leaves that card out.
+  const leases = await Promise.all(
+    current.map((tenancy) => getMyLease(session.backendToken, tenancy.tenancyId).catch(() => null))
+  );
   const firstName = getFirstName(session.fullName);
 
   return (
@@ -59,6 +65,15 @@ export default async function TenantHomePage() {
                 </div>
               )}
             </section>
+
+            {leases.some(Boolean) && (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                {current.map((tenancy, index) => {
+                  const lease = leases[index];
+                  return lease ? <LeaseCard key={tenancy.tenancyId} lease={lease} homeName={`${tenancy.property.name}, ${tenancy.unit.label}`} /> : null;
+                })}
+              </div>
+            )}
 
             {past.length > 0 && (
               <section>

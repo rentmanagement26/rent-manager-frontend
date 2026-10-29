@@ -11,9 +11,9 @@ import type { Property } from "@/lib/types";
 export default async function TenantsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; email?: string; error?: string; resent?: string; invitesPage?: string }>;
+  searchParams: Promise<{ sent?: string; email?: string; error?: string; resent?: string; invitesPage?: string; unitId?: string; tenancyId?: string }>;
 }) {
-  const { sent, email, error, resent, invitesPage } = await searchParams;
+  const { sent, email, error, resent, invitesPage, unitId, tenancyId } = await searchParams;
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const response = await backendFetch("/api/v1/properties/mine", session.backendToken);
 
@@ -52,7 +52,11 @@ export default async function TenantsPage({
       )}
 
       {hasUnits ? (
-        <InviteTenantForm properties={properties} />
+        <InviteTenantForm
+          properties={properties}
+          initialUnitId={Number(unitId) || undefined}
+          tenancyId={Number(tenancyId) || undefined}
+        />
       ) : (
         <div className="bg-white rounded-2xl border border-default shadow-sm p-6 text-center">
           <p className="text-muted mb-4">Add a property and unit before inviting a tenant.</p>

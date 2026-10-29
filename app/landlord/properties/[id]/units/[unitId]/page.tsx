@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { getUnitMedia } from "@/lib/media-api";
+import { getTenanciesForUnit } from "@/lib/tenancy-api";
 import { PageHeader } from "@/components/page-header";
 import { PhotoStrip } from "./photo-strip";
 import { ArchiveUnitButton } from "./archive-unit-button";
@@ -30,6 +31,10 @@ export default async function UnitDetailPage({
 
   const unit: Unit = await response.json();
   const photos = await getUnitMedia(unit.id, session.backendToken);
+  // The unit's current lease, if it has one. A failed lookup just hides the link.
+  const lease = await getTenanciesForUnit(session.backendToken, unit.id)
+    .then((items) => items[0] ?? null)
+    .catch(() => null);
 
   return (
     <div>
@@ -72,6 +77,14 @@ export default async function UnitDetailPage({
           </span>
 
           <div className="mt-6 pt-5 border-t border-default flex flex-col gap-2">
+            {lease && (
+              <Link
+                href={`/landlord/tenancies/${lease.id}`}
+                className="block rounded-lg border border-default px-4 py-2.5 text-sm font-semibold text-heading text-center hover:bg-subtle"
+              >
+                View lease
+              </Link>
+            )}
             <Link
               href={`/landlord/properties/${id}/units/${unit.id}/edit`}
               className="block rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white text-center hover:bg-accent-dark"

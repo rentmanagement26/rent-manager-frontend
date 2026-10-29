@@ -25,6 +25,16 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-29 — Claude (Windows) lease details, co-tenants and the tenant's "My lease" (mock-ups approved first)
+
+- **Synced**: both repos up to date. Backend news since 10-21: lease details on tenancies, co-tenants (max 6), lease documents with paper and online signing, admin province switch for online signing. This entry covers only lease details and co-tenants; **documents and signing are not built here yet**.
+- **Landlord**: `/landlord/tenancies/[id]` (terms, utilities, charges, tenants, Add co-tenant, End their stay for a co-tenant) and `/edit` (rent, due day 1-28, fixed/month-to-month, deposits, utilities, extra charges; saved in one PUT). "View lease" link on the unit page (`GET /tenancies?unitId=`). The Invite tenant form takes `?unitId=&tenancyId=` and sends `TenancyId` so the invitee joins that lease (unit locked).
+  Files: `lib/tenancy-api.ts`, `tenancy-types.ts`, `tenancy-actions.ts`, `lease-format.ts`, `lease-rules.ts`, `landlord-property.ts`, `components/lease-terms.tsx`, `app/landlord/tenancies/**`, edits to `tenant-invite-api.ts`, `tenants/*`, the unit page.
+- **Tenant**: "My lease" card under the home card (rent, due day, term, deposit, utilities they pay, included, extra charges, other tenants' names; no emails) from `GET /tenants/me/tenancies/{id}`. Rent is the agreed lease rent, so the old rent-increase-notice concern about showing asking rent no longer applies. `app/tenant/lease-card.tsx`.
+- **Law checks (the backend records, it does not check)**: the form blocks saving deposits over the limit for Ontario (rent deposit up to one month, no pet or damage deposit) and Manitoba (security up to half a month, pet up to one month); other provinces get a note only. Province comes from the property's region text ("ON", "Ontario", "MB", "Manitoba"). Ontario Standard Lease form is not covered by this screen.
+- **Not available from the backend**: ending a whole lease, changing the primary tenant. The page says so.
+- **Verified**: `tsc` and `eslint` clean. **Not seen live** (the dev server was not running and sign-in needs 2FA): all new pages, saving, add and end co-tenant. First test on a throwaway unit.
+
 ## 2026-10-23 (later) — Claude (Windows) Plus Jakarta Sans, wider screens, new landlord dashboard (owner: keep our colors)
 
 - **Font**: Plus Jakarta Sans replaces Sora + IBM Plex Sans (landlord/tenant/marketing) and Outfit (admin). One `next/font` variable, `--font-jakarta`, in both `layout.tsx` / `globals.css`.

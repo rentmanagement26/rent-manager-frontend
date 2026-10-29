@@ -4,10 +4,19 @@ import { useState } from "react";
 import { createTenantInviteAction } from "./actions";
 import type { Property } from "@/lib/types";
 
-export function InviteTenantForm({ properties }: { properties: Property[] }) {
+// When tenancyId is given the invite is for a co-tenant joining that lease, so the unit is fixed to the lease's unit.
+export function InviteTenantForm({
+  properties,
+  initialUnitId,
+  tenancyId,
+}: {
+  properties: Property[];
+  initialUnitId?: number;
+  tenancyId?: number;
+}) {
   const firstUnit = properties.flatMap((p) => p.units)[0];
   const [email, setEmail] = useState("");
-  const [unitId, setUnitId] = useState(firstUnit?.id ?? 0);
+  const [unitId, setUnitId] = useState(initialUnitId ?? firstUnit?.id ?? 0);
 
   const inputClass =
     "rounded-lg border border-default px-3 py-2.5 text-sm text-heading placeholder:text-muted focus:outline-none focus:border-accent";
@@ -16,6 +25,14 @@ export function InviteTenantForm({ properties }: { properties: Property[] }) {
   return (
     <div className="bg-white rounded-2xl border border-default shadow-sm p-6 max-w-2xl">
       <form action={createTenantInviteAction} className="flex flex-col gap-4">
+        {tenancyId && (
+          <>
+            <input type="hidden" name="tenancyId" value={tenancyId} />
+            <p className="rounded-lg bg-accent-tint px-3 py-2 text-xs text-accent-dark">
+              This person will join the existing lease for this unit as a co-tenant.
+            </p>
+          </>
+        )}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className={labelClass}>Tenant&apos;s email</label>
           <input
@@ -36,6 +53,7 @@ export function InviteTenantForm({ properties }: { properties: Property[] }) {
             id="unitId"
             name="unitId"
             value={unitId}
+            disabled={Boolean(tenancyId)}
             onChange={(e) => setUnitId(Number(e.target.value))}
             className={inputClass}
           >
@@ -50,6 +68,8 @@ export function InviteTenantForm({ properties }: { properties: Property[] }) {
             )}
           </select>
         </div>
+
+        {tenancyId && <input type="hidden" name="unitId" value={unitId} />}
 
         <div className="mt-2 pt-4 border-t border-default flex justify-end">
           <button

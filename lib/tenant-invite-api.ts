@@ -44,11 +44,13 @@ export async function registerTenant(input: RegisterTenantInput): Promise<Regist
 export async function createTenantInvite(
   email: string,
   unitId: number,
-  token: string
+  token: string,
+  // Set to invite a co-tenant onto an existing lease; the unit must be that lease's unit.
+  tenancyId: number | null = null
 ): Promise<CreateTenantInviteResult> {
   const response = await backendFetch("/api/v1/auth/tenant-invites", token, {
     method: "POST",
-    body: JSON.stringify({ Email: email, UnitId: unitId }),
+    body: JSON.stringify({ Email: email, UnitId: unitId, TenancyId: tenancyId }),
   });
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response));
