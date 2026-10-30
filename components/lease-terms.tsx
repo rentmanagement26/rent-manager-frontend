@@ -1,7 +1,7 @@
 // The agreed lease terms (rent, term, deposits, utilities, extra charges) as read-only cards.
 // Used by the landlord's tenancy page and by the tenant's "My lease" card, so both see the same words.
 import { formatCalendarDate } from "@/lib/format-time";
-import { CHARGE_FREQUENCIES, CHARGE_TYPES, RESPONSIBILITY_OPTIONS, UTILITIES, formatMoney, labelFor, ordinal, toWire } from "@/lib/lease-format";
+import { CHARGE_FREQUENCIES, CHARGE_TYPES, RESPONSIBILITY_OPTIONS, UTILITIES, formatMoney, labelFor, monthlyTotal, ordinal, toWire } from "@/lib/lease-format";
 import type { TenancyDetails } from "@/lib/tenancy-types";
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
@@ -68,12 +68,17 @@ export function LeaseTerms({ details }: { details: TenancyDetails }) {
                 <span className="text-heading">
                   {labelFor(charge.type, CHARGE_TYPES)}
                   {charge.description ? ` · ${charge.description}` : ""}
+                  {charge.startsOn || charge.endsOn ? <span className="ml-2 text-xs text-muted">{charge.startsOn ? `from ${charge.startsOn.slice(0, 10)}` : ""}{charge.endsOn ? ` until ${charge.endsOn.slice(0, 10)}` : ""}</span> : null}
                 </span>
                 <span className="text-muted">
                   {formatMoney(charge.amount)} {labelFor(charge.frequency, CHARGE_FREQUENCIES).toLowerCase()}
                 </span>
               </li>
             ))}
+            <li className="flex justify-between py-2 font-semibold text-heading">
+              <span>Total each month with the rent</span>
+              <span>{formatMoney(monthlyTotal(details.monthlyRent, details.charges))}</span>
+            </li>
           </ul>
         )}
       </section>

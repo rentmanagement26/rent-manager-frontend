@@ -12,12 +12,17 @@ import {
   CHARGE_TYPES,
   RESPONSIBILITY_OPTIONS,
   UTILITIES,
+  monthlyTotal,
   toWire,
 } from "@/lib/lease-format";
+import { formatMoney } from "@/lib/lease-format";
 import { depositProblems, depositRule } from "@/lib/lease-rules";
 import type { LeaseDetailsInput, TenancyDetails } from "@/lib/tenancy-types";
 
 interface ChargeRow {
+  // Optional dates (YYYY-MM-DD) between which the charge applies; empty means it is not limited.
+  startsOn: string;
+  endsOn: string;
   type: string;
   description: string;
   amount: string;
@@ -73,11 +78,22 @@ export function LeaseForm({
     )
   );
   const [charges, setCharges] = useState<ChargeRow[]>(
-    details.charges.map((c) => ({ type: toWire(c.type), description: c.description, amount: c.amount.toString(), frequency: toWire(c.frequency) }))
+    details.charges.map((c) => ({
+      type: toWire(c.type),
+      description: c.description,
+      amount: c.amount.toString(),
+      frequency: toWire(c.frequency),
+      startsOn: c.startsOn ? c.startsOn.slice(0, 10) : "",
+      endsOn: c.endsOn ? c.endsOn.slice(0, 10) : "",
+    }))
   );
 
   const rule = depositRule(region, toNumber(rent));
   const problems = depositProblems(rule, toNumber(security), toNumber(pet));
+  // A charge that ends before it starts can't be saved.
+  const chargeProblems = charges.flatMap((c, index) => (c.startsOn && c.endsOn && c.endsOn < c.startsOn ? [`Charge ${index + 1}: the end date is before the start date.`] : []));
+  // Rent plus every charge, per month, so the landlord sees what the tenant pays in all.
+  const total = monthlyTotal(toNumber(rent), charges.map((c) => ({ amount: toNumber(c.amount) ?? 0, frequency: c.frequency })));
 
   const payload: LeaseDetailsInput = {
     monthlyRent: toNumber(rent),
@@ -93,8 +109,8 @@ export function LeaseForm({
       description: c.description.trim(),
       amount: toNumber(c.amount) ?? 0,
       frequency: c.frequency,
-      startsOn: null,
-      endsOn: null,
+      startsOn: c.startsOn || null,
+      endsOn: c.endsOn || null,
     })),
   };
 
@@ -107,7 +123,7 @@ export function LeaseForm({
       action={embedded ? undefined : saveLeaseDetailsAction}
       onSubmit={async (event) => {
         // The province deposit limits are the law, so a form that breaks them is not sent.
-        if (problems.length > 0) return event.preventDefault();
+        if (problems.length > 0 || chargeProblems.length > 0) return event.preventDefault();
         if (!embedded) return;
 
         event.preventDefault();
@@ -207,6 +223,10 @@ export function LeaseForm({
             </li>
           ))}
         </ul>
+        <p className="mt-3 text-xs text-muted">
+          Included in rent and Landlord pays both mean the landlord pays the provider. Tenant pays means the tenant pays the provider directly. Not applicable is for a utility the
+          unit does not have. The tenant is told which one you chose.
+        </p>
       </section>
 
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
@@ -214,7 +234,7 @@ export function LeaseForm({
           <h2 className="text-sm font-semibold text-heading">Extra charges</h2>
           <button
             type="button"
-            onClick={() => setCharges((rows) => [...rows, { type: "parking", description: "", amount: "", frequency: "monthly" }])}
+            onClick={() => setCharges((rows) => [...rows, { type: "parking", description: "", amount: "", frequency: "monthly", startsOn: "", endsOn: "" }])}
             className="text-xs font-semibold text-accent hover:text-accent-dark"
           >
             + Add charge
@@ -223,7 +243,8 @@ export function LeaseForm({
         {charges.length === 0 && <p className="text-sm text-muted">No extra charges, such as parking or storage.</p>}
         <div className="space-y-3">
           {charges.map((row, index) => (
-            <div key={index} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_1fr_1fr_auto]">
+            <div key={index} className="space-y-2 border-b border-default pb-3 last:border-b-0 last:pb-0">
+            <div className="grid gap-2 sm:grid-cols-[1fr_1.5fr_1fr_1fr_auto]">
               <select aria-label="Charge type" value={row.type} onChange={(e) => updateCharge(index, { type: e.target.value })} className={inputClass}>
                 {CHARGE_TYPES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
@@ -236,8 +257,28 @@ export function LeaseForm({
                 Remove
               </button>
             </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex flex-col gap-1 text-xs text-muted">
+                Starts (optional)
+                <input type="date" value={row.startsOn} onChange={(e) => updateCharge(index, { startsOn: e.target.value })} className={inputClass} />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-muted">
+                Ends (optional)
+                <input type="date" value={row.endsOn} onChange={(e) => updateCharge(index, { endsOn: e.target.value })} className={inputClass} />
+              </label>
+            </div>
+            </div>
           ))}
         </div>
+        {chargeProblems.map((problem) => (
+          <p key={problem} className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{problem}</p>
+        ))}
+        {total !== null && (
+          <p className="mt-4 border-t border-default pt-3 text-sm text-heading">
+            Total each month with the rent: <b>{formatMoney(total)}</b>
+            <span className="mt-0.5 block text-xs text-muted">A charge can have its own start and end dates. Quarterly and yearly charges are shown as a monthly average.</span>
+          </p>
+        )}
       </section>
 
       <div className="flex justify-end gap-3">

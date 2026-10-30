@@ -42,3 +42,16 @@ export function ordinal(day: number): string {
   if (rest >= 11 && rest <= 13) return `${day}th`;
   return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
 }
+
+// A charge's amount as a monthly figure: a quarterly charge counts a third, a yearly charge a twelfth.
+export function monthlyEquivalent(amount: number, frequency: string): number {
+  const wire = toWire(frequency);
+  return wire === "quarterly" ? amount / 3 : wire === "yearly" ? amount / 12 : amount;
+}
+
+// Rent plus every extra charge, per month. Null when there is neither a rent nor a charge to add up.
+export function monthlyTotal(rent: number | null, charges: { amount: number; frequency: string }[]): number | null {
+  if (rent === null && charges.length === 0) return null;
+  const extra = charges.reduce((sum, charge) => sum + monthlyEquivalent(charge.amount, charge.frequency), 0);
+  return Math.round(((rent ?? 0) + extra) * 100) / 100;
+}

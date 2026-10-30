@@ -1,7 +1,7 @@
 // "My lease" on the tenant home: the agreed rent, due day, term, deposit, utilities and the other tenants' names.
 // Read only. Rent comes from the lease the landlord agreed, not from the unit's asking price.
 import { formatCalendarDate } from "@/lib/format-time";
-import { CHARGE_FREQUENCIES, formatMoney, labelFor, ordinal } from "@/lib/lease-format";
+import { CHARGE_FREQUENCIES, formatMoney, labelFor, monthlyTotal, ordinal } from "@/lib/lease-format";
 import { utilityList } from "@/components/lease-terms";
 import type { TenancyDetails } from "@/lib/tenancy-types";
 
@@ -37,6 +37,7 @@ export function LeaseCard({ lease, homeName }: { lease: TenancyDetails; homeName
           {lease.charges.map((charge) => `${charge.description || charge.type} ${formatMoney(charge.amount)} ${labelFor(charge.frequency, CHARGE_FREQUENCIES).toLowerCase()}`).join(", ")}
         </Row>
       )}
+      {lease.charges.length > 0 && lease.monthlyRent !== null && <Row label="Total each month">{formatMoney(monthlyTotal(lease.monthlyRent, lease.charges))}</Row>}
       {others.length > 1 && <Row label="Tenants on this lease">{others.join(", ")}</Row>}
     </section>
   );
