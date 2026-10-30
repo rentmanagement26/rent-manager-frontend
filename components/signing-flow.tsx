@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { DocumentViewer } from "@/components/document-viewer";
 import { SignaturePad } from "@/components/signature-pad";
+import { StepLayout } from "@/components/step-layout";
 import { Stepper, type StepInfo } from "@/components/stepper";
 import {
   declineDocumentAction,
@@ -221,141 +222,170 @@ export function SigningFlow({
     <div className="space-y-6">
       <Stepper steps={steps} current={step} onSelect={go} />
 
-      <div className="min-h-[200px]">
-        {step === 0 && (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="h-1.5 w-48 rounded-full bg-slate-200">
-                <div className="h-1.5 rounded-full bg-accent" style={{ width: `${status.pageCount ? Math.min(100, (viewed / status.pageCount) * 100) : 0}%` }} />
-              </div>
-              <span className="text-xs text-muted">
-                {viewed} of {status.pageCount} pages viewed
-              </span>
+      {step === 0 && (
+        <StepLayout
+          icon="eye"
+          title="Read the lease"
+          intro={role === "tenant" ? "Take your time. Every page has to be opened before you can sign online." : "Check the final version once more before you sign it."}
+          guide={{
+            steps: ["Open each page with the thumbnails on the left or the arrows.", "A page counts as read once it is on screen.", "When every page is read, go to Agree."],
+            note: paper ? "You chose paper, so reading in the app is not required. Read it before you sign anyway." : "You can zoom in, and download the PDF to read it offline.",
+          }}
+        >
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="h-1.5 w-48 rounded-full bg-slate-200">
+              <div className="h-1.5 rounded-full bg-accent" style={{ width: `${status.pageCount ? Math.min(100, (viewed / status.pageCount) * 100) : 0}%` }} />
             </div>
-            <DocumentViewer fileUrl={fileUrl} downloadUrl={`${fileUrl}?download=1`} title={doc.title} seenPages={seen} onPageSeen={pageSeen} />
+            <span className="text-xs text-muted">
+              {viewed} of {status.pageCount} pages viewed
+            </span>
           </div>
-        )}
+          <DocumentViewer fileUrl={fileUrl} downloadUrl={`${fileUrl}?download=1`} title={doc.title} seenPages={seen} onPageSeen={pageSeen} />
+        </StepLayout>
+      )}
 
-        {step === 1 && (
-          <section className="rounded-2xl border border-default bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-heading">Agree to sign electronically</h2>
-            <p className="mt-2 text-sm text-body">{status.consentText}</p>
-            {paper && <p className="mt-3 text-xs text-muted">You chose to sign on paper, so this is not needed.</p>}
-            <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
-              <input type="checkbox" checked={agree} onChange={(event) => setAgree(event.target.checked)} /> I agree
-            </label>
-          </section>
-        )}
+      {step === 1 && (
+        <StepLayout
+          icon="check"
+          title="Agree to sign electronically"
+          intro="Your typed name or drawing counts as your signature."
+          guide={{
+            steps: ["Read the statement.", "Tick I agree.", "Go to Sign."],
+            note: "Signing online has the same effect as signing with a pen. If you prefer pen and paper, choose Sign on paper in the next step.",
+          }}
+        >
+          <p className="rounded-xl bg-slate-50 px-4 py-4 text-sm text-body">{status.consentText}</p>
+          {paper && <p className="mt-3 text-xs text-muted">You chose to sign on paper, so this is not needed.</p>}
+          <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
+            <input type="checkbox" checked={agree} onChange={(event) => setAgree(event.target.checked)} /> I agree
+          </label>
+        </StepLayout>
+      )}
 
-        {step === 2 && (
-          <section className="rounded-2xl border border-default bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-heading">How do you want to sign?</h2>
-            {!onlineOk && status.message && <p className="mt-2 rounded-lg bg-accent-tint px-3 py-2 text-xs text-accent-dark">{status.message}</p>}
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {([
-                ["draw", "Draw your signature", "Draw it, with your typed name"],
-                ["type", "Type your name", "Your typed legal name counts as your signature"],
-                ["paper", "Sign on paper", "Download, sign by hand, upload a scan"],
-              ] as const).map(([value, title, note]) => {
-                const disabled = value !== "paper" && !onlineOk;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setMode(value)}
-                    className={`rounded-xl border-[1.5px] p-3 text-left disabled:cursor-not-allowed disabled:opacity-40 ${mode === value ? "border-accent bg-accent-tint" : "border-default bg-white hover:border-accent"}`}
-                  >
-                    <span className="block text-sm font-semibold text-heading">{title}</span>
-                    <span className="mt-0.5 block text-xs text-muted">{note}</span>
-                  </button>
-                );
-              })}
+      {step === 2 && (
+        <StepLayout
+          icon="pen"
+          title="Sign the lease"
+          intro="Choose how you want to sign."
+          guide={{
+            steps:
+              mode === "paper"
+                ? ["Press Download print copy.", "Print it and sign every page by hand.", "Upload the scan or photos, then tick that it is the document you signed."]
+                : mode === "draw"
+                  ? ["Type your given names and surname.", "Draw your signature in the box.", "Go to Confirm."]
+                  : mode === "type"
+                    ? ["Type your given names and surname.", "Go to Confirm."]
+                    : ["Choose Draw, Type your name, or Sign on paper.", "Online options need your name as it is on your account.", "Paper: download, sign by hand, upload a scan."],
+            note: mode === "paper" && role === "tenant" ? "If you and another tenant signed the same pages, one scan can cover you both." : "Your name must match the name on your DomusPRO account.",
+          }}
+        >
+          {!onlineOk && status.message && <p className="mb-3 rounded-lg bg-accent-tint px-3 py-2 text-xs text-accent-dark">{status.message}</p>}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {([
+              ["draw", "Draw your signature", "Draw it, with your typed name"],
+              ["type", "Type your name", "Your typed legal name counts as your signature"],
+              ["paper", "Sign on paper", "Download, sign by hand, upload a scan"],
+            ] as const).map(([value, title, note]) => {
+              const disabled = value !== "paper" && !onlineOk;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setMode(value)}
+                  className={`rounded-xl border-[1.5px] p-3 text-left disabled:cursor-not-allowed disabled:opacity-40 ${mode === value ? "border-accent bg-accent-tint" : "border-default bg-white hover:border-accent"}`}
+                >
+                  <span className="block text-sm font-semibold text-heading">{title}</span>
+                  <span className="mt-0.5 block text-xs text-muted">{note}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {(mode === "draw" || mode === "type") && (
+            <div className="mt-5 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="given" className="mb-1 block text-xs font-semibold text-heading">Given names</label>
+                  <input id="given" value={given} onChange={(event) => setGiven(event.target.value)} className={inputClass} autoComplete="given-name" />
+                </div>
+                <div>
+                  <label htmlFor="surname" className="mb-1 block text-xs font-semibold text-heading">Surname</label>
+                  <input id="surname" value={surname} onChange={(event) => setSurname(event.target.value)} className={inputClass} autoComplete="family-name" />
+                </div>
+              </div>
+              {mode === "draw" && <SignaturePad value={drawing} onChange={setDrawing} />}
             </div>
+          )}
 
-            {(mode === "draw" || mode === "type") && (
-              <div className="mt-4 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="given" className="mb-1 block text-xs font-semibold text-heading">Given names</label>
-                    <input id="given" value={given} onChange={(event) => setGiven(event.target.value)} className={inputClass} autoComplete="given-name" />
-                  </div>
-                  <div>
-                    <label htmlFor="surname" className="mb-1 block text-xs font-semibold text-heading">Surname</label>
-                    <input id="surname" value={surname} onChange={(event) => setSurname(event.target.value)} className={inputClass} autoComplete="family-name" />
-                  </div>
-                </div>
-                <p className="text-xs text-muted">Your name must match the name on your DomusPRO account.</p>
-                {mode === "draw" && <SignaturePad value={drawing} onChange={setDrawing} />}
+          {mode === "paper" && (
+            <div className="mt-5 space-y-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-default pt-3">
+                <span>1. Download the print copy and sign every page</span>
+                <button type="button" onClick={openPrintCopy} className={ghostButton}>Download print copy</button>
               </div>
-            )}
-
-            {mode === "paper" && (
-              <div className="mt-4 space-y-3 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-default pt-3">
-                  <span>1. Download the print copy and sign every page</span>
-                  <button type="button" onClick={openPrintCopy} className={ghostButton}>Download print copy</button>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-default pt-3">
-                  <span>2. Upload your signed scan or photos</span>
-                  <input type="file" accept={role === "landlord" ? ".pdf" : ".pdf,.jpg,.jpeg,.png"} onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="max-w-[16rem] text-xs" />
-                </div>
-                {role === "tenant" && otherTenants.length > 1 && (
-                  <fieldset className="border-t border-default pt-3">
-                    <legend className="mb-1 text-xs font-semibold text-heading">This scan also covers</legend>
-                    {otherTenants.filter((s) => s.displayName !== "").map((signer) => (
-                      <label key={signer.id} className="mr-4 inline-flex items-center gap-1.5 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={alsoCovers.includes(signer.id)}
-                          onChange={(event) => setAlsoCovers((current) => (event.target.checked ? [...current, signer.id] : current.filter((id) => id !== signer.id)))}
-                        />
-                        {signer.displayName}
-                      </label>
-                    ))}
-                  </fieldset>
-                )}
-                <label className="flex cursor-pointer items-center gap-2 border-t border-default pt-3 font-semibold text-heading">
-                  <input type="checkbox" checked={confirmedCopy} onChange={(event) => setConfirmedCopy(event.target.checked)} /> This is the document I signed
-                </label>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-default pt-3">
+                <span>2. Upload your signed scan or photos</span>
+                <input type="file" accept={role === "landlord" ? ".pdf" : ".pdf,.jpg,.jpeg,.png"} onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="max-w-[16rem] text-xs" />
               </div>
-            )}
-          </section>
-        )}
+              {role === "tenant" && otherTenants.length > 1 && (
+                <fieldset className="border-t border-default pt-3">
+                  <legend className="mb-1 text-xs font-semibold text-heading">This scan also covers</legend>
+                  {otherTenants.filter((s) => s.displayName !== "").map((signer) => (
+                    <label key={signer.id} className="mr-4 inline-flex items-center gap-1.5 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={alsoCovers.includes(signer.id)}
+                        onChange={(event) => setAlsoCovers((current) => (event.target.checked ? [...current, signer.id] : current.filter((id) => id !== signer.id)))}
+                      />
+                      {signer.displayName}
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+              <label className="flex cursor-pointer items-center gap-2 border-t border-default pt-3 font-semibold text-heading">
+                <input type="checkbox" checked={confirmedCopy} onChange={(event) => setConfirmedCopy(event.target.checked)} /> This is the document I signed
+              </label>
+            </div>
+          )}
+        </StepLayout>
+      )}
 
-        {step === 3 && (
-          <section className="rounded-2xl border border-default bg-white p-6 shadow-sm">
-            {paper ? (
-              <>
-                <h2 className="text-sm font-semibold text-heading">Nothing to confirm for paper</h2>
-                <p className="mt-1 text-sm text-muted">Upload your signed copy with the button below.</p>
-              </>
-            ) : (
-              <>
-                <h2 className="text-sm font-semibold text-heading">Confirm with an email code</h2>
-                <p className="mt-1 text-sm text-muted">We send a 6-digit code to {codeSentTo || status.emailMasked}. This is only for signing, not your login code.</p>
-                <div className="mt-3 flex flex-wrap items-end gap-3">
-                  <button type="button" onClick={requestCode} disabled={busy || verified} className={ghostButton}>
-                    {codeSentTo ? "Send a new code" : "Send code"}
+      {step === 3 && (
+        <StepLayout
+          icon="mail"
+          title={paper ? "Nothing to confirm" : "Confirm with an email code"}
+          intro={paper ? "Signing on paper needs no code." : `We send a 6-digit code to ${codeSentTo || status.emailMasked}.`}
+          guide={{
+            steps: paper
+              ? ["Check the other steps are done.", "Press Upload signed copy below."]
+              : ["Press Send code.", "Open the email and copy the 6-digit code.", "Type it here and press Verify code, then press Sign lease below."],
+            note: paper ? undefined : "This code is only for signing, not your login code. It expires after a few minutes. You can ask for a new one.",
+          }}
+        >
+          {paper ? (
+            <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-muted">Upload your signed copy with the button below.</p>
+          ) : (
+            <div className="flex flex-wrap items-end gap-3">
+              <button type="button" onClick={requestCode} disabled={busy || verified} className={ghostButton}>
+                {codeSentTo ? "Send a new code" : "Send code"}
+              </button>
+              {codeSentTo && !verified && (
+                <>
+                  <div>
+                    <label htmlFor="code" className="mb-1 block text-xs font-semibold text-heading">Code</label>
+                    <input id="code" inputMode="numeric" maxLength={7} value={code} onChange={(event) => setCode(event.target.value)} placeholder="123456" className={`${inputClass} w-36 tracking-widest`} />
+                  </div>
+                  <button type="button" onClick={checkCode} disabled={busy || code.replace(/\D/g, "").length !== 6} className={primaryButton}>
+                    Verify code
                   </button>
-                  {codeSentTo && !verified && (
-                    <>
-                      <div>
-                        <label htmlFor="code" className="mb-1 block text-xs font-semibold text-heading">Code</label>
-                        <input id="code" inputMode="numeric" maxLength={7} value={code} onChange={(event) => setCode(event.target.value)} placeholder="123456" className={`${inputClass} w-36 tracking-widest`} />
-                      </div>
-                      <button type="button" onClick={checkCode} disabled={busy || code.replace(/\D/g, "").length !== 6} className={primaryButton}>
-                        Verify code
-                      </button>
-                    </>
-                  )}
-                  {verified && <span className="text-sm font-semibold text-green-700">Code verified</span>}
-                </div>
-              </>
-            )}
-          </section>
-        )}
-      </div>
+                </>
+              )}
+              {verified && <span className="text-sm font-semibold text-green-700">Code verified</span>}
+            </div>
+          )}
+        </StepLayout>
+      )}
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p>}
 

@@ -72,6 +72,11 @@ export default async function TenancyPage({
         )}
       </div>
 
+      {documents.some((d) => d.status === "AwaitingTenants" || d.status === "Completed" || d.status === "Expired") && (
+        <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          A lease has been sent for signing. It keeps the terms it was sent with, so changes made to the terms here will not change what was signed.
+        </p>
+      )}
       <LeaseTerms details={details} />
 
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">

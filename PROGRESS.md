@@ -25,6 +25,12 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-30 (late night) — Claude (Windows) guides on the signing steps and a warning for edited terms after sending
+
+- **Signing flow** (`components/signing-flow.tsx`, used by landlord and tenant): each of Read lease, Agree, Sign and Confirm now uses `StepLayout` with a "What to do" guide beside it (icon, title, one-line intro; the Sign guide changes with the chosen way: draw, type or paper; paper skips the code step text).
+- **Warning**: `/landlord/tenancies/[id]` and its `/edit` page show an amber note when a lease has been sent for signing (status waiting for tenants, fully signed or expired): the lease keeps the terms it was sent with, so changing the terms does not change what was signed; withdraw and send a new lease if the agreement changes. Warn only, no lock (owner wants freedom).
+- **Verified**: `tsc` and `eslint` clean; the edit page still renders on real data. **Not seen live**: the new signing layout (the only open document is already signed by the landlord, so `/sign` redirects) and the warning (nothing has been sent). Tenant signing still needs a sent lease.
+
 ## 2026-10-30 (night) — Claude (Windows) first live test of the landlord lease flow on the real backend
 
 - **Done live** (Riverside Townhome lease, tenancy 4): saved lease details (rent 1,450, due 1st, deposit 700, heat included, tenant pays electricity); Add lease stepper with a generated 3-page test PDF (created document id 1, code LD-S2Q5JA2M); the in-page viewer drew the real PDF through our file route; landlord signed **on paper** (uploaded scan accepted: "Signed on paper", history shows the fingerprint); the Send panel then appeared.
