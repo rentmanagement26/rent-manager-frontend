@@ -9,9 +9,12 @@ export interface StepInfo {
   complete: boolean;
   // True once the person has opened the step, so an unfinished one can say "Needs info".
   visited: boolean;
+  // True when the step does not apply (for example the reading and email-code steps when signing on paper). It counts as done but says so.
+  skipped?: boolean;
 }
 
 function stateOf(step: StepInfo, current: boolean): { word: string; circle: ReactNode; circleClass: string; wordClass: string } {
+  if (step.skipped) return { word: "Not needed", circle: "–", circleClass: "bg-slate-300 text-white", wordClass: "text-muted" };
   if (step.complete) return { word: "Completed", circle: "✓", circleClass: "bg-accent text-white", wordClass: "text-accent font-bold" };
   if (current) {
     return { word: "In progress", circle: <span className="h-2.5 w-2.5 rounded-full bg-accent" />, circleClass: "border-2 border-accent bg-white", wordClass: "text-accent font-bold" };

@@ -86,7 +86,13 @@ export function SigningFlow({
       : mode !== "" && given.trim() !== "" && surname.trim() !== "" && (mode !== "draw" || drawing !== null),
     paper || verified,
   ];
-  const steps: StepInfo[] = ["Read lease", "Agree", "Sign", "Confirm"].map((label, index) => ({ label, complete: complete[index], visited: Boolean(visited[index]) }));
+  // Signing on paper needs no reading check, consent or email code, so those steps say "Not needed" instead of looking finished.
+  const steps: StepInfo[] = ["Read lease", "Agree", "Sign", "Confirm"].map((label, index) => ({
+    label,
+    complete: complete[index],
+    visited: Boolean(visited[index]),
+    skipped: paper && index !== 2,
+  }));
   const allComplete = complete.every(Boolean);
 
   const missing: string[] = [];

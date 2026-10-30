@@ -42,6 +42,22 @@ export async function endCoTenantAction(formData: FormData) {
   redirect(`/landlord/tenancies/${tenancyId}?ended=1`);
 }
 
+// Saves the lease details from inside the Add lease stepper and answers the saved details, so the landlord stays on the page.
+export async function saveLeaseDetailsInlineAction(
+  tenancyId: number,
+  input: LeaseDetailsInput
+): Promise<{ details: TenancyDetails } | { error: string; expired: boolean }> {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  try {
+    await saveLeaseDetails(session.backendToken, Number(tenancyId), input);
+    const details = await getTenancy(session.backendToken, Number(tenancyId));
+    return details ? { details } : { error: "The lease was saved but could not be reloaded.", expired: false };
+  } catch (err) {
+    if (err instanceof SessionExpiredError) return { error: err.message, expired: true };
+    return { error: err instanceof Error ? err.message : "Couldn't save the lease details. Please try again.", expired: false };
+  }
+}
+
 // Loads one lease's details for the Add lease stepper after the landlord picks a unit. Answers { details } or { error }.
 export async function loadTenancyDetailsAction(tenancyId: number): Promise<{ details: TenancyDetails } | { error: string; expired: boolean }> {
   const session = await requireBackendToken(["Admin", "Landlord"]);

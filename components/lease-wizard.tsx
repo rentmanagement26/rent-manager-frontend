@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { LeaseForm } from "@/components/lease-form";
 import { LeaseTerms } from "@/components/lease-terms";
 import { Stepper, type StepInfo } from "@/components/stepper";
 import { StepLayout } from "@/components/step-layout";
@@ -52,6 +53,8 @@ export function LeaseWizard({
   const [title, setTitle] = useState("");
   const [titleEdited, setTitleEdited] = useState(false);
   const [matches, setMatches] = useState(false);
+  // Step 3: true while the landlord is changing the terms in place.
+  const [editingTerms, setEditingTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -247,20 +250,38 @@ export function LeaseWizard({
           title="Check the lease terms"
           intro="These are the terms you saved for this lease. They must match the PDF."
           guide={{
-            steps: ["Compare the rent, due day, term, deposit and utilities with the PDF.", "If something is wrong, use Edit lease details, fix it and come back.", "Tick the box when they match."],
-            note: "The terms are saved with the lease when you send it, as a record of what was agreed.",
+            steps: ["Compare the rent, due day, term, deposit and utilities with the PDF.", "Press Change terms to add, remove or edit anything, then Save terms.", "Tick the box when they match."],
+            note: "You can change any term here, including the extra charges. Changing the terms asks you to confirm them again. They are saved with the lease when you send it, as a record of what was agreed.",
           }}
         >
           {details ? (
-            <div className="space-y-4">
-              <LeaseTerms details={details} />
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
-                  <input type="checkbox" checked={matches} onChange={(event) => setMatches(event.target.checked)} /> The terms above match the lease PDF
-                </label>
-                <Link href={`/landlord/tenancies/${details.id}/edit`} className="text-sm font-semibold text-accent hover:text-accent-dark">Edit lease details</Link>
+            editingTerms ? (
+              <LeaseForm
+                details={details}
+                region={region}
+                embedded={{
+                  onSaved: (saved) => {
+                    setDetails(saved);
+                    // New terms must be checked against the PDF again.
+                    setMatches(false);
+                    setEditingTerms(false);
+                  },
+                  onCancel: () => setEditingTerms(false),
+                }}
+              />
+            ) : (
+              <div className="space-y-4">
+                <LeaseTerms details={details} />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-heading">
+                    <input type="checkbox" checked={matches} onChange={(event) => setMatches(event.target.checked)} /> The terms above match the lease PDF
+                  </label>
+                  <button type="button" onClick={() => setEditingTerms(true)} className="rounded-full border border-default bg-white px-4 py-2 text-sm font-semibold text-heading hover:bg-subtle">
+                    Change terms
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <p className="rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-muted">Choose the property and unit first. The lease terms show up here.</p>
           )}

@@ -1,10 +1,12 @@
 "use client";
 
 // The edit-lease-details form: rent, term, deposits, who pays each utility and extra charges, saved together.
+// Used on its own page (saves and goes back to the lease) and inside the Add lease stepper (`embedded`: saves, then hands the saved details back).
 // Deposits are checked against the province's limits (lib/lease-rules.ts) before anything is sent.
 import Link from "next/link";
 import { useState } from "react";
-import { saveLeaseDetailsAction } from "@/lib/tenancy-actions";
+import { saveLeaseDetailsAction, saveLeaseDetailsInlineAction } from "@/lib/tenancy-actions";
+import { goToSessionExpired } from "@/lib/session-expired-client";
 import {
   CHARGE_FREQUENCIES,
   CHARGE_TYPES,
@@ -37,7 +39,20 @@ function toNumber(text: string): number | null {
   return trimmed === "" || Number.isNaN(Number(trimmed)) ? null : Number(trimmed);
 }
 
-export function LeaseForm({ details, region, error }: { details: TenancyDetails; region: string; error?: string }) {
+export function LeaseForm({
+  details,
+  region,
+  error,
+  embedded,
+}: {
+  details: TenancyDetails;
+  region: string;
+  error?: string;
+  // Set inside the Add lease stepper: the form saves in place and calls onSaved with the new details instead of leaving the page.
+  embedded?: { onSaved: (details: TenancyDetails) => void; onCancel: () => void };
+}) {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [rent, setRent] = useState(details.monthlyRent?.toString() ?? "");
   const [dueDay, setDueDay] = useState(details.rentDueDay?.toString() ?? "1");
   const [termType, setTermType] = useState<"fixed" | "month_to_month">(details.termType === "Fixed" ? "fixed" : "month_to_month");
@@ -85,21 +100,31 @@ export function LeaseForm({ details, region, error }: { details: TenancyDetails;
 
   return (
     <form
-      action={saveLeaseDetailsAction}
-      onSubmit={(event) => {
-        // The province's deposit limits are the law, so a form that breaks them is not sent.
-        if (problems.length > 0) event.preventDefault();
+      action={embedded ? undefined : saveLeaseDetailsAction}
+      onSubmit={async (event) => {
+        // The province deposit limits are the law, so a form that breaks them is not sent.
+        if (problems.length > 0) return event.preventDefault();
+        if (!embedded) return;
+
+        event.preventDefault();
+        setSaving(true);
+        setSaveError("");
+        const answer = await saveLeaseDetailsInlineAction(details.id, payload);
+        setSaving(false);
+        if ("error" in answer) return answer.expired ? goToSessionExpired() : setSaveError(answer.error);
+        embedded.onSaved(answer.details);
       }}
       className="space-y-4"
     >
       <input type="hidden" name="tenancyId" value={details.id} />
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p>}
+      {(error || saveError) && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{saveError || error}</p>}
 
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-sm font-semibold text-heading">Rent and term</h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {/* Five across on the wide edit page; two across inside the narrower stepper card. */}
+        <div className={`grid gap-4 sm:grid-cols-2 ${embedded ? "" : "xl:grid-cols-5"}`}>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="rent" className={labelClass}>Monthly rent ($)</label>
             <input id="rent" type="number" min="0" step="0.01" value={rent} onChange={(e) => setRent(e.target.value)} className={inputClass} />
@@ -200,11 +225,17 @@ export function LeaseForm({ details, region, error }: { details: TenancyDetails;
       </section>
 
       <div className="flex justify-end gap-3">
-        <Link href={`/landlord/tenancies/${details.id}`} className="rounded-full border border-default bg-white px-5 py-2.5 text-sm font-semibold text-heading hover:bg-subtle">
-          Cancel
-        </Link>
-        <button type="submit" className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark">
-          Save lease details
+        {embedded ? (
+          <button type="button" onClick={embedded.onCancel} className="rounded-full border border-default bg-white px-5 py-2.5 text-sm font-semibold text-heading hover:bg-subtle">
+            Cancel
+          </button>
+        ) : (
+          <Link href={`/landlord/tenancies/${details.id}`} className="rounded-full border border-default bg-white px-5 py-2.5 text-sm font-semibold text-heading hover:bg-subtle">
+            Cancel
+          </Link>
+        )}
+        <button type="submit" disabled={saving} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60">
+          {saving ? "Saving…" : embedded ? "Save terms" : "Save lease details"}
         </button>
       </div>
     </form>

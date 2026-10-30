@@ -19,10 +19,21 @@ export function isOpen(status: LeaseDocument["status"]): boolean {
 
 // Browser-side: puts the file at the temporary address the backend made. Throws a message safe to show.
 export async function putToStorage(uploadUrl: string, file: File): Promise<void> {
-  const response = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": file.type || "application/pdf" },
-    body: file,
-  });
-  if (!response.ok) throw new Error("The file could not be uploaded. Try again.");
+  // Give up after 90 seconds so a stalled connection shows a message instead of "Uploading…" forever.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 90_000);
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": file.type || "application/pdf" },
+      body: file,
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error("The file could not be uploaded. Try again.");
+  } catch (err) {
+    if (controller.signal.aborted) throw new Error("The upload took too long. Check your connection and try again.");
+    throw err instanceof Error ? err : new Error("The file could not be uploaded. Try again.");
+  } finally {
+    clearTimeout(timer);
+  }
 }

@@ -5,7 +5,7 @@ import { SessionExpiredError } from "@/lib/api-error";
 import { findUnitContext } from "@/lib/landlord-property";
 import { getTenancy } from "@/lib/tenancy-api";
 import { PageHeader } from "@/components/page-header";
-import { LeaseForm } from "./lease-form";
+import { LeaseForm } from "@/components/lease-form";
 
 export default async function EditLeasePage({
   params,
