@@ -2,6 +2,7 @@
 import Link from "next/link";
 
 const LINKS = [
+  { href: "/tenant/documents", label: "Documents", note: "Leases to read and sign" },
   { href: "/tenant/notifications", label: "Notifications", note: "Messages from your landlord and DomusPRO" },
   { href: "/tenant/profile", label: "My profile", note: "Your name and password" },
   { href: "/tenant/settings", label: "Security settings", note: "Two-factor authentication" },

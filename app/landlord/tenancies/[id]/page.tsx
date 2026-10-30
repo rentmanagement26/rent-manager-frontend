@@ -6,6 +6,8 @@ import { SessionExpiredError } from "@/lib/api-error";
 import { findUnitContext } from "@/lib/landlord-property";
 import { formatCalendarDate } from "@/lib/format-time";
 import { getTenancy } from "@/lib/tenancy-api";
+import { listDocuments } from "@/lib/document-api";
+import { STATUS_LABELS } from "@/lib/document-format";
 import { PageHeader } from "@/components/page-header";
 import { LeaseTerms } from "@/components/lease-terms";
 import { EndStayButton } from "./end-stay-button";
@@ -35,6 +37,8 @@ export default async function TenancyPage({
   }
   if (!details) notFound();
 
+  // The lease documents for this tenancy. A failed lookup just hides the list.
+  const documents = await listDocuments(session.backendToken, details.id).catch(() => []);
   const current = details.tenants.filter((tenant) => !tenant.leftAt);
   const past = details.tenants.filter((tenant) => tenant.leftAt);
   const isActive = details.status === "Active";
@@ -69,6 +73,34 @@ export default async function TenancyPage({
       </div>
 
       <LeaseTerms details={details} />
+
+      <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-heading">Lease documents</h2>
+          {isActive && (
+            <Link href={`/landlord/tenancies/${details.id}/documents/new`} className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
+              Send lease for signing
+            </Link>
+          )}
+        </div>
+        {documents.length === 0 ? (
+          <p className="text-sm text-muted">No lease has been sent for signing yet.</p>
+        ) : (
+          <ul className="divide-y divide-default text-sm">
+            {documents.map((document) => (
+              <li key={document.id}>
+                <Link href={`/landlord/documents/${document.id}`} className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 hover:bg-subtle">
+                  <span>
+                    <span className="font-medium text-heading">{document.title}</span>
+                    <span className="ml-2 text-xs text-muted">{document.publicCode} · {document.signedCount} of {document.signerCount} signed</span>
+                  </span>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_LABELS[document.status].className}`}>{STATUS_LABELS[document.status].label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-heading">

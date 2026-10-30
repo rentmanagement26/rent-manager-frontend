@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TenantPageHeading } from "@/components/tenant-page-heading";
 import { SessionExpiredError } from "@/lib/api-error";
@@ -5,6 +6,7 @@ import { requireBackendToken } from "@/lib/auth-guard";
 import { getFirstName } from "@/lib/format-name";
 import { getMyTenancies } from "@/lib/tenant-api";
 import { getMyLease } from "@/lib/tenancy-api";
+import { listDocuments } from "@/lib/document-api";
 import type { TenantTenancy } from "@/lib/types";
 import { CurrentHomeCard, PastHomeRow } from "./tenancy-card";
 import { TenantQuickLinks } from "./tenant-quick-links";
@@ -30,6 +32,10 @@ export default async function TenantHomePage() {
   const leases = await Promise.all(
     current.map((tenancy) => getMyLease(session.backendToken, tenancy.tenancyId).catch(() => null))
   );
+  // Leases waiting for this tenant's signature. A failed lookup just hides the banner.
+  const toSign = (await listDocuments(session.backendToken).catch(() => [])).filter(
+    (document) => document.status === "AwaitingTenants" && document.yourStatus === "Pending"
+  );
   const firstName = getFirstName(session.fullName);
 
   return (
@@ -38,6 +44,18 @@ export default async function TenantHomePage() {
         title={firstName ? `Welcome back, ${firstName}` : "Welcome back"}
         description="Here's your home and your landlord's contact details."
       />
+
+      {toSign.length > 0 && (
+        <Link
+          href={`/tenant/documents/${toSign[0].id}`}
+          className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-accent bg-accent-tint px-5 py-4 text-sm"
+        >
+          <span className="font-semibold text-accent-dark">
+            {toSign.length === 1 ? `Your lease "${toSign[0].title}" is waiting for your signature` : `${toSign.length} leases are waiting for your signature`}
+          </span>
+          <span className="font-semibold text-accent">Read and sign</span>
+        </Link>
+      )}
 
       {loadError && (
         <p className="mb-6 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{loadError}</p>

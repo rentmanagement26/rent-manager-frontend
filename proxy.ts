@@ -63,5 +63,7 @@ export const config = {
     "/admin/:path*",
     // Bell polling hits these while a page sits open, so they need the same token refresh.
     "/api/notifications/:path*",
+    // The lease viewer and downloads call this while a page sits open.
+    "/api/documents/:path*",
   ],
 };
