@@ -4,10 +4,12 @@ import { notFound, redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { SessionExpiredError } from "@/lib/api-error";
 import { getDocument } from "@/lib/document-api";
+import { getTenancy } from "@/lib/tenancy-api";
 import { STATUS_LABELS } from "@/lib/document-format";
 import { formatCalendarDate, formatRelativeTime } from "@/lib/format-time";
 import { PageHeader } from "@/components/page-header";
 import { DocumentControls } from "./document-controls";
+import { DocumentTermsCard } from "@/components/document-terms-card";
 
 const METHOD_WORDS: Record<string, string> = { Online: "Signed online", Paper: "Signed on paper" };
 
@@ -23,6 +25,8 @@ export default async function LandlordDocumentPage({ params }: { params: Promise
     throw err;
   }
   if (!doc) notFound();
+  // The lease's current terms, to show beside the document and to compare with the terms it was sent with. A failed lookup just hides them.
+  const live = doc.tenancyId ? await getTenancy(session.backendToken, doc.tenancyId).catch(() => null) : null;
 
   const status = STATUS_LABELS[doc.status];
   const landlordSigned = doc.signers.some((s) => s.role === "Landlord" && s.status === "Signed");
@@ -58,6 +62,8 @@ export default async function LandlordDocumentPage({ params }: { params: Promise
       )}
 
       <DocumentControls doc={doc} />
+
+      <DocumentTermsCard doc={doc} live={live} />
 
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-heading">Who has signed</h2>

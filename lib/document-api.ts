@@ -168,3 +168,14 @@ export function declineDocument(token: string, id: number, note: string) {
 export function getPrintCopy(token: string, id: number) {
   return call<{ fileName: string; downloadUrl: string }>(token, "GET", `/documents/${id}/print-copy`);
 }
+
+// --- Landlord: replace the lease file with a new version ---
+
+export function newVersionUploadUrl(token: string, id: number): Promise<UploadTarget> {
+  return call(token, "POST", `/documents/${id}/versions/upload-url`, { Extension: "pdf" });
+}
+
+// Registers the new file. Earlier signatures stop counting and tenants it was sent to are told.
+export function replaceDocumentFile(token: string, id: number, blobPath: string, fileName: string) {
+  return call<unknown>(token, "POST", `/documents/${id}/versions`, { BlobPath: blobPath, FileName: fileName });
+}

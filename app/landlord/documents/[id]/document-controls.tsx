@@ -10,10 +10,13 @@ import {
   extendDocumentAction,
   rejectCopyAction,
   remindSignersAction,
+  replaceFileAction,
   sendDocumentAction,
+  versionUploadUrlAction,
   withdrawDocumentAction,
   type ActionResult,
 } from "@/lib/document-actions";
+import { putToStorage } from "@/lib/document-format";
 import type { LeaseDocument } from "@/lib/document-types";
 
 const primaryButton = "rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50";
@@ -29,12 +32,40 @@ export function DocumentControls({ doc }: { doc: LeaseDocument }) {
   const [rejecting, setRejecting] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
+  const [replacing, setReplacing] = useState(false);
+  const [newFile, setNewFile] = useState<File | null>(null);
 
   const landlordSigned = doc.signers.some((s) => s.role === "Landlord" && s.status === "Signed");
   const readyToSend = doc.status === "AwaitingLandlord" && landlordSigned;
   const sent = doc.status === "AwaitingTenants" || doc.status === "Expired";
   const canWithdraw = doc.status !== "Completed" && doc.status !== "Withdrawn";
   const pendingCopies = doc.copies.filter((c) => c.status === "Pending" || c.status === "Uploaded");
+
+  // Uploads a new version of the lease PDF. Earlier signatures stop counting, so the lease has to be signed (and sent) again.
+  async function replaceFile() {
+    if (!newFile) return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    const target = await versionUploadUrlAction(doc.id);
+    if ("error" in target) {
+      setBusy(false);
+      return target.expired ? goToSessionExpired() : setError(target.error);
+    }
+    try {
+      await putToStorage(target.data.uploadUrl, newFile);
+    } catch (err) {
+      setBusy(false);
+      return setError(err instanceof Error ? err.message : "The file could not be uploaded.");
+    }
+    const answer = await replaceFileAction(doc.id, target.data.blobPath, newFile.name);
+    setBusy(false);
+    if ("error" in answer) return answer.expired ? goToSessionExpired() : setError(answer.error);
+    setNotice("New version uploaded. Sign it again" + (sent ? " and send it to the tenants again." : "."));
+    setReplacing(false);
+    setNewFile(null);
+    router.refresh();
+  }
 
   // Runs one action: shows its error, or its success message, and refreshes the page data.
   async function run<T>(action: () => Promise<ActionResult<T>>, success: string) {
@@ -55,6 +86,27 @@ export function DocumentControls({ doc }: { doc: LeaseDocument }) {
     <div className="space-y-4">
       {notice && <p className="rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">{notice}</p>}
       {error && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p>}
+
+      {doc.status !== "Completed" && doc.status !== "Withdrawn" && doc.status !== "Declined" && (
+        <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-heading">Lease PDF</h2>
+              <p className="mt-0.5 text-sm text-muted">Changed the terms? Upload a new PDF so the document matches.{landlordSigned ? " Earlier signatures stop counting and you sign again." : ""}</p>
+            </div>
+            {!replacing && (
+              <button type="button" onClick={() => setReplacing(true)} className={ghostButton}>Replace the PDF</button>
+            )}
+          </div>
+          {replacing && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <input type="file" accept=".pdf,application/pdf" onChange={(event) => setNewFile(event.target.files?.[0] ?? null)} className="max-w-[18rem] text-sm" />
+              <button type="button" disabled={busy || !newFile} onClick={replaceFile} className={primaryButton}>{busy ? "Uploading…" : "Upload new version"}</button>
+              <button type="button" disabled={busy} onClick={() => { setReplacing(false); setNewFile(null); }} className={ghostButton}>Cancel</button>
+            </div>
+          )}
+        </section>
+      )}
 
       {readyToSend && (
         <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">

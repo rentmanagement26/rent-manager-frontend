@@ -259,6 +259,10 @@ export function LeaseWizard({
               <LeaseForm
                 details={details}
                 region={region}
+                warning={{
+                  title: "Your lease PDF must match these terms.",
+                  text: "If you change anything here, make sure the PDF you uploaded says the same. After saving you will be asked to confirm the terms again.",
+                }}
                 embedded={{
                   onSaved: (saved) => {
                     setDetails(saved);

@@ -51,6 +51,12 @@ export default async function TenancyPage({
       <PageHeader title={title} description={address || "Lease details and tenants."} />
 
       {saved === "1" && <p className="rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">Lease details saved.</p>}
+      {saved === "1" && documents.some((d) => d.status === "Draft" || d.status === "AwaitingLandlord") && (
+        <p className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+          The terms changed. Make sure the lease PDF matches:{" "}
+          <Link href={`/landlord/documents/${documents.find((d) => d.status === "Draft" || d.status === "AwaitingLandlord")!.id}`} className="font-semibold underline">open the lease and replace the PDF</Link> if needed.
+        </p>
+      )}
       {ended === "1" && <p className="rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">Their stay has ended.</p>}
       {error && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{error}</p>}
 

@@ -44,13 +44,17 @@ export function LeaseForm({
   region,
   error,
   embedded,
+  warning,
 }: {
   details: TenancyDetails;
   region: string;
   error?: string;
   // Set inside the Add lease stepper: the form saves in place and calls onSaved with the new details instead of leaving the page.
   embedded?: { onSaved: (details: TenancyDetails) => void; onCancel: () => void };
+  // A warning shown above the form. With requireAck the landlord must tick "I understand" before the terms can be saved.
+  warning?: { title: string; text: string; requireAck?: boolean };
 }) {
+  const [acknowledged, setAcknowledged] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [rent, setRent] = useState(details.monthlyRent?.toString() ?? "");
@@ -118,6 +122,18 @@ export function LeaseForm({
     >
       <input type="hidden" name="tenancyId" value={details.id} />
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
+
+      {warning && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">{warning.title}</p>
+          <p className="mt-1">{warning.text}</p>
+          {warning.requireAck && (
+            <label className="mt-3 flex cursor-pointer items-center gap-2 font-semibold">
+              <input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} /> I understand
+            </label>
+          )}
+        </div>
+      )}
 
       {(error || saveError) && <p className="rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">{saveError || error}</p>}
 
@@ -234,7 +250,7 @@ export function LeaseForm({
             Cancel
           </Link>
         )}
-        <button type="submit" disabled={saving} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60">
+        <button type="submit" disabled={saving || Boolean(warning?.requireAck && !acknowledged)} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60">
           {saving ? "Saving…" : embedded ? "Save terms" : "Save lease details"}
         </button>
       </div>

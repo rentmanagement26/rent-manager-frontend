@@ -105,3 +105,13 @@ export async function uploadSignedCopyAction(id: number, blobPath: string, fileN
 export async function declineDocumentAction(id: number, note: string) {
   return run(TENANT, (token) => api.declineDocument(token, Number(id), String(note)));
 }
+
+// --- Landlord: replace the lease file ---
+
+export async function versionUploadUrlAction(id: number): Promise<ActionResult<UploadTarget>> {
+  return run(LANDLORD, (token) => api.newVersionUploadUrl(token, Number(id)));
+}
+
+export async function replaceFileAction(id: number, blobPath: string, fileName: string) {
+  return run(LANDLORD, (token) => api.replaceDocumentFile(token, Number(id), String(blobPath), String(fileName)));
+}
