@@ -25,6 +25,16 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-01 — Claude (Windows) tenant home rebuilt in the landlord dashboard style; first look at the tenant side live
+
+- **Tenant home** (`app/tenant/page.tsx`, `components/tenant-dashboard-cards.tsx`): greeting "Hello <name>," with a Documents button, the amber "lease waiting for your signature" banner, four number tiles (**Homes**, **Monthly rent** from the leases' agreed rent, **Next rent due** from the due day, **To sign**; the same `StatTile` as the landlord dashboard), then **My home** and **My lease** cards on the left, and on the right a **Documents** card (newest four, "Needs your signature" / "You signed"), **Your landlord** (each landlord once, mailto link), **Rent and payments** (coming soon) and Quick links. The rent shown is the agreed lease rent, not the unit's asking price.
+- **Seen live as the tenant** (the owner signed in as the tenant in the pane): banner, tiles ($1,450.00, Nov 1, 1 to sign), cards and the signing page with the 3-page viewer all render. The lease history on the landlord side showed "Opened · Hardeep Singh". **Not done by the agent**: signing, the paper upload, the landlord's accept or reject and the final PDF.
+- **Tenant portal now has the landlord's shell** (owner: "same sidebar and organize everything"): the shared sidebar was split out as `components/app-sidebar.tsx` (items + optional footer); `landlord-sidebar.tsx` is now a thin wrapper (menu entries and the Upgrade card; it no longer takes an `email` prop) and the new `components/tenant-sidebar.tsx` gives the tenant **Dashboard, My home, Documents, Notifications, Profile, Security**. `app/tenant/layout.tsx` uses the same grid, top bar (bell and account menu), drawer on phones and footer as `app/landlord/layout.tsx`. The old top-header layout and the Quick links card (`tenant-quick-links.tsx`, deleted) are gone because the sidebar covers them.
+- **Organised**: the dashboard is now a summary (tiles; **My home** list with rent and a Details link; **Documents**; **Your landlord**; **Rent and payments** coming soon). The full homes, lease terms and past homes moved to the new **`/tenant/home`** page.
+- **Fixed**: the Read step said "before you can sign online" even when only paper is offered; it now says "Read the lease before you sign it on paper."
+- **Data note**: the owner's tenant account has two active leases for the same unit (Maple Street Duplex, Full house), so that home shows twice; looks like leftover test data.
+- **Verified**: `tsc` and `eslint` clean.
+
 ## 2026-10-31 (admin) — Claude (Windows) admin Catalog suggests the two features the backend already checks
 
 - **Why**: online signing stayed off and the tenant could not tell why. The backend does not create the plan features `documents.online_signing` and `leases.renewal_reminders`; the admin had to know and type their keys.

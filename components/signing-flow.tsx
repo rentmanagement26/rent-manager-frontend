@@ -226,7 +226,13 @@ export function SigningFlow({
         <StepLayout
           icon="eye"
           title="Read the lease"
-          intro={role === "tenant" ? "Take your time. Every page has to be opened before you can sign online." : "Check the final version once more before you sign it."}
+          intro={
+            !onlineOk
+              ? "Read the lease before you sign it on paper."
+              : role === "tenant"
+                ? "Take your time. Every page has to be opened before you can sign online."
+                : "Check the final version once more before you sign it."
+          }
           guide={{
             steps: ["Open each page with the thumbnails on the left or the arrows.", "A page counts as read once it is on screen.", "When every page is read, go to Agree."],
             note: paper ? "You chose paper, so reading in the app is not required. Read it before you sign anyway." : "You can zoom in, and download the PDF to read it offline.",

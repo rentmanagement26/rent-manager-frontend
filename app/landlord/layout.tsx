@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <SidebarProvider>
       <PageHeaderProvider>
         <div className="lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
-          <LandlordSidebar email={session.email} />
+          <LandlordSidebar />
 
           <div className="hidden lg:flex lg:col-start-2 lg:row-start-1 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-8">
             <div className="min-w-0 flex-1">
