@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/env";
 import { backendFetch } from "@/lib/api-client";
 import { extractErrorMessage } from "@/lib/api-error";
 import type {
@@ -13,7 +14,7 @@ import type {
 
 export async function getTenantInvitePreview(inviteToken: string): Promise<TenantInvitePreview> {
   const response = await fetch(
-    `${process.env.BACKEND_API_URL}/api/v1/auth/tenant-invites/${encodeURIComponent(inviteToken)}`
+    `${backendUrl()}/api/v1/auth/tenant-invites/${encodeURIComponent(inviteToken)}`
   );
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response));
@@ -22,7 +23,7 @@ export async function getTenantInvitePreview(inviteToken: string): Promise<Tenan
 }
 
 export async function registerTenant(input: RegisterTenantInput): Promise<RegisterTenantResult> {
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/register/tenant`, {
+  const response = await fetch(`${backendUrl()}/api/v1/auth/register/tenant`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -98,7 +99,7 @@ export async function acceptTenantInvite(inviteToken: string, token: string): Pr
 // Public: the invited person says no. No sign-in needed, the invite token is the proof.
 export async function declineTenantInvite(inviteToken: string): Promise<void> {
   const response = await fetch(
-    `${process.env.BACKEND_API_URL}/api/v1/auth/tenant-invites/${encodeURIComponent(inviteToken)}/decline`,
+    `${backendUrl()}/api/v1/auth/tenant-invites/${encodeURIComponent(inviteToken)}/decline`,
     { method: "POST" }
   );
   if (!response.ok) {

@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/env";
 import { backendFetch } from "@/lib/api-client";
 import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
 import type {
@@ -47,7 +48,7 @@ export function confirmAuthenticatorReplacement(token: string, code: string): Pr
 }
 
 async function postTwoFactor<T>(path: string, body: Record<string, string>): Promise<T> {
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/2fa/${path}`, {
+  const response = await fetch(`${backendUrl()}/api/v1/auth/2fa/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

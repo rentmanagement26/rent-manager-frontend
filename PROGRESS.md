@@ -9,6 +9,13 @@ meaningful changes, and note which tool/machine made it.
 
 Format: newest entries at the top.
 
+## 2026-10-30 — review, no code changes — local diagnosis
+
+- **Reviewed current state**: the app builds successfully (`npm run build` passes), and `eslint` is effectively clean aside from one warning in [lib/session.ts](C:\Users\dina\OneDrive\Documents\Hardeep Projects\Rent Management Front-End\lib\session.ts) for an unused variable. There is no compile-time crash in the repo right now.
+- **Actual issue**: the project is not functionally complete; the shared handoff notes in [PROGRESS.md](C:\Users\dina\OneDrive\Documents\Hardeep%20Projects\Rent%20Management%20Front-End/PROGRESS.md) explicitly call out that several backend features and finance screens were designed but not actually built or wired. The app also still contains placeholder/coming-soon areas like [app/contractor/page.tsx](C:\Users\dina\OneDrive\Documents\Hardeep%20Projects\Rent%20Management%20Front-End/app/contractor/page.tsx).
+- **Environment risk**: auth and API calls depend on `BACKEND_API_URL` and `SESSION_SECRET`, and the app throws immediately if the session secret is missing in [lib/session.ts](C:\Users\dina\OneDrive\Documents\Hardeep%20Projects\Rent%20Management%20Front-End/lib/session.ts). On a fresh machine or deployment without the proper env values, the app fails at runtime even though it compiles.
+- **Current decision**: no code patching for this pass; the main problem is incomplete backend integration and environment configuration rather than a broken Next.js build.
+
 ## Shared agent handoff protocol
 
 Codex and Claude use this file as the project handoff, across both computers.
@@ -24,6 +31,16 @@ Codex and Claude use this file as the project handoff, across both computers.
   or adding any feature (leases, deposits, rent increases, late fees, notices, tenant screening,
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
+
+## 2026-11-01 (config) — Claude (Windows) environment checks, one request helper setting, first tests (from a Copilot suggestion, reviewed)
+- `lib/env.ts`: `backendUrl()` and `sessionSecret()` check `BACKEND_API_URL` / `SESSION_SECRET` when first used and fail with a clear
+  message that never prints the value. Production needs https and a 32+ character, non-placeholder secret. Every direct
+  `process.env.BACKEND_API_URL` read (13 files) now goes through `backendUrl()`; `lib/session.ts` uses `sessionSecret()`.
+- `backendFetch` (lib/api-client.ts) now times out after 30 seconds. Other files still call `fetch` themselves for pre-login routes
+  (login, register, invite, 2FA, password reset); they use the checked URL but not yet the shared timeout/error handling.
+- Added `.env.example` (and un-ignored it), a README Setup section, Vitest 3 (v5 needs a newer @types/node), `npm test`, and 9 tests
+  in `tests/` for the env checks and the request helper. Screen-level loading/error tests and a backend health check are not done.
+- Note for commits: `package.json` / `package-lock.json` still contain the held `heic2any` line next to the new `vitest` entries.
 
 ## 2026-11-01 (screenshots) — Claude (Windows) the backend team's screenshots: lease form and reminder settings brought in line (our own design kept)
 

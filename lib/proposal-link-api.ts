@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/env";
 // Backend calls for the Accept / Decline buttons in a plan proposal email. The landlord does not sign in: the secret
 // in the link is the proof. Reading (GET) changes nothing; only the POST answers.
 import type { PendingPlanChange, PlanSnapshot } from "@/lib/types";
@@ -27,7 +28,7 @@ export function looksLikeToken(token: string | undefined): token is string {
 // What the confirm page shows. Never throws.
 export async function getProposalByLink(token: string): Promise<ProposalLinkResult> {
   try {
-    const response = await fetch(`${process.env.BACKEND_API_URL}${BASE}/${token}`, { cache: "no-store" });
+    const response = await fetch(`${backendUrl()}${BASE}/${token}`, { cache: "no-store" });
     if (response.status === 404) return { status: "invalid" };
     if (!response.ok) return { status: "error" };
     return { status: "ok", data: (await response.json()) as ProposalLinkView };
@@ -50,7 +51,7 @@ export class ProposalLinkError extends Error {
 export async function answerByLink(token: string, accept: boolean): Promise<void> {
   let response: Response;
   try {
-    response = await fetch(`${process.env.BACKEND_API_URL}${BASE}/${token}/${accept ? "accept" : "decline"}`, { method: "POST" });
+    response = await fetch(`${backendUrl()}${BASE}/${token}/${accept ? "accept" : "decline"}`, { method: "POST" });
   } catch {
     throw new ProposalLinkError("We couldn't reach DomusPRO. Please try again.");
   }

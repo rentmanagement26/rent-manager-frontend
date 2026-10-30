@@ -1,4 +1,5 @@
 "use server";
+import { backendUrl } from "@/lib/env";
 
 import { redirect } from "next/navigation";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -11,7 +12,7 @@ export async function loginAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirect") ?? "");
 
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/login`, {
+  const response = await fetch(`${backendUrl()}/api/v1/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ Email: email, Password: password }),

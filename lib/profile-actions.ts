@@ -1,4 +1,5 @@
 "use server";
+import { backendUrl } from "@/lib/env";
 
 import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
@@ -53,7 +54,7 @@ export async function changePasswordAction(
 export async function sendPasswordResetLinkAction(): Promise<{ message: string } | ActionFailure> {
   const session = await requireBackendToken();
 
-  const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/forgot-password`, {
+  const response = await fetch(`${backendUrl()}/api/v1/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ Email: session.email }),

@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/env";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
@@ -26,7 +27,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const refreshResponse = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/refresh`, {
+  const refreshResponse = await fetch(`${backendUrl()}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ RefreshToken: session.refreshToken }),

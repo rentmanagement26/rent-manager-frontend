@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
+import { sessionSecret } from "@/lib/env";
 import type { SessionUser } from "@/lib/types";
 
 export const SESSION_COOKIE_NAME = "session_token";
@@ -13,11 +14,7 @@ export const SESSION_COOKIE_OPTIONS = {
 };
 
 function getSecretKey() {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET environment variable is not set");
-  }
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(sessionSecret());
 }
 
 export async function createSession(user: SessionUser): Promise<string> {

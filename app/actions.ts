@@ -1,4 +1,5 @@
 "use server";
+import { backendUrl } from "@/lib/env";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -11,7 +12,7 @@ export async function logoutAction() {
   if (token) {
     const session = await getSessionUser(token);
     if (session?.refreshToken) {
-      await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/logout`, {
+      await fetch(`${backendUrl()}/api/v1/auth/logout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ RefreshToken: session.refreshToken }),

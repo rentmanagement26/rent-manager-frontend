@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/env";
 import { cookies } from "next/headers";
 import { getSession } from "@/lib/get-session";
 import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS, createSession } from "@/lib/session";
@@ -56,7 +57,7 @@ export async function saveSession(auth: BackendAuthResponse): Promise<SessionUse
   // Safety net: the backend already refuses staff at this portal's sign-in. If one ever got this far anyway,
   // sign their refresh token out and refuse, rather than letting an admin act as a landlord here.
   if (auth.roles.some((role) => STAFF_ROLES.includes(role))) {
-    await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/logout`, {
+    await fetch(`${backendUrl()}/api/v1/auth/logout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ RefreshToken: auth.refreshToken }),

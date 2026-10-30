@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Setup
+
+1. Install packages: `npm install`
+2. Copy `.env.example` to `.env.local` and fill in the two required values:
+   - `BACKEND_API_URL`: where the ASP.NET backend runs (for local work, `http://localhost:5156`). Production must use https.
+   - `SESSION_SECRET`: a long random value (at least 32 characters in production). The example file shows how to generate one.
+3. Start the backend, then run `npm run dev`.
+
+A missing or unsafe value stops the app with a clear message naming the variable (the value itself is never printed).
+Run the checks with `npm test`.
+
 ## Getting Started
 
 First, run the development server:

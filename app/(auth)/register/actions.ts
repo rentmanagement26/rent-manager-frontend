@@ -1,4 +1,5 @@
 "use server";
+import { backendUrl } from "@/lib/env";
 
 import { redirect } from "next/navigation";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -9,7 +10,7 @@ export async function registerAction(formData: FormData)  {
     const password = String(formData.get("password") ?? "");
     const userType = String(formData.get("userType") ?? "");
 
-    const response = await fetch(`${process.env.BACKEND_API_URL}/api/v1/auth/register`, {
+    const response = await fetch(`${backendUrl()}/api/v1/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
