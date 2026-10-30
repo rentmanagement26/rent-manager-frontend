@@ -68,7 +68,7 @@ export default async function LeasesPage({ searchParams }: { searchParams: Promi
             Invite a tenant
           </Link>
           <Link href="/landlord/leases/new" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
-            + Create lease
+            + Add lease
           </Link>
         </div>
       </div>
@@ -131,7 +131,7 @@ export default async function LeasesPage({ searchParams }: { searchParams: Promi
                     <td className="px-5 py-4 text-right">
                       <span className="flex justify-end gap-3 text-xs font-semibold">
                         {lease.status === "Active" && !document && (
-                          <Link href={`/landlord/tenancies/${lease.id}/documents/new`} className="text-accent hover:text-accent-dark">Create lease</Link>
+                          <Link href={`/landlord/tenancies/${lease.id}/documents/new`} className="text-accent hover:text-accent-dark">Upload lease</Link>
                         )}
                         <Link href={`/landlord/tenancies/${lease.id}`} className="text-heading hover:text-accent">Open</Link>
                       </span>

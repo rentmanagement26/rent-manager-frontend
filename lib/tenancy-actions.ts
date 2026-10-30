@@ -4,8 +4,8 @@
 import { redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { SessionExpiredError } from "@/lib/api-error";
-import { endCoTenant, saveLeaseDetails } from "@/lib/tenancy-api";
-import type { LeaseDetailsInput } from "@/lib/tenancy-types";
+import { endCoTenant, getTenancy, saveLeaseDetails } from "@/lib/tenancy-api";
+import type { LeaseDetailsInput, TenancyDetails } from "@/lib/tenancy-types";
 
 // The lease form sends everything as one JSON field so the repeated utility and charge rows stay together.
 export async function saveLeaseDetailsAction(formData: FormData) {
@@ -40,4 +40,16 @@ export async function endCoTenantAction(formData: FormData) {
   }
 
   redirect(`/landlord/tenancies/${tenancyId}?ended=1`);
+}
+
+// Loads one lease's details for the Add lease stepper after the landlord picks a unit. Answers { details } or { error }.
+export async function loadTenancyDetailsAction(tenancyId: number): Promise<{ details: TenancyDetails } | { error: string; expired: boolean }> {
+  const session = await requireBackendToken(["Admin", "Landlord"]);
+  try {
+    const details = await getTenancy(session.backendToken, Number(tenancyId));
+    return details ? { details } : { error: "That lease was not found.", expired: false };
+  } catch (err) {
+    if (err instanceof SessionExpiredError) return { error: err.message, expired: true };
+    return { error: err instanceof Error ? err.message : "Couldn't load the lease.", expired: false };
+  }
 }

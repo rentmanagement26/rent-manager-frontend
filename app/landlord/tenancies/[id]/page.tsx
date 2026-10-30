@@ -79,7 +79,7 @@ export default async function TenancyPage({
           <h2 className="text-sm font-semibold text-heading">Lease documents</h2>
           {isActive && (
             <Link href={`/landlord/tenancies/${details.id}/documents/new`} className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
-              Create lease
+              Add lease
             </Link>
           )}
         </div>
