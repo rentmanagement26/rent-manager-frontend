@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireBackendToken } from "@/lib/auth-guard";
 import { SessionExpiredError } from "@/lib/api-error";
-import { getDocument } from "@/lib/document-api";
+import { getDocument, getDownloads } from "@/lib/document-api";
 import { getTenancy } from "@/lib/tenancy-api";
-import { statusFor } from "@/lib/document-format";
+import { downloadHref, downloadLabel, statusFor } from "@/lib/document-format";
 import { formatCalendarDate, formatRelativeTime } from "@/lib/format-time";
 import { PageHeader } from "@/components/page-header";
 import { DocumentControls } from "./document-controls";
@@ -26,6 +26,8 @@ export default async function LandlordDocumentPage({ params }: { params: Promise
   }
   if (!doc) notFound();
   // The lease's current terms, to show beside the document and to compare with the terms it was sent with. A failed lookup just hides them.
+  // Every file the backend offers for this document (the lease, print copy, signed scans, final copy). A failed lookup just hides the list.
+  const downloads = await getDownloads(session.backendToken, doc.id).catch(() => []);
   const live = doc.tenancyId ? await getTenancy(session.backendToken, doc.tenancyId).catch(() => null) : null;
 
   const landlordSigned = doc.signers.some((s) => s.role === "Landlord" && s.status === "Signed");
@@ -86,10 +88,27 @@ export default async function LandlordDocumentPage({ params }: { params: Promise
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold text-heading">Downloads</h2>
         <ul className="space-y-2 text-sm">
-          <li><a className="text-accent hover:text-accent-dark" href={`${fileHref}?download=1`}>The lease (original PDF)</a></li>
-          {doc.printCopyReady && <li><a className="text-accent hover:text-accent-dark" href={`${fileHref}?kind=PrintCopy&download=1`}>Print copy with page stamps (for signing on paper)</a></li>}
-          {doc.finalCopyReady && <li><a className="font-semibold text-accent hover:text-accent-dark" href={`${fileHref}?kind=FinalCopy&download=1`}>Final signed PDF with the signing record</a></li>}
+          {downloads.map((file) => (
+            <li key={`${file.kind}-${file.copyId ?? ""}`}>
+              <a className={`${file.kind === "FinalCopy" ? "font-semibold " : ""}text-accent hover:text-accent-dark`} href={downloadHref(doc.id, file.kind, file.copyId)}>
+                {downloadLabel(file.kind)}
+              </a>
+              <span className="ml-2 text-xs text-muted">{file.fileName}</span>
+            </li>
+          ))}
+          {downloads.length === 0 && <li className="text-muted">No files to download yet.</li>}
         </ul>
+      </section>
+
+      <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
+        <h2 className="mb-1 text-sm font-semibold text-heading">Online signing</h2>
+        {doc.onlineSigning.available ? (
+          <p className="text-sm text-green-700">Available{doc.province ? ` in ${doc.province}` : ""}. Tenants can draw or type their signature, or sign on paper.</p>
+        ) : (
+          <p className="text-sm text-muted">
+            Not available: {doc.onlineSigning.message ?? "online signing is switched off for this lease."} Tenants can still sign on paper. To turn it on, an admin switches the province on under Documents and the plan needs the online-signing feature.
+          </p>
+        )}
       </section>
 
       {doc.events && doc.events.length > 0 && (

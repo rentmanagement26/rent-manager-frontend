@@ -44,3 +44,21 @@ export async function putToStorage(uploadUrl: string, file: File): Promise<void>
     clearTimeout(timer);
   }
 }
+
+// Plain words for each file the backend offers for a document (GET /documents/{id}/downloads). Landlord and tenant see different subsets.
+const DOWNLOAD_LABELS: Record<string, string> = {
+  Original: "The lease (original PDF)",
+  PrintCopy: "Print copy with page stamps (for signing on paper)",
+  FinalCopy: "Final signed PDF with the signing record",
+  LandlordSignedCopy: "The landlord's signed copy (scan)",
+  TenantSignedCopy: "A tenant's signed copy (scan)",
+};
+
+export function downloadLabel(kind: string): string {
+  return DOWNLOAD_LABELS[kind] ?? kind;
+}
+
+// Our file route address for one download. The route fetches the file with the signed-in person's access, so no storage address is exposed.
+export function downloadHref(documentId: number, kind: string, copyId: number | null): string {
+  return `/api/documents/${documentId}/file?kind=${encodeURIComponent(kind)}${copyId !== null ? `&copyId=${copyId}` : ""}&download=1`;
+}

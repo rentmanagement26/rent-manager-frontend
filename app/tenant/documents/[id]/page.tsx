@@ -4,8 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { TenantPageHeading } from "@/components/tenant-page-heading";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
-import { getDocument } from "@/lib/document-api";
-import { STATUS_LABELS } from "@/lib/document-format";
+import { getDocument, getDownloads } from "@/lib/document-api";
+import { STATUS_LABELS, downloadHref, downloadLabel } from "@/lib/document-format";
 import { formatCalendarDate } from "@/lib/format-time";
 
 export default async function TenantDocumentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,10 +20,11 @@ export default async function TenantDocumentPage({ params }: { params: Promise<{
     throw err;
   }
   if (!doc) notFound();
+  // The files this tenant may open: the lease, the landlord's signed copy, their own scans and, once everyone has signed, the final copy.
+  const downloads = await getDownloads(session.backendToken, doc.id).catch(() => []);
 
   const status = STATUS_LABELS[doc.status];
   const myTurn = doc.status === "AwaitingTenants" && doc.yourStatus === "Pending";
-  const fileHref = `/api/documents/${doc.id}/file`;
   const myCopies = doc.copies;
 
   return (
@@ -80,8 +81,15 @@ export default async function TenantDocumentPage({ params }: { params: Promise<{
         <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-heading">Downloads</h2>
           <ul className="space-y-2 text-sm">
-            <li><a className="text-accent hover:text-accent-dark" href={`${fileHref}?download=1`}>The lease (PDF)</a></li>
-            {doc.finalCopyReady && <li><a className="font-semibold text-accent hover:text-accent-dark" href={`${fileHref}?kind=FinalCopy&download=1`}>Final signed copy with the signing record</a></li>}
+            {downloads.map((file) => (
+              <li key={`${file.kind}-${file.copyId ?? ""}`}>
+                <a className={`${file.kind === "FinalCopy" ? "font-semibold " : ""}text-accent hover:text-accent-dark`} href={downloadHref(doc.id, file.kind, file.copyId)}>
+                  {downloadLabel(file.kind)}
+                </a>
+                <span className="ml-2 text-xs text-muted">{file.fileName}</span>
+              </li>
+            ))}
+            {downloads.length === 0 && <li className="text-muted">No files to download yet.</li>}
           </ul>
         </section>
       </div>

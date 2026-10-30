@@ -25,6 +25,13 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-01 (audit) — Claude (Windows) backend vs frontend: what is still missing
+
+- **Audit** (backend at `c9ceb26`, no newer commits; 167 routes listed from the controllers, each checked against the landlord/tenant app and `admin/`): every route has a screen or call except `POST /notifications/device-token`, which is the mobile app's push registration (not needed on the web). Admin routes all used (including the landlord plan history and the document province switch).
+- **Provided by the backend but not shown, now built**: (1) the Downloads list on the landlord and tenant document pages now comes from `GET /documents/{id}/downloads` (`lib/document-format.ts` `downloadLabel`, `downloadHref`), so it also lists the landlord's signed scan (which a tenant prints to sign), a tenant's own scans and accepted scans, not only the original, print copy and final copy; (2) the landlord document page has an **Online signing** card that says whether online signing is available for the lease and why not (`doc.onlineSigning`, `doc.province`).
+- **Left alone on purpose**: the renewal decision's optional `effectiveFrom` (the backend applies month to month at once even for a later date, so a date field would mislead).
+- **Verified**: `tsc` and `eslint` clean; the tenant document page now lists "The landlord's signed copy (scan)" on the real document. **Not seen**: the landlord page (the browser is signed in as the tenant).
+
 ## 2026-11-01 — Claude (Windows) tenant home rebuilt in the landlord dashboard style; first look at the tenant side live
 
 - **Tenant home** (`app/tenant/page.tsx`, `components/tenant-dashboard-cards.tsx`): greeting "Hello <name>," with a Documents button, the amber "lease waiting for your signature" banner, four number tiles (**Homes**, **Monthly rent** from the leases' agreed rent, **Next rent due** from the due day, **To sign**; the same `StatTile` as the landlord dashboard), then **My home** and **My lease** cards on the left, and on the right a **Documents** card (newest four, "Needs your signature" / "You signed"), **Your landlord** (each landlord once, mailto link), **Rent and payments** (coming soon) and Quick links. The rent shown is the agreed lease rent, not the unit's asking price.
