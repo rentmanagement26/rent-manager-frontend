@@ -5,10 +5,12 @@ import { backendFetch } from "@/lib/api-client";
 import { getMySubscription } from "@/lib/billing-api";
 import { getActivity } from "@/lib/activity-api";
 import { getTenantInviteStats } from "@/lib/tenant-invite-api";
+import { listDocuments } from "@/lib/document-api";
 import { PageHeader } from "@/components/page-header";
 import { PlanProposalBanner } from "@/components/plan-proposal-banner";
 import {
   InvitesCard,
+  LeaseActionsCard,
   OccupancyCard,
   PlanUsageCard,
   RecentActivityCard,
@@ -30,11 +32,12 @@ export default async function AdminDashboardPage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const token = session.backendToken;
 
-  const [response, subscription, inviteStats, activity] = await Promise.all([
+  const [response, subscription, inviteStats, activity, documents] = await Promise.all([
     backendFetch("/api/v1/properties/mine", token),
     tryLoad(() => getMySubscription(token)),
     tryLoad(() => getTenantInviteStats(token)),
     tryLoad(() => getActivity(token, {})),
+    tryLoad(() => listDocuments(token)),
   ]);
 
   if (response.status === 401) {
@@ -81,6 +84,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="space-y-6">
           {subscription?.hasPlan && <PlanUsageCard subscription={subscription} />}
+          {documents && <LeaseActionsCard documents={documents} />}
           {inviteStats && <InvitesCard stats={inviteStats} />}
           {activity && <RecentActivityCard items={activity.items.slice(0, 5)} />}
         </div>

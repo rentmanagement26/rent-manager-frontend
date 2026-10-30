@@ -27,7 +27,7 @@ export default async function NewLeaseDocumentPage({ params }: { params: Promise
 
   return (
     <div className="max-w-5xl">
-      <PageHeader title="Send lease for signing" description={where} />
+      <PageHeader title="Create lease" description={where} />
       <PrepareLease details={details} region={context?.property.region ?? ""} defaultTitle={context ? `Residential lease, ${context.unit.label}` : "Residential lease"} />
     </div>
   );

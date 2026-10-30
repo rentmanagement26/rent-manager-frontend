@@ -25,6 +25,14 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-30 (later) — Claude (Windows) landlord **Leases** page, sidebar item, dashboard card (owner: "complete landlord side")
+
+- **Why**: the lease screens were only reachable through a unit's "View lease" button, so the owner could not find "Add lease". A lease still **starts only when a tenant accepts an invite** (the backend has no "create tenancy" call); the Leases page says so and links to Invite a tenant.
+- **Built**: `/landlord/leases` (Active / All leases tabs, 25 per page): unit, primary tenant (+N), rent, term, lease-document status, **Send lease** (when none yet) and **Open**; sidebar item **Leases**; a note on the Tenants page pointing to it; dashboard card **Lease documents** (unsigned/unsent, ran out, declined, count waiting for tenants). Files: `app/landlord/leases/page.tsx`, `listTenancies` in `lib/tenancy-api.ts`, `LeaseActionsCard` in `components/dashboard-cards.tsx`, `landlord-sidebar.tsx`, `app/landlord/page.tsx`, `tenants/page.tsx`.
+- **Renamed to "Create lease"** (owner could not find it): a **+ Create lease** button on the Leases page opens `/landlord/leases/new` (pick the unit; one with an unfinished lease document says Continue instead), the table link and the lease page button now say Create lease, and the flow's title is "Create lease". It still needs a tenant who accepted an invite, because the backend only makes a lease then.
+- **Verified**: `tsc` and `eslint` clean. Signed in on the dev server, `/landlord/leases` lists the owner's 3 active leases (rent "Not set" on all: lease details were never filled in) with Send lease and Open.
+- **Not built (backend ready)**: renewals (`GET /tenancies/renewals`, `POST {id}/renewal-decision`, snooze, notice period), the paid reminder settings page (`/lease-reminders/settings`, feature `leases.renewal_reminders`), and the `renewal` block on the lease page. No "ended only" filter exists in the backend, so the tab is "All leases".
+
 ## 2026-10-30 — Claude (Windows) lease documents and signing, landlord and tenant (mock-ups approved first)
 
 - **Flow (owner's description)**: landlord prepares a lease PDF, signs it first, sends it; the tenant reads every page in an in-page viewer, then signs: **draw** (drawn signature + typed name), **type** (typed name) or **paper** (download the stamped print copy, sign, upload the scan, landlord accepts or rejects). Online signing also needs consent, an emailed 6-digit code (separate from login 2FA) and the typed name matching the account. The backend only stores an uploaded PDF; it has no lease generator.

@@ -33,6 +33,11 @@ export default async function TenantsPage({
     <div>
       <PageHeader title="Invite a tenant" description="Send an invite so a tenant can access their unit." />
 
+      <p className="mb-4 text-sm text-muted">
+        Once a tenant accepts, their lease appears under{" "}
+        <Link href="/landlord/leases" className="font-semibold text-accent hover:text-accent-dark">Leases</Link>, where you fill in the details and send it for signing.
+      </p>
+
       {sent === "1" && email && (
         <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
           Invite sent to {email}.

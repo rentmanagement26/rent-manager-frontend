@@ -1,6 +1,7 @@
 // Small presentational cards for the landlord dashboard. Each takes plain data, so the page decides what to fetch.
 import Link from "next/link";
 import { formatRelativeTime } from "@/lib/format-time";
+import type { DocumentListItem } from "@/lib/document-types";
 import type { ActivityItem, MySubscription, Property, TenantInviteStats } from "@/lib/types";
 
 // White card with a title and an optional link on the right.
@@ -141,5 +142,35 @@ export function RentComingSoonCard() {
       <h2 className="text-sm font-semibold text-heading">Rent and payments</h2>
       <p className="mt-1 text-sm text-muted">Rent received, upcoming and overdue will appear here once online payments are available.</p>
     </section>
+  );
+}
+
+// Lease documents that need the landlord: unsigned or unsent leases, ones that ran out, and ones a tenant declined.
+export function LeaseActionsCard({ documents }: { documents: DocumentListItem[] }) {
+  const waitingForTenants = documents.filter((d) => d.status === "AwaitingTenants").length;
+  const needsAction = documents
+    .filter((d) => d.status === "AwaitingLandlord" || d.status === "Expired" || d.status === "Declined")
+    .slice(0, 5);
+  const words = { AwaitingLandlord: "Sign and send", Expired: "Ran out, give more time", Declined: "A tenant declined" } as const;
+
+  return (
+    <Card title="Lease documents" href="/landlord/leases" linkLabel="Leases">
+      {needsAction.length === 0 ? (
+        <p className="text-sm text-muted">
+          {waitingForTenants > 0 ? `${waitingForTenants} waiting for tenants to sign.` : "Nothing needs your attention."}
+        </p>
+      ) : (
+        <ul className="divide-y divide-default text-sm">
+          {needsAction.map((document) => (
+            <li key={document.id}>
+              <Link href={`/landlord/documents/${document.id}`} className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-subtle">
+                <span className="truncate text-heading">{document.title}</span>
+                <span className="shrink-0 text-xs font-semibold text-accent">{words[document.status as keyof typeof words]}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

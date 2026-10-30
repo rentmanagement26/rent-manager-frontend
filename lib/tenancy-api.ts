@@ -36,6 +36,15 @@ export async function getTenanciesForUnit(token: string, unitId: number): Promis
   return page.items;
 }
 
+// All of the landlord's leases, newest first, one page at a time (the backend allows up to 100 per page).
+export async function listTenancies(
+  token: string,
+  options: { activeOnly: boolean; page: number }
+): Promise<{ items: TenancyListItem[]; totalCount: number; totalPages: number; page: number }> {
+  const query = `?activeOnly=${options.activeOnly}&page=${options.page}&pageSize=25`;
+  return readJson(await backendFetch(`${BASE}${query}`, token, { cache: "no-store" }));
+}
+
 // One tenancy with its lease details and everyone who has been on it. Null when it is not found.
 export async function getTenancy(token: string, tenancyId: number): Promise<TenancyDetails | null> {
   const response = await backendFetch(`${BASE}/${tenancyId}`, token, { cache: "no-store" });
