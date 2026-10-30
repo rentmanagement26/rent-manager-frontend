@@ -6,12 +6,14 @@ import { getMySubscription } from "@/lib/billing-api";
 import { getActivity } from "@/lib/activity-api";
 import { getTenantInviteStats } from "@/lib/tenant-invite-api";
 import { listDocuments } from "@/lib/document-api";
+import { listRenewals } from "@/lib/tenancy-api";
 import { PageHeader } from "@/components/page-header";
 import { PlanProposalBanner } from "@/components/plan-proposal-banner";
 import {
   InvitesCard,
   LeaseActionsCard,
   OccupancyCard,
+  RenewalsCard,
   PlanUsageCard,
   RecentActivityCard,
   RentComingSoonCard,
@@ -32,12 +34,13 @@ export default async function AdminDashboardPage() {
   const session = await requireBackendToken(["Admin", "Landlord"]);
   const token = session.backendToken;
 
-  const [response, subscription, inviteStats, activity, documents] = await Promise.all([
+  const [response, subscription, inviteStats, activity, documents, renewals] = await Promise.all([
     backendFetch("/api/v1/properties/mine", token),
     tryLoad(() => getMySubscription(token)),
     tryLoad(() => getTenantInviteStats(token)),
     tryLoad(() => getActivity(token, {})),
     tryLoad(() => listDocuments(token)),
+    tryLoad(() => listRenewals(token, 180)),
   ]);
 
   if (response.status === 401) {
@@ -49,6 +52,8 @@ export default async function AdminDashboardPage() {
   const countUnits = (status: string) => units.filter((unit) => unit.status === status).length;
   const occupied = countUnits("Occupied");
   const available = countUnits("Vacant") + countUnits("Listed");
+  // "Property, Unit" for each unit, for the renewals card.
+  const unitNames = new Map(properties.flatMap((property) => property.units.map((unit) => [unit.id, `${property.name}, ${unit.label}`] as const)));
   const firstName = session.fullName?.split(" ")[0];
 
   return (
@@ -85,6 +90,7 @@ export default async function AdminDashboardPage() {
         <div className="space-y-6">
           {subscription?.hasPlan && <PlanUsageCard subscription={subscription} />}
           {documents && <LeaseActionsCard documents={documents} />}
+          {renewals && <RenewalsCard rows={renewals} unitNames={unitNames} />}
           {inviteStats && <InvitesCard stats={inviteStats} />}
           {activity && <RecentActivityCard items={activity.items.slice(0, 5)} />}
         </div>

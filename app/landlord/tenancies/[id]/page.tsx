@@ -7,10 +7,12 @@ import { findUnitContext } from "@/lib/landlord-property";
 import { formatCalendarDate } from "@/lib/format-time";
 import { getTenancy } from "@/lib/tenancy-api";
 import { listDocuments } from "@/lib/document-api";
-import { STATUS_LABELS } from "@/lib/document-format";
+import { statusFor } from "@/lib/document-format";
 import { PageHeader } from "@/components/page-header";
 import { LeaseTerms } from "@/components/lease-terms";
 import { EndStayButton } from "./end-stay-button";
+import { RenewalDialogButton } from "@/components/renewal-dialog";
+import { RenewalPill, decisionWord } from "@/components/renewal-parts";
 
 // The backend allows up to 6 tenants on one tenancy.
 const MAX_TENANTS = 6;
@@ -85,6 +87,44 @@ export default async function TenancyPage({
       )}
       <LeaseTerms details={details} />
 
+      {details.renewal && (details.termType === "Fixed" || details.renewal.monthToMonthSince) && (
+        <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-heading">Renewal</h2>
+            {details.termType === "Fixed" && <RenewalPill state={details.renewal.state} decision={details.renewal.status} />}
+          </div>
+          {details.termType === "Fixed" ? (
+            <>
+              <div className="grid grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+                <div><p className="text-xs text-muted">Term ends</p><p className="font-medium text-heading">{details.endDate ? formatCalendarDate(details.endDate) : "No end date"}</p></div>
+                <div><p className="text-xs text-muted">Notice period</p><p className="font-medium text-heading">{details.renewal.noticeDays ? `${details.renewal.noticeDays} days` : "Your default"}</p></div>
+                <div><p className="text-xs text-muted">Tell them by</p><p className="font-medium text-heading">{details.renewal.sendByDate ? formatCalendarDate(details.renewal.sendByDate) : "Not set"}</p></div>
+                <div><p className="text-xs text-muted">Your plan</p><p className="font-medium text-heading">{decisionWord(details.renewal.status)}</p></div>
+              </div>
+              {isActive && (
+                <div className="mt-4">
+                  <RenewalDialogButton
+                    tenancyId={details.id}
+                    heading={title}
+                    endDate={details.endDate ? formatCalendarDate(details.endDate) : null}
+                    decision={details.renewal.status}
+                    noticeDays={details.renewal.noticeDays}
+                    snoozed={Boolean(details.renewal.snoozedUntil)}
+                    label={details.renewal.status === "Pending" ? "Decide" : "Change decision"}
+                    primary={details.renewal.status === "Pending"}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-body">
+              This lease continues month to month since {formatCalendarDate(details.renewal.monthToMonthSince!)}
+              {details.renewal.previousEndDate ? `. It was a fixed term until ${formatCalendarDate(details.renewal.previousEndDate)}.` : "."}
+            </p>
+          )}
+        </section>
+      )}
+
       <section className="rounded-2xl border border-default bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-heading">Lease documents</h2>
@@ -105,7 +145,7 @@ export default async function TenancyPage({
                     <span className="font-medium text-heading">{document.title}</span>
                     <span className="ml-2 text-xs text-muted">{document.publicCode} · {document.signedCount} of {document.signerCount} signed</span>
                   </span>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_LABELS[document.status].className}`}>{STATUS_LABELS[document.status].label}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusFor(document.status, document.signedCount > 0).className}`}>{statusFor(document.status, document.signedCount > 0).label}</span>
                 </Link>
               </li>
             ))}

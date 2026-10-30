@@ -3,7 +3,7 @@
 import { backendFetch } from "@/lib/api-client";
 import { SessionExpiredError } from "@/lib/api-error";
 import { listDocuments } from "@/lib/document-api";
-import { STATUS_LABELS, isOpen } from "@/lib/document-format";
+import { isOpen, statusFor } from "@/lib/document-format";
 import { listTenancies } from "@/lib/tenancy-api";
 import type { DocumentListItem } from "@/lib/document-types";
 import type { Property } from "@/lib/types";
@@ -58,7 +58,7 @@ export async function loadPickerProperties(token: string): Promise<PickerPropert
         tenancyId: lease?.id ?? null,
         tenantName: lease?.primaryTenantName ?? null,
         openDocumentId: openDocument?.id ?? null,
-        openDocumentWord: openDocument ? STATUS_LABELS[openDocument.status].label : null,
+        openDocumentWord: openDocument ? statusFor(openDocument.status, openDocument.signedCount > 0).label : null,
       };
     }),
   }));

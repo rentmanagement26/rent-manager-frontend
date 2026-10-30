@@ -1,7 +1,9 @@
 // Small presentational cards for the landlord dashboard. Each takes plain data, so the page decides what to fetch.
 import Link from "next/link";
 import { formatRelativeTime } from "@/lib/format-time";
+import { RenewalPill } from "@/components/renewal-parts";
 import type { DocumentListItem } from "@/lib/document-types";
+import type { RenewalRow } from "@/lib/tenancy-types";
 import type { ActivityItem, MySubscription, Property, TenantInviteStats } from "@/lib/types";
 
 // White card with a title and an optional link on the right.
@@ -151,7 +153,8 @@ export function LeaseActionsCard({ documents }: { documents: DocumentListItem[] 
   const needsAction = documents
     .filter((d) => d.status === "AwaitingLandlord" || d.status === "Expired" || d.status === "Declined")
     .slice(0, 5);
-  const words = { AwaitingLandlord: "Sign and send", Expired: "Ran out, give more time", Declined: "A tenant declined" } as const;
+  const wordFor = (document: DocumentListItem) =>
+    document.status === "AwaitingLandlord" ? (document.signedCount > 0 ? "Send to tenants" : "Sign and send") : document.status === "Expired" ? "Ran out, give more time" : "A tenant declined";
 
   return (
     <Card title="Lease documents" href="/landlord/leases" linkLabel="Leases">
@@ -165,12 +168,39 @@ export function LeaseActionsCard({ documents }: { documents: DocumentListItem[] 
             <li key={document.id}>
               <Link href={`/landlord/documents/${document.id}`} className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-subtle">
                 <span className="truncate text-heading">{document.title}</span>
-                <span className="shrink-0 text-xs font-semibold text-accent">{words[document.status as keyof typeof words]}</span>
+                <span className="shrink-0 text-xs font-semibold text-accent">{wordFor(document)}</span>
               </Link>
             </li>
           ))}
         </ul>
       )}
+    </Card>
+  );
+}
+
+// Fixed-term leases that need a renewal decision soon (overdue first), or a count of the rest.
+export function RenewalsCard({ rows, unitNames }: { rows: RenewalRow[]; unitNames: Map<number, string> }) {
+  const open = rows.filter((row) => row.state !== "Decided");
+  const shown = open.slice(0, 3);
+  if (rows.length === 0) return null;
+
+  return (
+    <Card title="Renewals" href="/landlord/renewals" linkLabel="View all">
+      {open.length === 0 ? (
+        <p className="text-sm text-muted">Every lease ending soon has a decision.</p>
+      ) : (
+        <ul className="divide-y divide-default text-sm">
+          {shown.map((row) => (
+            <li key={row.tenancyId}>
+              <Link href={`/landlord/tenancies/${row.tenancyId}`} className="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-subtle">
+                <span className="truncate text-heading">{unitNames.get(row.unitId) ?? `Unit ${row.unitId}`}</span>
+                <RenewalPill state={row.state} decision={row.decision} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open.length > shown.length && <p className="mt-2 text-xs text-muted">{open.length - shown.length} more ending in the next 180 days</p>}
     </Card>
   );
 }

@@ -1,7 +1,7 @@
 // Backend calls for tenancies: the landlord's lease details and co-tenants, and the tenant's own lease.
 import { backendFetch } from "@/lib/api-client";
 import { SessionExpiredError, extractErrorMessage } from "@/lib/api-error";
-import type { LeaseDetailsInput, TenancyDetails, TenancyListItem } from "@/lib/tenancy-types";
+import type { LeaseDetailsInput, RenewalRow, TenancyDetails, TenancyListItem } from "@/lib/tenancy-types";
 
 const BASE = "/api/v1/tenancies";
 
@@ -91,4 +91,26 @@ export async function getMyLease(token: string, tenancyId: number): Promise<Tena
   const response = await backendFetch(`/api/v1/tenants/me/tenancies/${tenancyId}`, token, { cache: "no-store" });
   if (response.status === 404) return null;
   return readJson<TenancyDetails>(response);
+}
+
+// --- Renewals ---
+
+// Fixed-term leases ending within the next withinDays (1 to 365), plus every one already past its end date with no decision.
+export async function listRenewals(token: string, withinDays: number): Promise<RenewalRow[]> {
+  return readJson(await backendFetch(`${BASE}/renewals?withinDays=${withinDays}`, token, { cache: "no-store" }));
+}
+
+// Records what the landlord plans at the end of the term. month_to_month also makes the lease month to month and removes the end date.
+export async function setRenewalDecision(token: string, tenancyId: number, decision: "pending" | "offered" | "not_renewing" | "month_to_month"): Promise<void> {
+  await expectOk(await backendFetch(`${BASE}/${tenancyId}/renewal-decision`, token, { method: "POST", body: JSON.stringify({ Decision: decision }) }));
+}
+
+// Pauses this lease's renewal reminders for 1 to 30 days, or (days null) resumes them. Changes nothing about the lease.
+export async function snoozeReminders(token: string, tenancyId: number, days: number | null): Promise<void> {
+  await expectOk(await backendFetch(`${BASE}/${tenancyId}/reminder-snooze`, token, { method: "POST", body: JSON.stringify({ Days: days }) }));
+}
+
+// This lease's own notice period, 14 to 365 days, or null to use the landlord's default. Active fixed-term leases only.
+export async function setRenewalNotice(token: string, tenancyId: number, days: number | null): Promise<void> {
+  await expectOk(await backendFetch(`${BASE}/${tenancyId}/renewal-notice`, token, { method: "PUT", body: JSON.stringify({ Days: days }) }));
 }

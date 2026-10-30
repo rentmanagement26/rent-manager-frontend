@@ -5,7 +5,7 @@ import { requireBackendToken } from "@/lib/auth-guard";
 import { SessionExpiredError } from "@/lib/api-error";
 import { getDocument } from "@/lib/document-api";
 import { getTenancy } from "@/lib/tenancy-api";
-import { STATUS_LABELS } from "@/lib/document-format";
+import { statusFor } from "@/lib/document-format";
 import { formatCalendarDate, formatRelativeTime } from "@/lib/format-time";
 import { PageHeader } from "@/components/page-header";
 import { DocumentControls } from "./document-controls";
@@ -28,8 +28,8 @@ export default async function LandlordDocumentPage({ params }: { params: Promise
   // The lease's current terms, to show beside the document and to compare with the terms it was sent with. A failed lookup just hides them.
   const live = doc.tenancyId ? await getTenancy(session.backendToken, doc.tenancyId).catch(() => null) : null;
 
-  const status = STATUS_LABELS[doc.status];
   const landlordSigned = doc.signers.some((s) => s.role === "Landlord" && s.status === "Signed");
+  const status = statusFor(doc.status, landlordSigned);
   const needsLandlordSignature = doc.status === "AwaitingLandlord" && !landlordSigned;
   const fileHref = `/api/documents/${doc.id}/file`;
   const leaseHref = doc.tenancyId ? `/landlord/tenancies/${doc.tenancyId}` : "/landlord";

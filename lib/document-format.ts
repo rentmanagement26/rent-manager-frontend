@@ -12,6 +12,13 @@ export const STATUS_LABELS: Record<LeaseDocument["status"], { label: string; cla
   Expired: { label: "Expired", className: "bg-red-50 text-red-700" },
 };
 
+// The label for a lease document. "Waiting for your signature" only fits until the landlord has signed; after that the lease is ready to send.
+// landlordSigned is true when the landlord's own signature is recorded (for a list row: at least one signature while it is still unsent).
+export function statusFor(status: LeaseDocument["status"], landlordSigned: boolean): { label: string; className: string } {
+  if (status === "AwaitingLandlord" && landlordSigned) return { label: "Ready to send", className: "bg-green-50 text-green-700" };
+  return STATUS_LABELS[status];
+}
+
 // Whether the lease can still be signed or changed: not finished, declined, withdrawn or expired.
 export function isOpen(status: LeaseDocument["status"]): boolean {
   return status === "Draft" || status === "AwaitingLandlord" || status === "AwaitingTenants";

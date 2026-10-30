@@ -26,6 +26,31 @@ export interface TenancyPerson {
   leftAt: string | null;
 }
 
+// Where a lease stands on renewal. Only the landlord gets it. State is worked out from today's date: Upcoming, Due, Overdue or Decided.
+export interface RenewalInfo {
+  status: string;
+  state: "Upcoming" | "Due" | "Overdue" | "Decided" | null;
+  noticeDays: number | null;
+  sendByDate: string | null;
+  snoozedUntil: string | null;
+  monthToMonthSince: string | null;
+  previousEndDate: string | null;
+}
+
+// One row of the renewals list: a fixed-term lease that is ending, or one already past its end date with no decision.
+export interface RenewalRow {
+  tenancyId: number;
+  unitId: number;
+  endDate: string;
+  sendByDate: string;
+  daysToEnd: number;
+  noticeDays: number;
+  state: "Upcoming" | "Due" | "Overdue" | "Decided";
+  // Pending, Offered, NotRenewing or MonthToMonth.
+  decision: string;
+  snoozedUntil: string | null;
+}
+
 export interface TenancyDetails {
   id: number;
   unitId: number;
@@ -41,6 +66,8 @@ export interface TenancyDetails {
   utilities: TenancyUtility[];
   charges: TenancyCharge[];
   tenants: TenancyPerson[];
+  // Landlord only; absent for tenants.
+  renewal?: RenewalInfo | null;
 }
 
 export interface TenancyListItem {

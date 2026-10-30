@@ -6,7 +6,7 @@ import { requireBackendToken } from "@/lib/auth-guard";
 import { backendFetch } from "@/lib/api-client";
 import { SessionExpiredError } from "@/lib/api-error";
 import { listDocuments } from "@/lib/document-api";
-import { STATUS_LABELS } from "@/lib/document-format";
+import { statusFor } from "@/lib/document-format";
 import { formatCalendarDate } from "@/lib/format-time";
 import { formatMoney } from "@/lib/lease-format";
 import { listTenancies } from "@/lib/tenancy-api";
@@ -121,8 +121,8 @@ export default async function LeasesPage({ searchParams }: { searchParams: Promi
                     </td>
                     <td className="px-5 py-4">
                       {document ? (
-                        <Link href={`/landlord/documents/${document.id}`} className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_LABELS[document.status].className}`}>
-                          {STATUS_LABELS[document.status].label}
+                        <Link href={`/landlord/documents/${document.id}`} className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${statusFor(document.status, document.signedCount > 0).className}`}>
+                          {statusFor(document.status, document.signedCount > 0).label}
                         </Link>
                       ) : (
                         <span className="text-xs text-muted">Not sent yet</span>
