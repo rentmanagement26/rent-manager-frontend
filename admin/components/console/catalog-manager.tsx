@@ -20,9 +20,30 @@ import { AddLimitModal, EditLimitModal } from "@/components/console/limit-modal"
 import { createFeatureAction, updateFeatureAction } from "@/lib/catalog-actions";
 import type { ActionFailure, Catalog, CatalogFeature, CatalogLimit } from "@/lib/types";
 
+// Features the backend already checks for, so the admin does not have to type their keys. The backend does not create them: they must be added
+// here, then given to plans (Plans, New version) or to one landlord (an override on the landlord page).
+interface SuggestedFeature {
+  key: string;
+  displayName: string;
+  description: string;
+}
+
+const SUGGESTED_FEATURES: SuggestedFeature[] = [
+  {
+    key: "documents.online_signing",
+    displayName: "Online signing",
+    description: "Sign lease documents online with a drawn or typed signature and an email code. Also needs the province switched on under Documents.",
+  },
+  {
+    key: "leases.renewal_reminders",
+    displayName: "Renewal reminders",
+    description: "Email and in-app reminders before a fixed-term lease ends, and the reminder settings.",
+  },
+];
+
 // What the popup is doing right now. `null` means closed.
 type Editing =
-  | { kind: "new-feature" }
+  | { kind: "new-feature"; preset?: SuggestedFeature }
   | { kind: "feature"; feature: CatalogFeature }
   | { kind: "new-limit" }
   | { kind: "limit"; limit: CatalogLimit }
@@ -34,15 +55,16 @@ function CatalogModal({
   onClose,
   onSaved,
 }: {
-  editing: { kind: "new-feature" } | { kind: "feature"; feature: CatalogFeature };
+  editing: { kind: "new-feature"; preset?: SuggestedFeature } | { kind: "feature"; feature: CatalogFeature };
   onClose: () => void;
   onSaved: () => void;
 }) {
   const feature = editing.kind === "feature" ? editing.feature : null;
 
-  const [key, setKey] = useState("");
-  const [name, setName] = useState(feature?.displayName ?? "");
-  const [description, setDescription] = useState(feature?.description ?? "");
+  const preset = editing.kind === "new-feature" ? editing.preset : undefined;
+  const [key, setKey] = useState(preset?.key ?? "");
+  const [name, setName] = useState(feature?.displayName ?? preset?.displayName ?? "");
+  const [description, setDescription] = useState(feature?.description ?? preset?.description ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -134,6 +156,9 @@ export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
 
+  // Suggested features the catalog does not have yet.
+  const suggestions = SUGGESTED_FEATURES.filter((suggestion) => !catalog.features.some((feature) => feature.key === suggestion.key));
+
   // After any save: close the popup and reload the page data.
   function saved() {
     setEditing(null);
@@ -155,6 +180,24 @@ export function CatalogManager({ catalog, canEdit }: { catalog: Catalog; canEdit
             </button>
           )}
         </div>
+        {canEdit && suggestions.length > 0 && (
+          <div className="mt-4 rounded-[10px] bg-c-aci px-4 py-3 text-[13px] text-c-act2">
+            <p className="font-medium">Features the system already checks for</p>
+            <p className="mt-0.5">Add them here first, then give them to a plan or a landlord, or the matching screens stay switched off for landlords.</p>
+            <ul className="mt-2 flex flex-col gap-2">
+              {suggestions.map((suggestion) => (
+                <li key={suggestion.key} className="flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    <span className="font-medium">{suggestion.displayName}</span> <span className="font-mono text-xs">{suggestion.key}</span>
+                  </span>
+                  <button type="button" onClick={() => setEditing({ kind: "new-feature", preset: suggestion })} className={secondaryButtonClass}>
+                    Add
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <ul className="mt-4 flex flex-col">
           {catalog.features.map((feature) => (
             <li key={feature.id} className="flex items-start gap-3 border-t border-c-bd py-3 first:border-t-0 first:pt-0">

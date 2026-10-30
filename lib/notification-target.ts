@@ -9,6 +9,14 @@ const PLAN_NOTICE_TYPE = "PlanChangeNotice";
 // Returns the page a notification opens, or null when it is just a message. A plan proposal carries its id in `data`
 // ({ "proposalId": 12, ... }) so it opens that proposal; older ones without it open the list.
 export function notificationHref(item: NotificationItem): string | null {
+  // A lease document notification carries { "documentId": 3 }. /documents/3 sends a landlord or a tenant to their own page for it.
+  try {
+    const documentId = Number(JSON.parse(item.data ?? "{}").documentId);
+    if (Number.isInteger(documentId) && documentId > 0) return `/documents/${documentId}`;
+  } catch {
+    // `data` was not JSON: this is not a document notification.
+  }
+
   if (item.type === PLAN_NOTICE_TYPE) return "/landlord/plan-proposals";
   if (item.type !== PLAN_PROPOSAL_TYPE) return null;
 

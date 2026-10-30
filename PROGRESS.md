@@ -25,6 +25,18 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-10-31 (admin) — Claude (Windows) admin Catalog suggests the two features the backend already checks
+
+- **Why**: online signing stayed off and the tenant could not tell why. The backend does not create the plan features `documents.online_signing` and `leases.renewal_reminders`; the admin had to know and type their keys.
+- **Built**: on `/catalog` in `admin/`, a box "Features the system already checks for" lists each of the two that the catalog does not have yet, with an **Add** button that opens the Add feature popup pre-filled (key, name, description); the admin presses Save, then gives the feature to a plan (Plans, New version) or one landlord (override on the landlord page), and switches the province on under Documents. File: `admin/components/console/catalog-manager.tsx` (`SUGGESTED_FEATURES`; add new backend feature keys there).
+- **Verified**: `tsc` and `eslint` clean in `admin/`; the box shows on the real catalog (it has no features yet). **Not pressed**: Add and Save (they change real catalog data).
+
+## 2026-10-31 (link fix) — Claude (Windows) the link in lease emails opened a 404
+
+- **Found by the owner**: the "lease sent" email links to `{site}/documents/1`, which did not exist (our pages are `/landlord/documents/[id]` and `/tenant/documents/[id]`). The backend builds the link in `Documents/Application/DocumentNotifier.cs` as `Frontend:BaseUrl` + `Documents:DocumentLinkPath` (default `/documents`) + `/{id}`, and puts `{ documentId }` in the notification data.
+- **Fix (frontend only)**: new `app/documents/[id]/page.tsx` sends a signed-in tenant to `/tenant/documents/[id]`, a landlord to `/landlord/documents/[id]`, and a signed-out visitor to `/login?redirect=/documents/[id]` so they land on it after signing in; a non-numeric id goes to the person's home. `lib/notification-target.ts` now opens `/documents/[id]` for any notification whose data has a `documentId`.
+- **Verified**: a signed-in landlord opening `/documents/1` lands on the landlord document page; `tsc` and `eslint` clean. The signed-out redirect also works (307 to `/login?redirect=%2Fdocuments%2F1`). **Not seen**: the tenant redirect. **Deploy note**: the live site (rentmanagement-liard.vercel.app) only gets this after the push is deployed, and it also needs `Frontend:BaseUrl` set on the backend (it is, since the link was produced).
+
 ## 2026-10-31 (parked) — Address autofill: decided to leave it for now
 
 - **Request**: autofill addresses from an official Canadian source in every address form (street, city, province, postal code), with every field still editable. Only the New property and Edit property forms ask for an address today.
