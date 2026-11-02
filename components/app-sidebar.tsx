@@ -2,7 +2,7 @@
 
 // The left menu shared by the landlord and tenant portals: white panel, an accent bar plus tinted background on the active page, a light
 // background on hover, and the slide-in drawer on small screens. Each portal passes its own entries, an optional footer card and an
-// optional note shown under the logo (the landlord's plan).
+// optional note shown at the top of the menu, just under the logo row (the landlord's plan). It is kept out of the logo row so the top bar keeps its height.
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -36,13 +36,10 @@ export function AppSidebar({ homeHref, items, footer, logoNote }: { homeHref: st
           open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"
         }`}
       >
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-5 lg:bg-white">
-          <div className="flex flex-col items-start gap-2.5">
-            <Link href={homeHref}>
-              <Image src="/domuspro-logo.png" alt="DomusPRO" width={150} height={50} priority className="h-auto w-auto" />
-            </Link>
-            {logoNote}
-          </div>
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-6 lg:bg-white">
+          <Link href={homeHref}>
+            <Image src="/domuspro-logo.png" alt="DomusPRO" width={150} height={50} priority className="h-auto w-auto" />
+          </Link>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -56,28 +53,31 @@ export function AppSidebar({ homeHref, items, footer, logoNote }: { homeHref: st
         </div>
 
         <div className="max-lg:flex-1 lg:col-start-1 lg:row-start-2 lg:row-span-2 flex flex-col justify-between lg:overflow-y-auto lg:min-h-0 lg:bg-white">
-          <nav className="flex flex-col gap-1.5 py-3">
-            {items.map((item) => {
-              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3.5 border-l-[3px] px-5 py-3.5 text-sm transition ${
-                    active
-                      ? "border-accent bg-accent-tint font-bold text-accent-dark"
-                      : "border-transparent font-medium text-body hover:bg-subtle hover:text-heading"
-                  }`}
-                >
-                  <svg className={`h-[18px] w-[18px] ${active ? "text-accent" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
-                  </svg>
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <div>
+            {logoNote && <div className="px-6 pt-4">{logoNote}</div>}
+            <nav className="flex flex-col gap-1.5 py-3">
+              {items.map((item) => {
+                const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3.5 border-l-[3px] px-5 py-3.5 text-sm transition ${
+                      active
+                        ? "border-accent bg-accent-tint font-bold text-accent-dark"
+                        : "border-transparent font-medium text-body hover:bg-subtle hover:text-heading"
+                    }`}
+                  >
+                    <svg className={`h-[18px] w-[18px] ${active ? "text-accent" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
+                    </svg>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
           {footer}
         </div>
