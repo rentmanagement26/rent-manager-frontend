@@ -9,7 +9,7 @@ import { BillingCancelDialog } from "@/components/billing-cancel-dialog";
 import { BillingSwitchDialog } from "@/components/billing-switch-dialog";
 import { cardPageAction, checkoutAction } from "@/lib/billing-actions";
 import { money } from "@/lib/billing-format";
-import { offerText } from "@/lib/billing-offer";
+import { offerText, trialLength } from "@/lib/billing-offer";
 import { limitText } from "@/lib/format-time";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, BillingInterval, MyBilling } from "@/lib/types";
@@ -25,8 +25,8 @@ const outlineButton = "w-full rounded-xl border border-default px-4 py-2 text-sm
 export function BillingPlans({ plans, billing }: Props) {
   const router = useRouter();
   const paying = billing?.hasStripeSubscription ?? false;
-  // The trial days a first checkout would give; null when the landlord already used their trial.
-  const trialDays = billing?.trialEligible ? billing.trialDays : null;
+  // The trial months a first checkout would give; null when the landlord already used their trial.
+  const trialMonths = billing?.trialEligible ? billing.trialMonths : null;
 
   const [interval, setInterval] = useState<BillingInterval>(billing?.interval ?? "month");
   const [switchTo, setSwitchTo] = useState<AvailablePlan | null>(null);
@@ -102,7 +102,7 @@ export function BillingPlans({ plans, billing }: Props) {
     if (paying) return <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>Switch to {plan.name}</button>;
     return (
       <button type="button" className={primaryButton} disabled={busyId !== null} onClick={() => pay(plan)}>
-        {busyId === plan.packageId ? "Opening Stripe…" : trialDays ? `Start ${trialDays}-day free trial` : "Subscribe"}
+        {busyId === plan.packageId ? "Opening Stripe…" : trialMonths ? `Start ${trialLength(trialMonths)} free trial` : "Subscribe"}
       </button>
     );
   }
@@ -132,7 +132,7 @@ export function BillingPlans({ plans, billing }: Props) {
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {plans.map((plan) => {
           const price = priceFor(plan);
-          const offer = !plan.isCurrent && price ? offerText(price, trialDays, billing?.priceOverride ?? null, interval) : null;
+          const offer = !plan.isCurrent && price ? offerText(price, trialMonths, billing?.priceOverride ?? null, interval) : null;
           return (
             <div key={plan.packageId} className={`flex flex-col rounded-2xl border p-4 ${plan.isCurrent ? "border-accent ring-1 ring-accent" : "border-default"}`}>
               <p className="text-sm font-semibold text-heading">{plan.name}</p>

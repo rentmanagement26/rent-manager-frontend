@@ -22,10 +22,10 @@ describe("offerText", () => {
     expect(offerText(20, null, null)).toBeNull();
   });
   it("describes a trial", () => {
-    expect(offerText(20, 30, null)).toBe("30 days free, then $20.00/mo");
+    expect(offerText(20, 1, null)).toBe("1 month free, then $20.00/mo");
   });
   it("describes a yearly trial", () => {
-    expect(offerText(220, 30, null, "year")).toBe("30 days free, then $220.00/yr");
+    expect(offerText(220, 1, null, "year")).toBe("1 month free, then $220.00/yr");
   });
   it("describes a limited custom price", () => {
     const over = { kind: "percent_off" as const, monthlyAmount: null, percentOff: 50, months: 6 };

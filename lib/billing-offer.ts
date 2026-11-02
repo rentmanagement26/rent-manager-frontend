@@ -10,11 +10,16 @@ export function priceAfterOverride(planPrice: number, override: MyPriceOverride 
   return Math.round(planPrice * (1 - (override.percentOff ?? 0) / 100) * 100) / 100;
 }
 
-// One sentence such as "30 days free, then $10.00/mo for 6 months, then $20.00/mo", or null when nothing differs from the plain price.
-export function offerText(planPrice: number, trialDays: number | null, override: MyPriceOverride | null, interval: BillingInterval = "month"): string | null {
+// "1 month" or "2 months".
+export function trialLength(months: number): string {
+  return `${months} month${months === 1 ? "" : "s"}`;
+}
+
+// One sentence such as "1 month free, then $10.00/mo for 6 months, then $20.00/mo", or null when nothing differs from the plain price.
+export function offerText(planPrice: number, trialMonths: number | null, override: MyPriceOverride | null, interval: BillingInterval = "month"): string | null {
   const price = priceAfterOverride(planPrice, override, interval);
   let text: string;
-  if (trialDays) text = `${trialDays} days free, then ${pricePer(price, interval)}`;
+  if (trialMonths) text = `${trialLength(trialMonths)} free, then ${pricePer(price, interval)}`;
   else if (override) text = pricePer(price, interval);
   else return null;
 

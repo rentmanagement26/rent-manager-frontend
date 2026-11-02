@@ -32,6 +32,11 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-03 (trial) — Claude (Windows) free trial is now one calendar month
+
+- **Backend** (`c4abc72`): `Stripe:TrialDays` replaced by `Stripe:TrialMonths` (default 1); a new landlord's trial ends the same day of the next month (3 Nov to 3 Dec). `GET /billing` returns `trialMonths` and still `trialDays` (28 to 31, for older screens).
+- **Frontend**: the Billing page reads `trialMonths` and says "Start 1-month free trial" and "1 month free, then $20.00/mo" (`lib/billing-offer.ts` `trialLength`, `components/billing-plans.tsx`, `lib/types.ts`, tests updated). **Live check (before this change)**: a new landlord's Stripe checkout showed 30 days free, then CA$20.00 a month from Dec 2, with the email prefilled; monthly and yearly both worked.
+
 ## 2026-11-03 (part 3 and 4) — Claude (Windows) Billing page rebuilt for switching, cancelling and yearly; admin yearly price and Refund card (mock-ups approved first)
 
 - **Backend** (`135f4af`, `dbd096b`): checkout takes `interval` (month or year) and answers 409 `has_subscription` for a landlord who already pays; `POST /billing/change-preview` and `/change` switch plan in place (upgrade now with proration and the difference charged to the saved card, 402 `payment_failed` if it fails; a lower plan waits for the end of the period unless timing is now; a booked change is dropped with `/pending-change/cancel`); `GET /billing/cancel-options`, `POST /cancel { refund }` (refund only within 7 days of the last payment, cancels now), `/cancel/undo`; `POST /billing/payment-method` (Stripe card page); `GET /billing` also returns `interval`, `cancelAtPeriodEnd`, `pendingPackageId`, `pendingChangeAt`, `refundWindowDays`. Admin: `PUT .../stripe-price` takes a yearly price too (empty string removes it), `GET .../billing/last-payment`, `POST .../billing/refund` (permission `billing.refund`, audited, emails the landlord). A limited custom price keeps only its remaining months on a plan change. **Migration `YearlyPricesAndBillingState` must be applied to Neon.**

@@ -281,9 +281,9 @@ export interface MyBilling {
   status: string | null; // from Stripe: trialing, active, past_due...
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
-  // True when paying for a plan now would start a free trial of `trialDays` days.
+  // True when paying for a plan now would start a free trial of `trialMonths` calendar months (3 Nov to 3 Dec).
   trialEligible: boolean;
-  trialDays: number;
+  trialMonths: number;
   // A custom price an admin gave this landlord, or null.
   priceOverride: MyPriceOverride | null;
   // How they are billed now, whether the plan ends at the end of the period, a lower plan booked for the end of the period,
