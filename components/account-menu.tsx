@@ -33,17 +33,21 @@ export function AccountMenu({ email, role, plan }: AccountMenuProps) {
 
     return (
     <div className="flex items-center gap-2 sm:gap-4">
-      {/* The plan badge (Pro, Max or Free) sits beside the role label and opens the plan details under Settings. */}
-      {plan && (
-        <Link
-          href="/landlord/settings#subscription"
-          title="Your plan"
-          className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full ${plan.paid ? "bg-accent-tint text-accent-dark" : "bg-subtle text-body"}`}
-        >
-          {planLabel}
+      {/* The role badge with the plan (Pro, Max or Free) as a small raised tag on its top-right corner. It opens the plan details under Settings. */}
+      {plan ? (
+        <Link href="/landlord/settings#subscription" title="Your plan" className="relative mr-3 hidden sm:inline-flex">
+          <span className="inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
+          <span
+            className={`absolute -right-3 -top-2 rounded-full px-1.5 py-px text-[10px] font-extrabold leading-4 tracking-wide ring-2 ring-slate-50 ${
+              plan.paid ? "bg-accent text-white" : "bg-slate-200 text-slate-600"
+            }`}
+          >
+            {planLabel}
+          </span>
         </Link>
+      ) : (
+        <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
       )}
-      <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
       {/* Upgrade is only offered on the free plan. */}
       {!plan?.paid && (
         <Link

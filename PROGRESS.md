@@ -32,10 +32,15 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-03 (navigation) — Claude (Windows) Back button and breadcrumbs on nested pages
+
+- **Owner request**: navigation was not easy. Every nested page in the landlord and tenant portals now has a **Back** button (to the parent page) and breadcrumbs above the title, for example Dashboard > Properties > Property > (this unit). The trail is worked out from the page address (`lib/breadcrumb-trail.ts` + `tests/breadcrumb-trail.test.ts`): units sit under their property, leases (`/landlord/tenancies/<id>`) and lease documents under **Leases**, reminder settings under Renewals, tenant documents under Documents. Top-level pages (Dashboard, Billing, Settings, lists) show nothing. `components/breadcrumbs.tsx` is shown in the landlord top bar (`components/page-header-slot.tsx`, with the page title as the last item) and above the content in the tenant layout (tenant pages draw their own heading, so no title there). Parent labels are generic ("Property", "Unit", "Lease") because the parent's name is not known on the child page.
+- **Verified**: `tsc` and `eslint` clean, tests pass. **Not seen live yet.**
+
 ## 2026-11-03 (settings and header) — Claude (Windows) plan badge in the top bar, plan details and Manage subscription moved to Settings
 
 - **Owner request**: Manage subscription and plan details belong under Settings, not the Billing page or the sidebar, and the top-right "Landlord" label should show the plan.
-- **Top bar** (`components/account-menu.tsx`, `lib/header-plan.ts`, `app/landlord/layout.tsx`): a plan badge, **Pro** or **Max** (orange tint) or **Free** (grey), sits beside the "Landlord" label (both stay) and links to Settings; if the plan cannot be read only the role label shows. The Upgrade button shows only on the free plan; the menu shows "<role> · <plan> plan".
+- **Top bar** (`components/account-menu.tsx`, `lib/header-plan.ts`, `app/landlord/layout.tsx`): the "Landlord" badge stays and the plan (**Pro** or **Max** in orange, **Free** in grey) is a small raised tag on its top-right corner, like a superscript; the badge links to Settings; if the plan cannot be read only the role label shows. The Upgrade button shows only on the free plan; the menu shows "<role> · <plan> plan".
 - **Sidebar**: the plan card at the bottom is removed (both the Upgrade and Your plan cards).
 - **Settings** (`app/landlord/settings/page.tsx`): new **Plan and billing** section (`#subscription`): the status banner (trial, ends, booked change, payment failed), the plan summary card (`components/plan-summary-card.tsx`, shared with Billing; `lib/plan-summary.ts`), Change plan / See plans, and for a paying landlord **Manage subscription** (`components/settings/manage-subscription.tsx`: Update card, Cancel plan or refund, with the receipt card after a cancellation). Security settings stay below.
 - **Billing page**: the Manage subscription box and the cancel popup are gone from it; the free-plan card shows "Cancel in Settings" to a paying landlord; the payment-failed banner links to Settings.
