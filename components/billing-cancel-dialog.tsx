@@ -6,14 +6,16 @@ import { useEffect, useState } from "react";
 import { BillingDialog, ChoiceRow, ghostButton } from "@/components/billing-dialog";
 import { cancelAction, cancelOptionsAction } from "@/lib/billing-actions";
 import { dayText, money } from "@/lib/billing-format";
+import { cancelReceipt } from "@/lib/billing-receipt";
+import type { Receipt } from "@/lib/billing-receipt";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { CancelOptions } from "@/lib/types";
 
 interface Props {
   currentName: string;
   onClose: () => void;
-  // Called after a successful cancellation, with a sentence for the Billing page to show.
-  onDone: (message: string) => void;
+  // Called after a successful cancellation, with the receipt for the Billing page to show.
+  onDone: (receipt: Receipt) => void;
 }
 
 export function BillingCancelDialog({ currentName, onClose, onDone }: Props) {
@@ -49,14 +51,7 @@ export function BillingCancelDialog({ currentName, onClose, onDone }: Props) {
       setError(result.error);
       return;
     }
-    const done = result.result;
-    onDone(
-      done.mode === "refunded"
-        ? `Your plan is cancelled and ${money(done.refundAmount)} is on its way back to your card.`
-        : done.mode === "at_period_end"
-          ? `Your plan ends on ${done.accessUntil ? dayText(done.accessUntil) : "the end of the period"}. You keep ${currentName} until then.`
-          : "Your trial is cancelled. You won't be charged.",
-    );
+    onDone(cancelReceipt({ planName: currentName, result: result.result }));
   }
 
   const canCancel = options?.hasSubscription && !options.alreadyCancelling;

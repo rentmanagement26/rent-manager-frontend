@@ -5,6 +5,7 @@ import { SessionExpiredError } from "@/lib/api-error";
 import type {
   AvailablePlan,
   BillingChangeAnswer,
+  BillingChangeResult,
   BillingInterval,
   BillingTiming,
   CancelOptions,
@@ -79,8 +80,9 @@ export async function previewBillingChange(token: string, packageId: number, int
 
 // Makes the change the preview showed. An upgrade happens now and the difference is charged to the saved card; a lower plan waits
 // for the end of the paid period unless timing is "now".
-export async function changeBillingPlan(token: string, packageId: number, interval: BillingInterval, timing: BillingTiming): Promise<void> {
-  await post("/change", token, { PackageId: packageId, Interval: interval, Timing: timing }, "Couldn't change your plan. Please try again.");
+export async function changeBillingPlan(token: string, packageId: number, interval: BillingInterval, timing: BillingTiming): Promise<BillingChangeResult> {
+  const response = await post("/change", token, { PackageId: packageId, Interval: interval, Timing: timing }, "Couldn't change your plan. Please try again.");
+  return response.json();
 }
 
 // Drops a lower plan that was booked for the end of the period.

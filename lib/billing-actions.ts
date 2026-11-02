@@ -14,7 +14,7 @@ import {
   startCheckout,
   undoCancel,
 } from "@/lib/billing-api";
-import type { ActionFailure, BillingChangeAnswer, BillingInterval, BillingTiming, CancelOptions, CancelResult } from "@/lib/types";
+import type { ActionFailure, BillingChangeAnswer, BillingChangeResult, BillingInterval, BillingTiming, CancelOptions, CancelResult } from "@/lib/types";
 
 function failure(err: unknown, fallback: string): ActionFailure {
   if (err instanceof SessionExpiredError) return { error: err.message, expired: true };
@@ -48,13 +48,12 @@ export async function previewChangeAction(packageId: number, interval: string): 
   }
 }
 
-// Confirms the switch the preview showed.
-export async function changeAction(packageId: number, interval: string, timing: string): Promise<{ ok: true } | ActionFailure> {
+// Confirms the switch the preview showed and returns the figures for the receipt.
+export async function changeAction(packageId: number, interval: string, timing: string): Promise<{ ok: true; result: BillingChangeResult } | ActionFailure> {
   const session = await requireBackendToken(["Landlord"]);
 
   try {
-    await changeBillingPlan(session.backendToken, Number(packageId), intervalOf(interval), timingOf(timing));
-    return { ok: true };
+    return { ok: true, result: await changeBillingPlan(session.backendToken, Number(packageId), intervalOf(interval), timingOf(timing)) };
   } catch (err) {
     return failure(err, "Couldn't change your plan. Please try again.");
   }

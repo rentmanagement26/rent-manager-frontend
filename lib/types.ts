@@ -369,6 +369,14 @@ export interface CancelOptions {
   refundWindowDays: number;
 }
 
+// POST /billing/change answers what was done: now or booked for the end of the period, and the same figures the preview showed.
+export interface BillingChangeResult {
+  applied: boolean;
+  timing: BillingTiming;
+  effectiveAt: string | null;
+  preview: BillingChangePreview;
+}
+
 // POST /billing/cancel: at_period_end (they keep the plan until accessUntil), now (a trial ended) or refunded.
 export interface CancelResult {
   mode: "at_period_end" | "now" | "refunded";

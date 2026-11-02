@@ -7,17 +7,10 @@ import { useEffect, useState } from "react";
 import { AmountRow, BillingDialog, ChoiceRow, ghostButton, primaryButton } from "@/components/billing-dialog";
 import { changeAction, previewChangeAction } from "@/lib/billing-actions";
 import { dayText, money, pricePer } from "@/lib/billing-format";
+import { changeReceipt, nextPaymentLabel } from "@/lib/billing-receipt";
+import type { Receipt } from "@/lib/billing-receipt";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, BillingChangePreview, BillingInterval, BillingTiming } from "@/lib/types";
-
-// "First payment, Dec 2, 2026" after a trial, "Next payment, Dec 2, 2026" when the billing period stays the same, or "Then each year"
-// when the plan moves between monthly and yearly (the new period starts today, so the end of the old one is not the next payment).
-function nextPaymentLabel(preview: BillingChangePreview): string {
-  if (preview.inTrial && preview.trialEndsAt) return `First payment, ${dayText(preview.trialEndsAt)}`;
-  const sameInterval = preview.current?.interval === preview.target?.interval;
-  if (sameInterval && preview.periodEnd) return `Next payment, ${dayText(preview.periodEnd)}`;
-  return preview.target?.interval === "year" ? "Then each year" : "Then each month";
-}
 
 interface Props {
   plan: AvailablePlan;
@@ -25,11 +18,13 @@ interface Props {
   // The name of the plan they are on now, for the wording.
   currentName: string;
   onClose: () => void;
-  // Called after a successful change, with a sentence for the Billing page to show.
-  onDone: (message: string) => void;
+  // How many days after a payment the landlord may cancel for a full refund (for the receipt's refund line).
+  refundWindowDays: number;
+  // Called after a successful change, with the receipt for the Billing page to show.
+  onDone: (receipt: Receipt) => void;
 }
 
-export function BillingSwitchDialog({ plan, interval, currentName, onClose, onDone }: Props) {
+export function BillingSwitchDialog({ plan, interval, currentName, refundWindowDays, onClose, onDone }: Props) {
   const [preview, setPreview] = useState<BillingChangePreview | null>(null);
   const [timing, setTiming] = useState<BillingTiming>("now");
   const [busy, setBusy] = useState(false);
@@ -67,7 +62,7 @@ export function BillingSwitchDialog({ plan, interval, currentName, onClose, onDo
       setError(result.error);
       return;
     }
-    onDone(timing === "now" ? `You're now on ${plan.name}.` : `Your plan changes to ${plan.name} on ${dayText(preview?.atPeriodEnd?.effectiveAt ?? "")}.`);
+    onDone(changeReceipt({ fromName: currentName, toName: plan.name, result: result.result, refundWindowDays }));
   }
 
   return (
