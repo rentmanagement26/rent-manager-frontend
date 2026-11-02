@@ -88,7 +88,8 @@ export function BillingPlans({ plans, billing }: Props) {
     const isCurrent = plan.isCurrent;
     const paid = plan.monthlyPrice > 0;
 
-    if (isCurrent && paying && billing?.interval && billing.interval !== interval && price !== null) {
+    // A paying landlord whose period is not recorded yet is billed monthly.
+    if (isCurrent && paying && (billing?.interval ?? "month") !== interval && price !== null) {
       return (
         <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>
           Switch to {interval === "year" ? "yearly" : "monthly"} billing

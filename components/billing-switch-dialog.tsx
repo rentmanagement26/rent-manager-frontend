@@ -10,6 +10,15 @@ import { dayText, money, pricePer } from "@/lib/billing-format";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, BillingChangePreview, BillingInterval, BillingTiming } from "@/lib/types";
 
+// "First payment, Dec 2, 2026" after a trial, "Next payment, Dec 2, 2026" when the billing period stays the same, or "Then each year"
+// when the plan moves between monthly and yearly (the new period starts today, so the end of the old one is not the next payment).
+function nextPaymentLabel(preview: BillingChangePreview): string {
+  if (preview.inTrial && preview.trialEndsAt) return `First payment, ${dayText(preview.trialEndsAt)}`;
+  const sameInterval = preview.current?.interval === preview.target?.interval;
+  if (sameInterval && preview.periodEnd) return `Next payment, ${dayText(preview.periodEnd)}`;
+  return preview.target?.interval === "year" ? "Then each year" : "Then each month";
+}
+
 interface Props {
   plan: AvailablePlan;
   interval: BillingInterval;
@@ -105,12 +114,7 @@ export function BillingSwitchDialog({ plan, interval, currentName, onClose, onDo
               {preview.now.creditForUnusedTime > 0 && <AmountRow label={`Credit for unused ${currentName} time (${preview.daysLeft} days)`} value={`-${money(preview.now.creditForUnusedTime)}`} />}
               {preview.now.chargeForRemainingTime > 0 && <AmountRow label={`${plan.name} for the rest of this period`} value={money(preview.now.chargeForRemainingTime)} />}
               <AmountRow label="Charged today to your saved card" value={money(preview.now.dueToday)} strong />
-              {preview.target && (
-                <AmountRow
-                  label={preview.inTrial && preview.trialEndsAt ? `First payment, ${dayText(preview.trialEndsAt)}` : preview.periodEnd ? `Next payment, ${dayText(preview.periodEnd)}` : "Then"}
-                  value={pricePer(preview.target.amount, preview.target.interval)}
-                />
-              )}
+              {preview.target && <AmountRow label={nextPaymentLabel(preview)} value={pricePer(preview.target.amount, preview.target.interval)} />}
               {!preview.inTrial && preview.isIncrease && <p className="mt-2 text-xs text-muted">Your plan changes right away. If your card is declined, nothing changes.</p>}
             </div>
           )}
