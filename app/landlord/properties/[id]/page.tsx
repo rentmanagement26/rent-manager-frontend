@@ -34,18 +34,7 @@ export default async function PropertyDetailPage({
 
   return (
     <div>
-          <PageHeader
-        title={property.name}
-        description={property.propertyType}
-        action={
-          <Link
-            href={`/landlord/properties/${property.id}/edit`}
-            className="rounded-xl border border-default px-4 py-2.5 text-sm font-semibold text-heading hover:bg-subtle whitespace-nowrap"
-          >
-            Edit
-          </Link>
-        }
-      />
+      <PageHeader title={property.name} description={property.propertyType} />
 
       {unitArchived === "1" && (
         <p className="mb-4 rounded-lg bg-green-50 px-3 py-2.5 text-sm font-medium text-green-700">
@@ -138,10 +127,10 @@ export default async function PropertyDetailPage({
 
           <div className="mt-6 pt-5 border-t border-default">
             <Link
-              href="/landlord/properties"
+              href={`/landlord/properties/${property.id}/edit`}
               className="block rounded-lg border border-default px-4 py-2.5 text-sm font-medium text-heading text-center hover:bg-subtle"
             >
-              Back to properties
+              Edit property
             </Link>
           </div>
         </div>

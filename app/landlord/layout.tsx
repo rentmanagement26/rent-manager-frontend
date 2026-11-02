@@ -12,14 +12,14 @@ import { getHeaderPlan } from "@/lib/header-plan";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth(["Admin", "Landlord"]);
   const role = session.role || "Landlord";
-  // The plan badge in the top bar (Pro, Max or Free); a failure just shows the plain role label.
+  // The plan chip under the logo (and the Upgrade button on the free plan); a failure just hides the chip.
   const plan = await getHeaderPlan(session.backendToken);
 
   return (
     <SidebarProvider>
       <PageHeaderProvider>
         <div className="flex min-h-screen flex-col lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
-          <LandlordSidebar />
+          <LandlordSidebar plan={plan} />
 
           <div className="hidden lg:flex lg:col-start-2 lg:row-start-1 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-8">
             <div className="min-w-0 flex-1">

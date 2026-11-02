@@ -1,7 +1,8 @@
 "use client";
 
 // The left menu shared by the landlord and tenant portals: white panel, an accent bar plus tinted background on the active page, a light
-// background on hover, and the slide-in drawer on small screens. Each portal passes its own entries and an optional footer card.
+// background on hover, and the slide-in drawer on small screens. Each portal passes its own entries, an optional footer card and an
+// optional note shown under the logo (the landlord's plan).
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,7 +18,7 @@ export interface SidebarItem {
   icon: string;
 }
 
-export function AppSidebar({ homeHref, items, footer }: { homeHref: string; items: SidebarItem[]; footer?: ReactNode }) {
+export function AppSidebar({ homeHref, items, footer, logoNote }: { homeHref: string; items: SidebarItem[]; footer?: ReactNode; logoNote?: ReactNode }) {
   const { open, setOpen } = useSidebar();
   const pathname = usePathname();
 
@@ -35,10 +36,13 @@ export function AppSidebar({ homeHref, items, footer }: { homeHref: string; item
           open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"
         }`}
       >
-        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-6 lg:bg-white">
-          <Link href={homeHref}>
-            <Image src="/domuspro-logo.png" alt="DomusPRO" width={150} height={50} priority className="h-auto w-auto" />
-          </Link>
+        <div className="lg:col-start-1 lg:row-start-1 lg:h-full flex items-center justify-between px-6 py-5 lg:bg-white">
+          <div className="flex flex-col items-start gap-2.5">
+            <Link href={homeHref}>
+              <Image src="/domuspro-logo.png" alt="DomusPRO" width={150} height={50} priority className="h-auto w-auto" />
+            </Link>
+            {logoNote}
+          </div>
           <button
             type="button"
             onClick={() => setOpen(false)}

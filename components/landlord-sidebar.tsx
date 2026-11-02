@@ -1,7 +1,9 @@
 "use client";
 
-// The landlord's menu entries, on top of the shared sidebar. Plan details live under Settings and the plan badge is in the top bar.
+// The landlord's menu entries, on top of the shared sidebar, with the plan chip under the logo. Plan details live under Settings.
+import Link from "next/link";
 import { AppSidebar, type SidebarItem } from "@/components/app-sidebar";
+import type { HeaderPlan } from "@/lib/header-plan";
 
 // Where each entry goes, which paths count as "on this page", and the icon drawing.
 const NAV_ITEMS: SidebarItem[] = [
@@ -43,6 +45,38 @@ const NAV_ITEMS: SidebarItem[] = [
   },
 ];
 
-export function LandlordSidebar() {
-  return <AppSidebar homeHref="/landlord" items={NAV_ITEMS} />;
+// The plan under the logo: an orange "Pro plan" or "Max plan" chip with a crown for a paid plan, a grey "Free plan" chip with an Upgrade link
+// for the free plan. It opens the plan details under Settings (or the plans on Billing for the free plan). Nothing is shown if the plan
+// could not be read.
+function PlanChip({ plan }: { plan: HeaderPlan | null }) {
+  if (!plan) return null;
+  if (plan.paid) {
+    return (
+      <Link
+        href="/landlord/settings#subscription"
+        title="Your plan"
+        className="inline-flex items-center gap-1.5 rounded-full bg-accent-tint px-2.5 py-1 text-[11px] font-bold text-accent-dark transition hover:bg-orange-100"
+      >
+        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M2.5 6l3 2 4.5-5 4.5 5 3-2-1.5 9h-12L2.5 6z" />
+        </svg>
+        {plan.name} plan
+      </Link>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-2 text-[11px] font-semibold">
+      <Link href="/landlord/settings#subscription" title="Your plan" className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-body transition hover:bg-slate-200">
+        Free plan
+      </Link>
+      <Link href="/landlord/billing" className="text-accent hover:text-accent-dark">
+        Upgrade
+      </Link>
+    </span>
+  );
+}
+
+// `plan` is null when it could not be read.
+export function LandlordSidebar({ plan }: { plan: HeaderPlan | null }) {
+  return <AppSidebar homeHref="/landlord" items={NAV_ITEMS} logoNote={<PlanChip plan={plan} />} />;
 }
