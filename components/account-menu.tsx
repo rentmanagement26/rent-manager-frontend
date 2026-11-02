@@ -33,18 +33,17 @@ export function AccountMenu({ email, role, plan }: AccountMenuProps) {
 
     return (
     <div className="flex items-center gap-2 sm:gap-4">
-      {/* The plan badge (Pro, Max or Free) takes the place of the role label; it opens the plan details under Settings. */}
-      {plan ? (
+      {/* The plan badge (Pro, Max or Free) sits beside the role label and opens the plan details under Settings. */}
+      {plan && (
         <Link
           href="/landlord/settings#subscription"
           title="Your plan"
-          className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full ${plan.paid ? "bg-accent-tint text-accent-dark" : "bg-brand-green-tint text-brand-green-dark"}`}
+          className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full ${plan.paid ? "bg-accent-tint text-accent-dark" : "bg-subtle text-body"}`}
         >
           {planLabel}
         </Link>
-      ) : (
-        <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
       )}
+      <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
       {/* Upgrade is only offered on the free plan. */}
       {!plan?.paid && (
         <Link
