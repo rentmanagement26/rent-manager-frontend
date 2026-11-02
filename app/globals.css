@@ -41,3 +41,17 @@ body {
   color: var(--heading);
   font-family: var(--font-jakarta), system-ui, sans-serif;
 }
+
+/* Landing page motion: product cards that drift gently, and a pulsing dot. Switched off for visitors who prefer less motion. */
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes landing-pulse {
+  50% { opacity: 0.35; }
+}
+.landing-float { animation: landing-float 6s ease-in-out infinite; }
+.landing-pulse { animation: landing-pulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-float, .landing-pulse { animation: none; }
+}

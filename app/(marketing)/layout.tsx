@@ -9,7 +9,7 @@ export default function MarketingLayout({
   return (
     <>
       <SiteHeader />
-      {children}
+      <div className="flex flex-1 flex-col">{children}</div>
       <SiteFooter />
     </>
   );

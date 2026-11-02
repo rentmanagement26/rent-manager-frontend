@@ -45,7 +45,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       <PageHeader title="Billing" description="See your plan and change it." />
 
       {checkout === "cancelled" && (
-        <div className="max-w-4xl rounded-2xl border border-default bg-subtle p-4 text-sm text-body">You didn&apos;t complete the payment. Your plan hasn&apos;t changed.</div>
+        <div className="max-w-5xl rounded-2xl border border-default bg-subtle p-4 text-sm text-body">You didn&apos;t complete the payment. Your plan hasn&apos;t changed.</div>
       )}
 
       {failed || !subscription ? (
@@ -59,7 +59,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
           {billing && <BillingBanner billing={billing} currentName={subscription.packageName ?? "your plan"} pendingName={pendingName} currentPrice={currentPrice} />}
 
-          <div className="max-w-4xl rounded-2xl border border-default bg-white p-6 shadow-sm">
+          <div className="max-w-5xl rounded-2xl border border-default bg-white p-6 shadow-sm">
             {subscription.hasPlan ? (
               <>
                 <div className="flex items-baseline justify-between gap-3">

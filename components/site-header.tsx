@@ -10,8 +10,11 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-6">
-          <Link href="#features" className="text-sm font-medium text-body hover:text-heading">
+          <Link href="/#features" className="text-sm font-medium text-body hover:text-heading">
             Features
+          </Link>
+          <Link href="/pricing" className="text-sm font-medium text-body hover:text-heading">
+            Pricing
           </Link>
           <Link
             href="/login"

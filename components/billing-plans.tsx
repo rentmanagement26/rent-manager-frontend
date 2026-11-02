@@ -1,16 +1,23 @@
 "use client";
 
-// The "Change plan" section of the Billing page: a monthly/yearly toggle and one card per plan. What a card's button does depends on
-// the landlord: no paid plan yet -> Stripe checkout (with the free trial if they are eligible); already paying -> the Switch popup
-// (cost preview first); a free plan while paying -> the Cancel popup. Also holds the Update card and Cancel plan links.
+// The "Change plan" section of the Billing page: a monthly/yearly toggle and one card per plan (the same cards as the public pricing page),
+// then the AI panel and the collapsed feature comparison. What a card's button does depends on the landlord: no paid plan yet -> Stripe
+// checkout (with the free trial if they are eligible); already paying -> the Switch popup (cost preview first); a free plan while
+// paying -> the Cancel popup. Also holds the Update card and Cancel plan links.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BillingCancelDialog } from "@/components/billing-cancel-dialog";
 import { BillingSwitchDialog } from "@/components/billing-switch-dialog";
+import { AiSection } from "@/components/pricing/ai-section";
+import { IntervalToggle } from "@/components/pricing/interval-toggle";
+import { PlanCard } from "@/components/pricing/plan-card";
+import { PlanComparison } from "@/components/pricing/plan-comparison";
 import { cardPageAction, checkoutAction } from "@/lib/billing-actions";
 import { money } from "@/lib/billing-format";
 import { offerText, trialLength } from "@/lib/billing-offer";
 import { limitText } from "@/lib/format-time";
+import { copyFor } from "@/lib/pricing-content";
+import { yearlyPerMonth, yearlySaving } from "@/lib/pricing-math";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, BillingInterval, MyBilling } from "@/lib/types";
 
@@ -19,14 +26,16 @@ interface Props {
   billing: MyBilling | null;
 }
 
-const primaryButton = "w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60";
-const outlineButton = "w-full rounded-xl border border-default px-4 py-2 text-sm font-semibold text-body hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-60";
+const buttonBase = "block w-full rounded-[14px] border-[1.5px] px-4 py-3 text-center text-[13.5px] font-bold disabled:cursor-not-allowed disabled:opacity-60";
+const primaryButton = `${buttonBase} border-accent bg-accent text-white shadow-[0_8px_20px_-8px_rgba(217,96,31,0.75)] hover:bg-accent-dark`;
+const outlineButton = `${buttonBase} border-default bg-white text-heading hover:border-accent hover:text-accent-dark`;
 
 export function BillingPlans({ plans, billing }: Props) {
   const router = useRouter();
   const paying = billing?.hasStripeSubscription ?? false;
   // The trial months a first checkout would give; null when the landlord already used their trial.
   const trialMonths = billing?.trialEligible ? billing.trialMonths : null;
+  const override = billing?.priceOverride ?? null;
 
   const [interval, setInterval] = useState<BillingInterval>(billing?.interval ?? "month");
   const [switchTo, setSwitchTo] = useState<AvailablePlan | null>(null);
@@ -36,10 +45,12 @@ export function BillingPlans({ plans, billing }: Props) {
   const [notice, setNotice] = useState("");
 
   const current = plans.find((plan) => plan.isCurrent);
+  const currentCopy = current ? copyFor(current.name) : null;
   // Yearly is only offered once the backend says which plans have a yearly price.
   const yearlyAvailable = plans.some((plan) => plan.monthlyPrice > 0 && plan.yearlyPrice != null);
+  const maxSaving = Math.max(0, ...plans.map((plan) => (plan.yearlyPrice != null ? (plan.yearlySavings ?? yearlySaving(plan.monthlyPrice, plan.yearlyPrice)) : 0)));
 
-  // The price a card shows for the chosen billing period; null when the plan is not sold that way.
+  // The price a card charges for the chosen billing period; null when the plan is not sold that way.
   function priceFor(plan: AvailablePlan): number | null {
     if (plan.monthlyPrice === 0) return 0;
     return interval === "year" ? (plan.yearlyPrice ?? null) : plan.monthlyPrice;
@@ -84,73 +95,73 @@ export function BillingPlans({ plans, billing }: Props) {
   }
 
   // The button of one card, following the rules in the file comment.
-  function cardButton(plan: AvailablePlan, price: number | null) {
-    const isCurrent = plan.isCurrent;
+  function cardButton(plan: AvailablePlan, price: number | null, popular: boolean) {
     const paid = plan.monthlyPrice > 0;
 
     // A paying landlord whose period is not recorded yet is billed monthly.
-    if (isCurrent && paying && (billing?.interval ?? "month") !== interval && price !== null) {
+    if (plan.isCurrent && paying && (billing?.interval ?? "month") !== interval && price !== null) {
       return (
         <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>
           Switch to {interval === "year" ? "yearly" : "monthly"} billing
         </button>
       );
     }
-    if (isCurrent) return <p className="text-center text-xs font-semibold text-muted">Current plan</p>;
+    if (plan.isCurrent) return <p className="py-3 text-center text-[13px] font-bold text-muted">Your current plan</p>;
     if (!paid) return paying ? <button type="button" className={outlineButton} onClick={() => setCancelling(true)}>Cancel plan</button> : null;
-    if (price === null) return <p className="text-center text-xs text-muted">Not sold yearly</p>;
-    if (paying) return <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>Switch to {plan.name}</button>;
+    if (price === null) return <p className="py-3 text-center text-[13px] text-muted">Not sold yearly</p>;
+    if (paying) {
+      return (
+        <button type="button" className={popular ? primaryButton : outlineButton} onClick={() => setSwitchTo(plan)}>
+          Switch to {plan.name}
+        </button>
+      );
+    }
     return (
-      <button type="button" className={primaryButton} disabled={busyId !== null} onClick={() => pay(plan)}>
-        {busyId === plan.packageId ? "Opening Stripe…" : trialMonths ? `Start ${trialLength(trialMonths)} free trial` : "Subscribe"}
+      <button type="button" className={popular ? primaryButton : outlineButton} disabled={busyId !== null} onClick={() => pay(plan)}>
+        {busyId === plan.packageId ? "Opening Stripe…" : trialMonths ? `Start ${trialMonths}-month free trial` : "Subscribe"}
       </button>
     );
   }
 
   return (
-    <div className="max-w-4xl rounded-2xl border border-default bg-white p-6 shadow-sm">
+    <div className="max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-heading">Change plan</h2>
-
-        {yearlyAvailable && (
-          <div className="inline-flex rounded-full border border-default p-0.5 text-xs font-semibold" role="group" aria-label="Billing period">
-            {(["month", "year"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={interval === option}
-                onClick={() => setInterval(option)}
-                className={`rounded-full px-3 py-1.5 ${interval === option ? "bg-accent-tint text-accent" : "text-muted hover:text-heading"}`}
-              >
-                {option === "month" ? "Monthly" : "Yearly"}
-              </button>
-            ))}
-          </div>
-        )}
+        {yearlyAvailable && <IntervalToggle value={interval} onChange={setInterval} maxSaving={maxSaving || null} />}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         {plans.map((plan) => {
+          const copy = copyFor(plan.name);
           const price = priceFor(plan);
-          const offer = !plan.isCurrent && price ? offerText(price, trialMonths, billing?.priceOverride ?? null, interval) : null;
+          const paid = plan.monthlyPrice > 0;
+          const yearly = interval === "year" && plan.yearlyPrice != null;
+          const saving = plan.yearlyPrice != null ? (plan.yearlySavings ?? yearlySaving(plan.monthlyPrice, plan.yearlyPrice)) : 0;
+          const popular = !!copy?.popular;
+          const custom = !plan.isCurrent && paid && price ? offerText(price, null, override, interval) : null;
           return (
-            <div key={plan.packageId} className={`flex flex-col rounded-2xl border p-4 ${plan.isCurrent ? "border-accent ring-1 ring-accent" : "border-default"}`}>
-              <p className="text-sm font-semibold text-heading">{plan.name}</p>
-              <p className="mt-1 text-2xl font-semibold text-heading">
-                {price === null ? "—" : price === 0 ? "$0" : money(price)}
-                {price ? <span className="text-xs font-normal text-muted">{interval === "year" ? "/year" : "/month"}</span> : null}
-              </p>
-              <p className="mt-1 text-xs text-muted">{plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}</p>
-              {interval === "year" && plan.yearlySavings ? <p className="mt-1 text-xs font-semibold text-green-700">Save {money(plan.yearlySavings)} a year</p> : null}
-              <p className="mb-3 mt-1 min-h-4 text-xs font-semibold text-accent">{offer}</p>
-              <div className="mt-auto">{cardButton(plan, price)}</div>
-            </div>
+            <PlanCard
+              key={plan.packageId}
+              name={plan.name}
+              tagline={copy?.tagline ?? ""}
+              highlights={copy?.highlights ?? plan.limits.map((limit) => limitText(limit.value, limit.displayName))}
+              popular={popular}
+              current={plan.isCurrent}
+              price={!paid ? "$0" : yearly ? money(yearlyPerMonth(plan.yearlyPrice ?? 0)) : money(plan.monthlyPrice)}
+              billingNote={!paid ? "Free plan" : yearly ? `Billed yearly at ${money(plan.yearlyPrice ?? 0)}` : interval === "year" ? "Monthly billing only" : "Billed monthly"}
+              trialLabel={!plan.isCurrent && paid && trialMonths ? `${trialLength(trialMonths)} free` : null}
+              savingLabel={paid && saving > 0 ? (yearly ? `Save ${money(saving)} a year` : `Save ${money(saving)} with yearly`) : null}
+              onSwitchToYearly={paid && !yearly && saving > 0 ? () => setInterval("year") : undefined}
+              extraNote={custom ? `Your custom price: ${custom}` : null}
+            >
+              {cardButton(plan, price, popular)}
+            </PlanCard>
           );
         })}
       </div>
 
       {paying && (
-        <div className="mt-4 flex flex-wrap gap-4 border-t border-default pt-3 text-sm">
+        <div className="flex flex-wrap gap-4 text-sm">
           <button type="button" onClick={openCardPage} disabled={busyId !== null} className="font-semibold text-accent hover:text-accent-dark disabled:opacity-60">
             {busyId === "card" ? "Opening…" : "Update card"}
           </button>
@@ -162,8 +173,11 @@ export function BillingPlans({ plans, billing }: Props) {
         </div>
       )}
 
-      {notice && <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">{notice}</p>}
-      {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</p>}
+      {notice && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">{notice}</p>}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</p>}
+
+      <AiSection highlight={currentCopy?.key} />
+      <PlanComparison />
 
       {switchTo && <BillingSwitchDialog plan={switchTo} interval={interval} currentName={current?.name ?? "your plan"} onClose={() => setSwitchTo(null)} onDone={done} />}
       {cancelling && <BillingCancelDialog currentName={current?.name ?? "your plan"} onClose={() => setCancelling(false)} onDone={done} />}

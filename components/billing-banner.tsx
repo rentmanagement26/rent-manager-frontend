@@ -18,7 +18,7 @@ interface Props {
   currentPrice: number | null;
 }
 
-const bannerClass = "flex max-w-4xl flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm";
+const bannerClass = "flex max-w-5xl flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm";
 const bannerButton = "rounded-full border border-current bg-white/70 px-4 py-1.5 text-xs font-semibold hover:bg-white disabled:opacity-50";
 
 export function BillingBanner({ billing, currentName, pendingName, currentPrice }: Props) {
@@ -73,7 +73,7 @@ export function BillingBanner({ billing, currentName, pendingName, currentPrice 
   return (
     <div>
       <div className={`${bannerClass} ${tone}`}>{content}</div>
-      {error && <p className="mt-2 max-w-4xl rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</p>}
+      {error && <p className="mt-2 max-w-5xl rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</p>}
     </div>
   );
 }

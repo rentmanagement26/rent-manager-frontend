@@ -1,4 +1,5 @@
 import { PendingOverlay } from "@/components/pending-overlay";
+import { ChosenPlanNote } from "@/components/pricing/chosen-plan-note";
 import Link from "next/link";
 import { registerAction } from "./actions";
 import Image from "next/image";
@@ -6,9 +7,9 @@ import Image from "next/image";
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; plan?: string; interval?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, plan, interval } = await searchParams;
 
   return (
     <main className="flex flex-1 flex-col md:flex-row">
@@ -34,6 +35,9 @@ export default async function RegisterPage({
           <p className="mb-6 text-sm text-muted">
             Set up your account to start managing properties and leases.
           </p>
+
+          {/* The plan picked on /pricing, shown for information. */}
+          <ChosenPlanNote plan={plan} interval={interval} />
 
           {error && (
             <p className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700">

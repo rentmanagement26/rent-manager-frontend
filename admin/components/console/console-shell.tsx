@@ -257,7 +257,11 @@ export function ConsoleShell({
             </button>
           </form>
         </header>
-        <main className="mx-auto w-full max-w-screen-2xl p-4 sm:p-8">{children}</main>
+        <main className="mx-auto w-full max-w-screen-2xl flex-1 p-4 sm:p-8">{children}</main>
+        {/* Always at the bottom of the window, however short the page is. */}
+        <footer className="border-t border-c-bd bg-c-sf px-4 py-4 text-center text-xs text-c-tx3 transition-colors duration-400 sm:px-8">
+          &copy; {new Date().getFullYear()} DomusPRO. All rights reserved.
+        </footer>
       </div>
     </div>
   );

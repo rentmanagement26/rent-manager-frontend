@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <SidebarProvider>
       <PageHeaderProvider>
-        <div className="lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
+        <div className="flex min-h-screen flex-col lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
           <LandlordSidebar />
 
           <div className="hidden lg:flex lg:col-start-2 lg:row-start-1 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-8">
@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <AccountMenu email={session.email} role={role} />
           </div>
 
-          <main className="lg:min-h-0 lg:overflow-y-auto px-8 pb-8 lg:pt-8 lg:col-start-2 lg:row-start-2">
+          <main className="flex flex-1 flex-col lg:block lg:min-h-0 lg:overflow-y-auto px-8 pb-8 lg:pt-8 lg:col-start-2 lg:row-start-2">
             <div className="lg:hidden py-6 -mx-8 px-8 mb-6 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -36,8 +36,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 </div>
               </div>
             </div>
-            <div className="max-w-screen-2xl mx-auto">{children}</div>
-            <div className="lg:hidden -mx-8 mt-8">
+            <div className="mx-auto w-full max-w-screen-2xl flex-1">{children}</div>
+            <div className="lg:hidden -mx-8 mt-auto pt-8">
               <SiteFooter />
             </div>
           </main>
