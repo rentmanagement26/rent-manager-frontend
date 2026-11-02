@@ -35,6 +35,18 @@ export default async function SettingsPage() {
   const summary = subscription ? planSummary(subscription, plans, billing) : null;
   const paying = billing?.hasStripeSubscription ?? false;
 
+  // The row at the bottom of the plan card: a sentence and the button that opens the plans.
+  const planFooter = (
+    <>
+      <p className="text-[13px] text-muted">
+        {paying ? "Need more room, or a different billing period?" : billing?.trialEligible ? `Try Pro or Max free for ${billing.trialMonths} month${billing.trialMonths === 1 ? "" : "s"}.` : "Need more room?"}
+      </p>
+      <Link href="/landlord/billing" className="rounded-xl bg-accent px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_18px_-10px_rgba(217,96,31,0.8)] hover:bg-accent-dark">
+        {paying ? "Change plan" : "See plans"}
+      </Link>
+    </>
+  );
+
   return (
     <div className="space-y-6">
       <PageHeader title="Settings" description="Configure your account and preferences." />
@@ -47,17 +59,17 @@ export default async function SettingsPage() {
           <>
             {billing && <BillingBanner billing={billing} currentName={subscription.packageName ?? "your plan"} pendingName={summary.pendingName} currentPrice={summary.currentPrice} />}
             {paying && billing ? (
-              // One "Manage subscription" button under the plan card holds Change plan, Update card and Cancel plan or refund.
-              <ManageSubscription currentName={subscription.packageName ?? "your plan"} refundWindowDays={billing.refundWindowDays} cancelAtPeriodEnd={billing.cancelAtPeriodEnd}>
-                <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} />
+              // Paying: the plan card, then Payment method and invoices, then Cancel subscription last.
+              <ManageSubscription
+                currentName={subscription.packageName ?? "your plan"}
+                refundWindowDays={billing.refundWindowDays}
+                cancelAtPeriodEnd={billing.cancelAtPeriodEnd}
+                accessUntil={billing.currentPeriodEnd}
+              >
+                <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} footer={planFooter} />
               </ManageSubscription>
             ) : (
-              <>
-                <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} />
-                <Link href="/landlord/billing" className="inline-block rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark">
-                  See plans
-                </Link>
-              </>
+              <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} footer={planFooter} />
             )}
           </>
         ) : (
