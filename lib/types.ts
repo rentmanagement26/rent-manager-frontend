@@ -275,6 +275,14 @@ export interface MySubscription {
   features: { key: string; displayName: string }[];
 }
 
+// GET /api/v1/billing: the Stripe side of the landlord's plan. When hasStripeSubscription is false the other fields are null.
+export interface MyBilling {
+  hasStripeSubscription: boolean;
+  status: string | null; // from Stripe: trialing, active, past_due...
+  trialEndsAt: string | null;
+  currentPeriodEnd: string | null;
+}
+
 // One plan the landlord can choose (newest terms only).
 export interface AvailablePlan {
   packageId: number;

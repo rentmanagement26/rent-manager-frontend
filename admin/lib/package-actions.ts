@@ -10,6 +10,7 @@ import {
   createPackage,
   previewPublish,
   publishPackageVersion,
+  setBillingLink,
   setTermsEndDate,
   updatePackage,
 } from "@/lib/package-api";
@@ -187,5 +188,21 @@ export async function clearTermsEndDateAction(input: {
     return { ok: true, result: result ?? { landlords: 0, noticesQueued: 0, replaced: 0 } };
   } catch (err) {
     return failure(err, "Couldn't remove the end date. Try again.");
+  }
+}
+
+// Saves a plan's Stripe Payment Link. Checks the shape here; the backend checks the permission and the same rules.
+export async function setBillingLinkAction(input: { packageId: number; url: string; linkId: string }): Promise<Done | ActionFailure> {
+  const session = await requireAdmin();
+  const url = String(input.url ?? "").trim();
+  const linkId = String(input.linkId ?? "").trim();
+  if (!url.startsWith("https://buy.stripe.com/")) return { error: "The link must start with https://buy.stripe.com/.", expired: false };
+  if (!/^plink_[A-Za-z0-9]+$/.test(linkId)) return { error: "The link id must look like plink_ followed by letters and numbers.", expired: false };
+
+  try {
+    await setBillingLink(session.backendToken, Number(input.packageId), url, linkId);
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't save the billing link. Try again.");
   }
 }

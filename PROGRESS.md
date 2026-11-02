@@ -32,6 +32,15 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-02 — Claude (Windows) Stripe billing wired: checkout on the landlord Billing page, billing link in admin (mock-up approved first)
+
+- **Synced**: frontend and backend (`e18ba35`) both up to date. New backend since the last audit: Stripe Payment Links billing (`0499930`), refresh-token 30 s grace (`e18ba35`, no frontend change), SMTP sender (config only).
+- **Landlord** (`lib/billing-api.ts`, `billing-actions.ts`, `components/billing-plans.tsx`, `checkout-watcher.tsx`, `app/landlord/billing/page.tsx`): `GET /billing` shows the trial end / renewal / past-due line under the plan; a paid plan's button is now **Pay with Stripe** (`POST /billing/checkout`, then the browser goes to the returned https address); the backend's checkout errors (409, 404 no_checkout, 422 over_limits with the violations) show as messages; `changeMyPlan` maps 402 `payment_required`. Free plans keep the preview-and-confirm flow. After Stripe returns with `?checkout=done` the page refreshes every 3 s (up to 10 times) until the Stripe subscription appears.
+- **Admin** (`admin/lib/package-api.ts`, `package-actions.ts`, `components/console/billing-link-button.tsx`, plans page): a **Billing link** button on each paid plan card opens a popup with the two required fields (Stripe link address, `plink_` id); `PUT /admin/packages/{id}/billing-link`. The backend cannot return the saved link, so the form starts empty.
+- **To do outside the code**: in the Stripe dashboard set each payment link's "after payment" redirect to `<site>/landlord/billing?checkout=done`; apply the Payments migration on Neon and `Payments/stripe_sandbox_setup.sql`; save both links in admin.
+- **Verified**: `tsc` and `eslint` clean in the root app and `admin/`. **Not exercised**: checkout, the webhook and the admin save (need Stripe test mode and the migrated database).
+- **Law**: card details stay on Stripe's hosted page (PIPEDA: name Stripe as a processor in the privacy policy). Trials end in an automatic paid renewal, so the page states the trial end and the price after it; confirm consumer-protection wording if individuals can sign up.
+
 ## 2026-11-01 (config) — Claude (Windows) environment checks, one request helper setting, first tests (from a Copilot suggestion, reviewed)
 - `lib/env.ts`: `backendUrl()` and `sessionSecret()` check `BACKEND_API_URL` / `SESSION_SECRET` when first used and fail with a clear
   message that never prints the value. Production needs https and a 32+ character, non-placeholder secret. Every direct

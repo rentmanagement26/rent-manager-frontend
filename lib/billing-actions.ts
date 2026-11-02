@@ -3,7 +3,7 @@
 // Server actions for the Billing page. The backend resolves the landlord from the session, so one landlord can never change another's plan.
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireBackendToken } from "@/lib/auth-guard";
-import { PlanChangeRefused, changeMyPlan, previewPlanChange } from "@/lib/billing-api";
+import { PlanChangeRefused, changeMyPlan, previewPlanChange, startCheckout } from "@/lib/billing-api";
 import type { ActionFailure, PlanChangePreview } from "@/lib/types";
 
 function failure(err: unknown, fallback: string): ActionFailure {
@@ -23,7 +23,7 @@ export async function previewPlanChangeAction(packageId: number): Promise<{ ok: 
   }
 }
 
-// Confirms the change. Takes no payment.
+// Confirms the change to a free plan (paid plans go through checkoutAction).
 export async function changePlanAction(packageId: number): Promise<{ ok: true } | ActionFailure> {
   const session = await requireBackendToken(["Landlord"]);
 
@@ -32,5 +32,16 @@ export async function changePlanAction(packageId: number): Promise<{ ok: true } 
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't change your plan. Please try again.");
+  }
+}
+
+// Returns the Stripe address for a paid plan; the browser then navigates to it.
+export async function checkoutAction(packageId: number): Promise<{ ok: true; url: string } | ActionFailure> {
+  const session = await requireBackendToken(["Landlord"]);
+
+  try {
+    return { ok: true, url: await startCheckout(session.backendToken, Number(packageId)) };
+  } catch (err) {
+    return failure(err, "Couldn't start checkout. Please try again.");
   }
 }

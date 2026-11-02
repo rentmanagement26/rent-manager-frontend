@@ -1,10 +1,10 @@
 "use client";
 
-// The "Change plan" list on the Billing page. Pressing Upgrade or Downgrade shows a preview first (does their usage fit?), then
-// Confirm. No payment is taken because payments are not built yet.
+// The "Change plan" list on the Billing page. A free plan shows a preview first (does their usage fit?), then Confirm.
+// A paid plan goes straight to Stripe checkout; the plan changes when Stripe's webhook reaches the backend.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { changePlanAction, previewPlanChangeAction } from "@/lib/billing-actions";
+import { changePlanAction, checkoutAction, previewPlanChangeAction } from "@/lib/billing-actions";
 import { limitText } from "@/lib/format-time";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 import type { AvailablePlan, PlanChangePreview } from "@/lib/types";
@@ -53,6 +53,20 @@ export function BillingPlans({ plans, currentPrice }: Props) {
     router.refresh();
   }
 
+  // Paid plan: the backend checks usage, then we leave for Stripe.
+  async function pay(plan: AvailablePlan) {
+    setError("");
+    setSaving(true);
+    const result = await checkoutAction(plan.packageId);
+    if ("error" in result) {
+      setSaving(false);
+      if (result.expired) return goToSessionExpired();
+      setError(result.error);
+      return;
+    }
+    window.location.assign(result.url);
+  }
+
   return (
     <div className="max-w-xl rounded-2xl border border-default bg-white p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-heading">Change plan</h2>
@@ -75,13 +89,13 @@ export function BillingPlans({ plans, currentPrice }: Props) {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => choose(plan)}
+                    onClick={() => (plan.monthlyPrice > 0 ? pay(plan) : choose(plan))}
                     disabled={saving}
                     className={`rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-60 ${
                       label === "Downgrade" ? "border border-default text-body hover:bg-subtle" : "bg-accent text-white hover:bg-accent-dark"
                     }`}
                   >
-                    {label}
+                    {plan.monthlyPrice > 0 && label !== "Downgrade" ? "Pay with Stripe" : label}
                   </button>
                 )}
               </div>
@@ -92,8 +106,7 @@ export function BillingPlans({ plans, currentPrice }: Props) {
                   {picked.preview && picked.preview.canChange && (
                     <>
                       <p>
-                        Your usage fits {plan.name}. Your plan changes right away to {money(plan.monthlyPrice)}. No payment is taken yet,
-                        because payments are not set up.
+                        Your usage fits {plan.name}. Your plan changes right away to {money(plan.monthlyPrice)}.
                       </p>
                       <div className="flex gap-2">
                         <button
