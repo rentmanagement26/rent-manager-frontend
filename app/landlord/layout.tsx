@@ -5,6 +5,7 @@ import { PageHeaderProvider } from "@/lib/page-header-context";
 import { SidebarProvider } from "@/lib/sidebar-context";
 import { MenuToggleButton } from "@/components/menu-toggle-button";
 import { AccountMenu } from "@/components/account-menu";
+import { BackButton } from "@/components/back-button";
 import SiteFooter from "@/components/site-footer";
 import { getHeaderPlan } from "@/lib/header-plan";
 
@@ -39,7 +40,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 </div>
               </div>
             </div>
-            <div className="mx-auto w-full max-w-screen-2xl flex-1">{children}</div>
+            <div className="mx-auto w-full max-w-screen-2xl flex-1">
+              {/* On pages inside another page: a Back button to the parent. */}
+              <BackButton />
+              {children}
+            </div>
             <div className="lg:hidden -mx-8 mt-auto pt-8">
               <SiteFooter />
             </div>

@@ -1,11 +1,14 @@
 // Works out the "where am I" trail for a page in the landlord or tenant portal from its address, so every nested page can show a Back
-// button and breadcrumbs. It returns the PARENT pages only (the current page is added by the caller, using the page's own title).
-// A page with nothing above it (the dashboard, or a top-level page such as Billing) gets an empty trail, so nothing is shown.
+// button. `breadcrumbTrail` returns the PARENT pages only; `backTarget` is the nearest one (where Back goes). A page with nothing above it
+// (the dashboard, or a main page in the sidebar) gets an empty trail, so no Back button is shown.
 
 export interface Crumb {
   label: string;
   href: string;
 }
+
+// Landlord pages that are not in the sidebar.
+const SECONDARY_PAGES = new Set(["billing", "settings", "profile", "notifications"]);
 
 const isId = (segment: string | undefined) => !!segment && /^\d+$/.test(segment);
 
@@ -40,8 +43,8 @@ export function breadcrumbTrail(pathname: string): Crumb[] {
   if (base !== "landlord" && base !== "tenant") return [];
 
   const rest = parts.slice(1);
-  // A page at the top level of the portal has no parent to go back to.
-  if (rest.length < 2) return [];
+  // Pages reached from the account menu or a button (not from the sidebar) go back to the dashboard.
+  if (rest.length < 2) return rest.length === 1 && base === "landlord" && SECONDARY_PAGES.has(rest[0]) ? [{ label: "Dashboard", href: `/${base}` }] : [];
 
   const trail: Crumb[] = [{ label: "Dashboard", href: `/${base}` }];
   let href = `/${base}`;
@@ -53,4 +56,10 @@ export function breadcrumbTrail(pathname: string): Crumb[] {
     }
   }
   return trail;
+}
+
+// Where the Back button goes: the nearest parent page, or null when there is none.
+export function backTarget(pathname: string): Crumb | null {
+  const trail = breadcrumbTrail(pathname);
+  return trail.length > 0 ? trail[trail.length - 1] : null;
 }

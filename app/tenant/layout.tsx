@@ -1,5 +1,5 @@
 // The tenant portal shell: the same left sidebar and top bar as the landlord portal. Each page draws its own heading.
-import { Breadcrumbs } from "@/components/breadcrumbs";
+import { BackButton } from "@/components/back-button";
 import { MenuToggleButton } from "@/components/menu-toggle-button";
 import SiteFooter from "@/components/site-footer";
 import { TenantAccountMenu } from "@/components/tenant-account-menu";
@@ -27,8 +27,7 @@ export default async function TenantLayout({ children }: { children: React.React
             </div>
           </div>
           <div className="mx-auto w-full max-w-screen-2xl flex-1">
-            {/* Tenant pages draw their own heading, so only the Back button and the parent pages are shown. */}
-            <Breadcrumbs />
+            <BackButton />
             {children}
           </div>
           <div className="lg:hidden -mx-4 sm:-mx-8 mt-auto pt-8">

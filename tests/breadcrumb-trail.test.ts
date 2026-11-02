@@ -1,14 +1,25 @@
 // Checks for lib/breadcrumb-trail.ts: the parent pages shown as a Back button and breadcrumbs.
 import { describe, expect, it } from "vitest";
-import { breadcrumbTrail } from "@/lib/breadcrumb-trail";
+import { backTarget, breadcrumbTrail } from "@/lib/breadcrumb-trail";
 
 const labels = (path: string) => breadcrumbTrail(path).map((crumb) => crumb.label);
 
 describe("breadcrumbTrail", () => {
-  it("shows nothing on the dashboard and top-level pages", () => {
+  it("shows nothing on the dashboard and the main sidebar pages", () => {
     expect(breadcrumbTrail("/landlord")).toEqual([]);
-    expect(breadcrumbTrail("/landlord/billing")).toEqual([]);
     expect(breadcrumbTrail("/landlord/properties")).toEqual([]);
+    expect(backTarget("/landlord/leases")).toBeNull();
+  });
+
+  it("sends pages reached from menus back to the dashboard", () => {
+    expect(backTarget("/landlord/billing")?.href).toBe("/landlord");
+    expect(backTarget("/landlord/settings")?.href).toBe("/landlord");
+    expect(backTarget("/landlord/notifications")?.href).toBe("/landlord");
+  });
+
+  it("goes back to the nearest parent", () => {
+    expect(backTarget("/landlord/properties/12/units/5/edit")?.href).toBe("/landlord/properties/12/units/5");
+    expect(backTarget("/landlord/properties/12")?.label).toBe("Properties");
   });
 
   it("goes from a property to Properties and the Dashboard", () => {
