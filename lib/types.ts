@@ -286,7 +286,16 @@ export interface MyBilling {
   trialDays: number;
   // A custom price an admin gave this landlord, or null.
   priceOverride: MyPriceOverride | null;
+  // How they are billed now, whether the plan ends at the end of the period, a lower plan booked for the end of the period,
+  // and how many days after a payment they may cancel for a full refund.
+  interval: BillingInterval | null;
+  cancelAtPeriodEnd: boolean;
+  pendingPackageId: number | null;
+  pendingChangeAt: string | null;
+  refundWindowDays: number;
 }
+
+export type BillingInterval = "month" | "year";
 
 // A custom price: a fixed monthly amount or a percent off, for `months` months or (null) for as long as they stay.
 export interface MyPriceOverride {
@@ -301,19 +310,70 @@ export interface AvailablePlan {
   packageId: number;
   name: string;
   monthlyPrice: number;
+  // The yearly price and what it saves against twelve monthly payments; both are null when the plan is not sold yearly.
+  yearlyPrice?: number | null;
+  yearlySavings?: number | null;
   isCurrent: boolean;
   limits: { key: string; displayName: string; value: number }[];
   features: { key: string; displayName: string }[];
 }
 
-// POST /subscription/preview-change: what a change would do, before it happens.
-export interface PlanChangePreview {
-  found: boolean;
-  alreadyOnPlan: boolean;
-  canChange: boolean;
-  direction: string | null;
-  packageName: string | null;
-  violations: { limitKey: string; displayName: string; limit: number; used: number }[];
+// ---- Changing and cancelling a paid plan (POST /billing/change-preview, /change, /cancel). Money is in dollars. ----
+
+export interface BillingPlanAmount {
+  interval: BillingInterval;
+  amount: number;
+  currency: string | null;
+}
+
+// What happens if the change is made now: credit for the unused time, the charge for the rest of the period, and what is billed today.
+export interface BillingChangeNow {
+  creditForUnusedTime: number;
+  chargeForRemainingTime: number;
+  dueToday: number;
+  // Credit that stays on the Stripe balance and is used on the next bill.
+  creditToBalance: number;
+}
+
+export interface BillingChangePreview {
+  inTrial: boolean;
+  trialEndsAt: string | null;
+  current: BillingPlanAmount | null;
+  target: BillingPlanAmount | null;
+  periodEnd: string | null;
+  daysLeft: number;
+  isIncrease: boolean;
+  // "now" or "end_of_period"; the backend recommends one and allows one or both.
+  recommendedTiming: BillingTiming | null;
+  allowedTimings: BillingTiming[];
+  now: BillingChangeNow | null;
+  atPeriodEnd: { effectiveAt: string; newAmount: number; newInterval: BillingInterval } | null;
+}
+
+export type BillingTiming = "now" | "end_of_period";
+
+// POST /billing/change-preview answers a change, or "cancel" when the target is a free plan (which is a cancellation).
+export type BillingChangeAnswer =
+  | { kind: "change"; targetName: string; preview: BillingChangePreview }
+  | { kind: "cancel"; targetName: string };
+
+// GET /billing/cancel-options: what cancelling does. `refundEligible` means they paid within the refund window.
+export interface CancelOptions {
+  hasSubscription: boolean;
+  inTrial: boolean;
+  accessUntil: string | null;
+  alreadyCancelling: boolean;
+  refundEligible: boolean;
+  refundAmount: number;
+  refundUntil: string | null;
+  refundWindowDays: number;
+}
+
+// POST /billing/cancel: at_period_end (they keep the plan until accessUntil), now (a trial ended) or refunded.
+export interface CancelResult {
+  mode: "at_period_end" | "now" | "refunded";
+  accessUntil: string | null;
+  refundAmount: number;
 }
 
 // ---- Activity (GET /api/v1/activity): what happened on the landlord's account -----------------------------------

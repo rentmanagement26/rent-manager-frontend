@@ -7,6 +7,7 @@ import { LandlordAccount } from "@/components/console/landlord-account";
 import { OverridesManager } from "@/components/console/overrides-manager";
 import { PlanChangesCard } from "@/components/console/plan-changes-card";
 import { PriceOverridesManager } from "@/components/console/price-overrides-manager";
+import { RefundCard } from "@/components/console/refund-card";
 import { ProposalStatus } from "@/components/console/proposal-status";
 import { ProposalWatcher } from "@/components/console/proposal-watcher";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
@@ -15,7 +16,7 @@ import { getCatalog } from "@/lib/catalog-api";
 import { formatPrice, formatWhen, initials } from "@/lib/format";
 import { getOverrides } from "@/lib/override-api";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
-import { getPriceOverrides } from "@/lib/price-api";
+import { getLastPayment, getPriceOverrides } from "@/lib/price-api";
 import { getAwaitingProposals } from "@/lib/proposal-api";
 import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
 
@@ -40,12 +41,13 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   if (!Number.isInteger(landlordProfileId) || landlordProfileId <= 0) notFound();
 
   // Load everything at once instead of one after another, so the page opens faster.
-  const [detail, history, packages, overrideList, priceList, catalog, { can }] = await Promise.all([
+  const [detail, history, packages, overrideList, priceList, lastPayment, catalog, { can }] = await Promise.all([
     getLandlordSubscription(session.backendToken, landlordProfileId),
     getLandlordHistory(session.backendToken, landlordProfileId),
     getPackages(session.backendToken), // the plan catalog, needed by the "Change plan" popup
     getOverrides(session.backendToken, landlordProfileId), // every override, including expired and removed ones
     getPriceOverrides(session.backendToken, landlordProfileId), // custom prices given to this landlord
+    getLastPayment(session.backendToken, landlordProfileId), // their latest Stripe payment, for the Refund card
     getCatalog(session.backendToken), // the limit and feature lists for the "Add override" popup
     getPermissions(session), // what this admin may do, to decide which buttons to show
   ]);
@@ -213,6 +215,16 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
           landlordName={displayName}
           prices={priceList.data}
           canGrant={can(PERMISSIONS.priceOverride)}
+        />
+      )}
+
+      {/* Refund: the last Stripe payment; the button needs billing.refund. */}
+      {lastPayment.status === "ok" && (
+        <RefundCard
+          landlordProfileId={landlord.landlordProfileId}
+          landlordName={displayName}
+          payment={lastPayment.data}
+          canRefund={can(PERMISSIONS.billingRefund)}
         />
       )}
 

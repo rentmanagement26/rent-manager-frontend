@@ -9,6 +9,9 @@ describe("priceAfterOverride", () => {
   it("replaces the price with a fixed amount", () => {
     expect(priceAfterOverride(20, { kind: "fixed_amount", monthlyAmount: 15, percentOff: null, months: null })).toBe(15);
   });
+  it("multiplies a fixed monthly amount by 12 on a yearly plan", () => {
+    expect(priceAfterOverride(220, { kind: "fixed_amount", monthlyAmount: 15, percentOff: null, months: null }, "year")).toBe(180);
+  });
   it("takes a percent off", () => {
     expect(priceAfterOverride(20, { kind: "percent_off", monthlyAmount: null, percentOff: 50, months: 6 })).toBe(10);
   });
@@ -20,6 +23,9 @@ describe("offerText", () => {
   });
   it("describes a trial", () => {
     expect(offerText(20, 30, null)).toBe("30 days free, then $20.00/mo");
+  });
+  it("describes a yearly trial", () => {
+    expect(offerText(220, 30, null, "year")).toBe("30 days free, then $220.00/yr");
   });
   it("describes a limited custom price", () => {
     const over = { kind: "percent_off" as const, monthlyAmount: null, percentOff: 50, months: 6 };

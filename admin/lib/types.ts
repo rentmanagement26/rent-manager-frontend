@@ -429,9 +429,19 @@ export interface LandlordOverride {
 // GET /admin/packages/{id}/billing-link: how a plan is sold in Stripe. Fields are null when not set.
 export interface PackageBilling {
   stripePriceId: string | null;
+  stripeYearlyPriceId: string | null;
   paymentLinkUrl: string | null;
   stripePaymentLinkId: string | null;
   updatedAt: string | null;
+}
+
+// GET /admin/landlords/{id}/billing/last-payment: the landlord's latest Stripe payment, so a refund screen can show what it returns.
+export interface LastPayment {
+  hasPayment: boolean;
+  amount: number;
+  currency: string | null;
+  paidAt: string | null;
+  planRunning: boolean;
 }
 
 // One custom price given to a landlord (GET /admin/landlords/{id}/price-overrides). `status` is offered (not used yet),

@@ -1,69 +1,58 @@
 "use client";
 
-// The "Change plan" list on the Billing page. A free plan shows a preview first (does their usage fit?), then Confirm.
-// A paid plan goes straight to Stripe checkout; the plan changes when Stripe's webhook reaches the backend.
+// The "Change plan" section of the Billing page: a monthly/yearly toggle and one card per plan. What a card's button does depends on
+// the landlord: no paid plan yet -> Stripe checkout (with the free trial if they are eligible); already paying -> the Switch popup
+// (cost preview first); a free plan while paying -> the Cancel popup. Also holds the Update card and Cancel plan links.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { changePlanAction, checkoutAction, previewPlanChangeAction } from "@/lib/billing-actions";
+import { BillingCancelDialog } from "@/components/billing-cancel-dialog";
+import { BillingSwitchDialog } from "@/components/billing-switch-dialog";
+import { cardPageAction, checkoutAction } from "@/lib/billing-actions";
+import { money } from "@/lib/billing-format";
 import { offerText } from "@/lib/billing-offer";
 import { limitText } from "@/lib/format-time";
 import { goToSessionExpired } from "@/lib/session-expired-client";
-import type { AvailablePlan, MyPriceOverride, PlanChangePreview } from "@/lib/types";
-
-const money = (value: number) => `$${value.toFixed(2)}/mo`;
+import type { AvailablePlan, BillingInterval, MyBilling } from "@/lib/types";
 
 interface Props {
   plans: AvailablePlan[];
-  // The landlord's current monthly price; null when they have no plan yet.
-  currentPrice: number | null;
-  // Free trial days a paid checkout would start (null when the landlord already used their trial), and any custom price.
-  trialDays: number | null;
-  override: MyPriceOverride | null;
+  billing: MyBilling | null;
 }
 
-export function BillingPlans({ plans, currentPrice, trialDays, override }: Props) {
+const primaryButton = "w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60";
+const outlineButton = "w-full rounded-xl border border-default px-4 py-2 text-sm font-semibold text-body hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-60";
+
+export function BillingPlans({ plans, billing }: Props) {
   const router = useRouter();
-  // The plan being previewed, its preview (null while loading), and any error.
-  const [picked, setPicked] = useState<{ plan: AvailablePlan; preview: PlanChangePreview | null } | null>(null);
+  const paying = billing?.hasStripeSubscription ?? false;
+  // The trial days a first checkout would give; null when the landlord already used their trial.
+  const trialDays = billing?.trialEligible ? billing.trialDays : null;
+
+  const [interval, setInterval] = useState<BillingInterval>(billing?.interval ?? "month");
+  const [switchTo, setSwitchTo] = useState<AvailablePlan | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [busyId, setBusyId] = useState<number | "card" | null>(null);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
 
-  async function choose(plan: AvailablePlan) {
-    setError("");
-    setPicked({ plan, preview: null });
-    const result = await previewPlanChangeAction(plan.packageId);
-    if ("error" in result) {
-      if (result.expired) return goToSessionExpired();
-      setPicked(null);
-      setError(result.error);
-      return;
-    }
-    setPicked({ plan, preview: result.preview });
+  const current = plans.find((plan) => plan.isCurrent);
+  // Yearly is only offered once the backend says which plans have a yearly price.
+  const yearlyAvailable = plans.some((plan) => plan.monthlyPrice > 0 && plan.yearlyPrice != null);
+
+  // The price a card shows for the chosen billing period; null when the plan is not sold that way.
+  function priceFor(plan: AvailablePlan): number | null {
+    if (plan.monthlyPrice === 0) return 0;
+    return interval === "year" ? (plan.yearlyPrice ?? null) : plan.monthlyPrice;
   }
 
-  async function confirm() {
-    if (!picked) return;
-    setSaving(true);
-    setError("");
-    const result = await changePlanAction(picked.plan.packageId);
-    setSaving(false);
-
-    if ("error" in result) {
-      if (result.expired) return goToSessionExpired();
-      setError(result.error);
-      return;
-    }
-    setPicked(null);
-    router.refresh();
-  }
-
-  // Paid plan: the backend checks usage, then we leave for Stripe.
+  // Paid plan for a landlord with no paid plan: the backend checks usage, then we leave for Stripe.
   async function pay(plan: AvailablePlan) {
     setError("");
-    setSaving(true);
-    const result = await checkoutAction(plan.packageId);
+    setNotice("");
+    setBusyId(plan.packageId);
+    const result = await checkoutAction(plan.packageId, interval);
     if ("error" in result) {
-      setSaving(false);
+      setBusyId(null);
       if (result.expired) return goToSessionExpired();
       setError(result.error);
       return;
@@ -71,96 +60,112 @@ export function BillingPlans({ plans, currentPrice, trialDays, override }: Props
     window.location.assign(result.url);
   }
 
+  async function openCardPage() {
+    setError("");
+    setNotice("");
+    setBusyId("card");
+    const result = await cardPageAction();
+    if ("error" in result) {
+      setBusyId(null);
+      if (result.expired) return goToSessionExpired();
+      setError(result.error);
+      return;
+    }
+    window.location.assign(result.url);
+  }
+
+  // After a switch or a cancellation: close the popup, show what happened and reload the page behind it.
+  function done(message: string) {
+    setSwitchTo(null);
+    setCancelling(false);
+    setError("");
+    setNotice(message);
+    router.refresh();
+  }
+
+  // The button of one card, following the rules in the file comment.
+  function cardButton(plan: AvailablePlan, price: number | null) {
+    const isCurrent = plan.isCurrent;
+    const paid = plan.monthlyPrice > 0;
+
+    if (isCurrent && paying && billing?.interval && billing.interval !== interval && price !== null) {
+      return (
+        <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>
+          Switch to {interval === "year" ? "yearly" : "monthly"} billing
+        </button>
+      );
+    }
+    if (isCurrent) return <p className="text-center text-xs font-semibold text-muted">Current plan</p>;
+    if (!paid) return paying ? <button type="button" className={outlineButton} onClick={() => setCancelling(true)}>Cancel plan</button> : null;
+    if (price === null) return <p className="text-center text-xs text-muted">Not sold yearly</p>;
+    if (paying) return <button type="button" className={outlineButton} onClick={() => setSwitchTo(plan)}>Switch to {plan.name}</button>;
+    return (
+      <button type="button" className={primaryButton} disabled={busyId !== null} onClick={() => pay(plan)}>
+        {busyId === plan.packageId ? "Opening Stripe…" : trialDays ? `Start ${trialDays}-day free trial` : "Subscribe"}
+      </button>
+    );
+  }
+
   return (
-    <div className="max-w-xl rounded-2xl border border-default bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-heading">Change plan</h2>
+    <div className="max-w-4xl rounded-2xl border border-default bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-heading">Change plan</h2>
 
-      <ul className="mt-3">
+        {yearlyAvailable && (
+          <div className="inline-flex rounded-full border border-default p-0.5 text-xs font-semibold" role="group" aria-label="Billing period">
+            {(["month", "year"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={interval === option}
+                onClick={() => setInterval(option)}
+                className={`rounded-full px-3 py-1.5 ${interval === option ? "bg-accent-tint text-accent" : "text-muted hover:text-heading"}`}
+              >
+                {option === "month" ? "Monthly" : "Yearly"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {plans.map((plan) => {
-          const isPicked = picked?.plan.packageId === plan.packageId;
-          const label = plan.isCurrent ? "Current plan" : currentPrice === null ? "Choose" : plan.monthlyPrice > currentPrice ? "Upgrade" : "Downgrade";
+          const price = priceFor(plan);
+          const offer = !plan.isCurrent && price ? offerText(price, trialDays, billing?.priceOverride ?? null, interval) : null;
           return (
-            <li key={plan.packageId} className="border-t border-default py-3 first:border-t-0">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-heading">
-                    {plan.name} <span className="font-normal text-muted">{money(plan.monthlyPrice)}</span>
-                  </p>
-                  <p className="text-xs text-muted">{plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}</p>
-                  {!plan.isCurrent && plan.monthlyPrice > 0 && offerText(plan.monthlyPrice, trialDays, override) && (
-                    <p className="text-xs font-semibold text-accent">{offerText(plan.monthlyPrice, trialDays, override)}</p>
-                  )}
-                </div>
-                {plan.isCurrent ? (
-                  <span className="text-xs font-semibold text-muted">Current plan</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => (plan.monthlyPrice > 0 ? pay(plan) : choose(plan))}
-                    disabled={saving}
-                    className={`rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-60 ${
-                      label === "Downgrade" ? "border border-default text-body hover:bg-subtle" : "bg-accent text-white hover:bg-accent-dark"
-                    }`}
-                  >
-                    {plan.monthlyPrice > 0 && label !== "Downgrade" ? "Pay with Stripe" : label}
-                  </button>
-                )}
-              </div>
-
-              {isPicked && (
-                <div className="mt-3 space-y-3 rounded-xl bg-subtle px-4 py-3 text-sm text-body">
-                  {picked.preview === null && <p>Checking your usage…</p>}
-                  {picked.preview && picked.preview.canChange && (
-                    <>
-                      <p>
-                        Your usage fits {plan.name}. Your plan changes right away to {money(plan.monthlyPrice)}.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={confirm}
-                          disabled={saving}
-                          className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
-                        >
-                          {saving ? "Changing…" : `Confirm ${plan.name}`}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPicked(null)}
-                          disabled={saving}
-                          className="rounded-xl border border-default px-4 py-2 text-sm font-semibold hover:bg-white"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </>
-                  )}
-                  {picked.preview && !picked.preview.canChange && (
-                    <>
-                      <p className="font-semibold text-red-700">{plan.name} can&apos;t be chosen yet.</p>
-                      {picked.preview.violations.map((v) => (
-                        <p key={v.limitKey}>
-                          {v.displayName}: {v.used} used, limit {v.limit}. Reduce usage first.
-                        </p>
-                      ))}
-                      {picked.preview.alreadyOnPlan && <p>You are already on this plan.</p>}
-                      <button
-                        type="button"
-                        onClick={() => setPicked(null)}
-                        className="rounded-xl border border-default px-4 py-2 text-sm font-semibold hover:bg-white"
-                      >
-                        Close
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </li>
+            <div key={plan.packageId} className={`flex flex-col rounded-2xl border p-4 ${plan.isCurrent ? "border-accent ring-1 ring-accent" : "border-default"}`}>
+              <p className="text-sm font-semibold text-heading">{plan.name}</p>
+              <p className="mt-1 text-2xl font-semibold text-heading">
+                {price === null ? "—" : price === 0 ? "$0" : money(price)}
+                {price ? <span className="text-xs font-normal text-muted">{interval === "year" ? "/year" : "/month"}</span> : null}
+              </p>
+              <p className="mt-1 text-xs text-muted">{plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}</p>
+              {interval === "year" && plan.yearlySavings ? <p className="mt-1 text-xs font-semibold text-green-700">Save {money(plan.yearlySavings)} a year</p> : null}
+              <p className="mb-3 mt-1 min-h-4 text-xs font-semibold text-accent">{offer}</p>
+              <div className="mt-auto">{cardButton(plan, price)}</div>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
-      {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+      {paying && (
+        <div className="mt-4 flex flex-wrap gap-4 border-t border-default pt-3 text-sm">
+          <button type="button" onClick={openCardPage} disabled={busyId !== null} className="font-semibold text-accent hover:text-accent-dark disabled:opacity-60">
+            {busyId === "card" ? "Opening…" : "Update card"}
+          </button>
+          {!billing?.cancelAtPeriodEnd && (
+            <button type="button" onClick={() => setCancelling(true)} className="font-semibold text-accent hover:text-accent-dark">
+              Cancel plan
+            </button>
+          )}
+        </div>
+      )}
+
+      {notice && <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">{notice}</p>}
+      {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</p>}
+
+      {switchTo && <BillingSwitchDialog plan={switchTo} interval={interval} currentName={current?.name ?? "your plan"} onClose={() => setSwitchTo(null)} onDone={done} />}
+      {cancelling && <BillingCancelDialog currentName={current?.name ?? "your plan"} onClose={() => setCancelling(false)} onDone={done} />}
     </div>
   );
 }

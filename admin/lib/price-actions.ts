@@ -5,7 +5,7 @@
 import { revalidatePath } from "next/cache";
 import { SessionExpiredError } from "@/lib/api-error";
 import { requireAdmin } from "@/lib/auth-guard";
-import { getPackageBilling, grantPriceOverride, revokePriceOverride, setStripePrice } from "@/lib/price-api";
+import { getPackageBilling, grantPriceOverride, refundPayment, revokePriceOverride, setStripePrice } from "@/lib/price-api";
 import { PLAN_CHANGE_REASONS } from "@/lib/types";
 import type { ActionFailure, PackageBilling } from "@/lib/types";
 
@@ -25,14 +25,23 @@ export async function loadPackageBillingAction(packageId: number): Promise<{ ok:
   return { error: "Couldn't load the saved price. Try again.", expired: false };
 }
 
-// Saves a plan's Stripe Price id. Checks the shape here; the backend asks Stripe whether it is usable.
-export async function setStripePriceAction(input: { packageId: number; priceId: string }): Promise<Done | ActionFailure> {
+// Saves a plan's Stripe prices. An empty box leaves that price as it is; "removeYearly" takes yearly billing away.
+// Checks the shape here; the backend asks Stripe whether each price is usable.
+export async function setStripePriceAction(input: { packageId: number; priceId: string; yearlyPriceId: string; removeYearly: boolean }): Promise<Done | ActionFailure> {
   const session = await requireAdmin();
-  const priceId = String(input.priceId ?? "").trim();
-  if (!/^price_[A-Za-z0-9]+$/.test(priceId)) return { error: "The price id must look like price_ followed by letters and numbers.", expired: false };
+  const monthly = String(input.priceId ?? "").trim();
+  const yearly = String(input.yearlyPriceId ?? "").trim();
+  const shape = /^price_[A-Za-z0-9]+$/;
+  if (monthly && !shape.test(monthly)) return { error: "The monthly price id must look like price_ followed by letters and numbers.", expired: false };
+  if (yearly && !shape.test(yearly)) return { error: "The yearly price id must look like price_ followed by letters and numbers.", expired: false };
+  if (!monthly && !yearly && !input.removeYearly) return { error: "Enter a monthly or yearly price id.", expired: false };
+  if (yearly && input.removeYearly) return { error: "Either enter a yearly price or remove yearly billing, not both.", expired: false };
 
   try {
-    await setStripePrice(session.backendToken, Number(input.packageId), priceId);
+    await setStripePrice(session.backendToken, Number(input.packageId), {
+      monthly: monthly || null,
+      yearly: input.removeYearly ? "" : yearly || null,
+    });
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't save the price. Try again.");
@@ -96,5 +105,25 @@ export async function revokePriceOverrideAction(input: { landlordProfileId: numb
     return { ok: true };
   } catch (err) {
     return failure(err, "Couldn't remove the custom price. Try again.");
+  }
+}
+
+// Refunds a landlord's last payment: all of it (empty amount) or part, optionally ending their plan. A note is required.
+export async function refundPaymentAction(input: { landlordProfileId: number; amount: string; cancelPlan: boolean; note: string }): Promise<Done | ActionFailure> {
+  const session = await requireAdmin();
+  const amountText = String(input.amount ?? "").trim();
+  const amount = amountText === "" ? null : Number(amountText);
+  if (amount !== null && !(Number.isFinite(amount) && amount > 0 && Math.round(amount * 100) / 100 === amount)) {
+    return { error: "The amount must be more than 0, with at most two decimals.", expired: false };
+  }
+  const note = String(input.note ?? "").trim();
+  if (!note || note.length > 500) return { error: "Add a short note (up to 500 characters) explaining the refund.", expired: false };
+
+  try {
+    await refundPayment(session.backendToken, Number(input.landlordProfileId), { amount, cancelPlan: !!input.cancelPlan, note });
+    revalidatePath(`/landlords/${input.landlordProfileId}`);
+    return { ok: true };
+  } catch (err) {
+    return failure(err, "Couldn't refund the payment. Try again.");
   }
 }
