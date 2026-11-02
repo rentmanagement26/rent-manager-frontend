@@ -4,13 +4,16 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { logoutAction } from "@/app/actions";
 import { NotificationBell } from "@/components/notification-bell";
+import type { HeaderPlan } from "@/lib/header-plan";
 
 interface AccountMenuProps {
   email: string;
   role: string;
+  // The landlord's plan, for the badge in the top bar; null shows the role instead.
+  plan: HeaderPlan | null;
 }
 
-export function AccountMenu({ email, role }: AccountMenuProps) {
+export function AccountMenu({ email, role, plan }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -25,18 +28,32 @@ export function AccountMenu({ email, role }: AccountMenuProps) {
   }, []);
 
   const initials = email.slice(0, 2).toUpperCase();
+  // "Pro" or "Max" for a paid plan, "Free" otherwise.
+  const planLabel = plan?.paid ? plan.name : "Free";
 
     return (
     <div className="flex items-center gap-2 sm:gap-4">
-      <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">
-        {role}
-      </span>
-      <Link
-        href="/landlord/billing"
-        className="hidden sm:inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-      >
-        Upgrade
-      </Link>
+      {/* The plan badge (Pro, Max or Free) takes the place of the role label; it opens the plan details under Settings. */}
+      {plan ? (
+        <Link
+          href="/landlord/settings#subscription"
+          title="Your plan"
+          className={`hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full ${plan.paid ? "bg-accent-tint text-accent-dark" : "bg-brand-green-tint text-brand-green-dark"}`}
+        >
+          {planLabel}
+        </Link>
+      ) : (
+        <span className="hidden sm:inline-flex text-xs font-semibold text-brand-green-dark bg-brand-green-tint px-2.5 py-1 rounded-full">{role}</span>
+      )}
+      {/* Upgrade is only offered on the free plan. */}
+      {!plan?.paid && (
+        <Link
+          href="/landlord/billing"
+          className="hidden sm:inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+          Upgrade
+        </Link>
+      )}
       <NotificationBell viewAllHref="/landlord/notifications" />
       <div className="hidden sm:block w-px h-6 bg-slate-200" />
       <div className="relative" ref={ref}>
@@ -52,16 +69,21 @@ export function AccountMenu({ email, role }: AccountMenuProps) {
         {open && (
           <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 bg-white shadow-lg py-1 z-40">
             <div className="px-3 py-2 border-b border-slate-100">
-              <p className="text-sm font-semibold text-slate-900 truncate">{role}</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">
+                {role}
+                {plan && <span className="font-normal text-slate-500"> &middot; {planLabel} plan</span>}
+              </p>
               <p className="text-xs text-slate-500 truncate" title={email}>{email}</p>
             </div>
-            <Link
-              href="/landlord/billing"
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent hover:bg-slate-50 sm:hidden"
-              onClick={() => setOpen(false)}
-            >
-              Upgrade to Pro
-            </Link>
+            {!plan?.paid && (
+              <Link
+                href="/landlord/billing"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent hover:bg-slate-50 sm:hidden"
+                onClick={() => setOpen(false)}
+              >
+                Upgrade to Pro
+              </Link>
+            )}
             <Link href="/landlord/profile" className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50" onClick={() => setOpen(false)}>
               Profile
             </Link>

@@ -32,6 +32,15 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-03 (settings and header) — Claude (Windows) plan badge in the top bar, plan details and Manage subscription moved to Settings
+
+- **Owner request**: Manage subscription and plan details belong under Settings, not the Billing page or the sidebar, and the top-right "Landlord" label should show the plan.
+- **Top bar** (`components/account-menu.tsx`, `lib/header-plan.ts`, `app/landlord/layout.tsx`): the "Landlord" label is now a plan badge: **Pro** or **Max** (orange tint) or **Free** (green tint), linking to Settings; if the plan cannot be read the role label stays. The Upgrade button shows only on the free plan; the menu shows "<role> · <plan> plan".
+- **Sidebar**: the plan card at the bottom is removed (both the Upgrade and Your plan cards).
+- **Settings** (`app/landlord/settings/page.tsx`): new **Plan and billing** section (`#subscription`): the status banner (trial, ends, booked change, payment failed), the plan summary card (`components/plan-summary-card.tsx`, shared with Billing; `lib/plan-summary.ts`), Change plan / See plans, and for a paying landlord **Manage subscription** (`components/settings/manage-subscription.tsx`: Update card, Cancel plan or refund, with the receipt card after a cancellation). Security settings stay below.
+- **Billing page**: the Manage subscription box and the cancel popup are gone from it; the free-plan card shows "Cancel in Settings" to a paying landlord; the payment-failed banner links to Settings.
+- **Verified**: `tsc` and `eslint` clean, 26 tests pass. **Not seen live yet**: the badge, the Settings section and the cancel flow from Settings.
+
 ## 2026-11-03 (receipt and sidebar) — Claude (Windows) receipt card after a plan change, Manage subscription box, sidebar plan card (mock-up approved first)
 
 - **Receipt card** (`components/billing-receipt.tsx`, content built by `lib/billing-receipt.ts` + `tests/billing-receipt.test.ts`): after a switch or a cancellation the Billing page shows a card at the top (stays until Done or X, survives the page reload): upgrade now (Before, Now, New price, credit for unused days, remaining days, **Charged today**, next payment, refund-policy line), downgrade booked (Keep <plan> button), cancelled at period end (Undo cancel button), cancelled with refund. `POST /billing/change` now returns its figures to the frontend (`changeBillingPlan` / `changeAction` return `BillingChangeResult`). The receipt has **no Cancel and refund button**: that lives under **Manage subscription** (new box in `components/billing-plans.tsx`: Update card, Cancel plan or refund, with the refund-window sentence).

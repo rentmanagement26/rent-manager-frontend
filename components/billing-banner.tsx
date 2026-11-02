@@ -2,6 +2,7 @@
 
 // The status banner at the top of the Billing page: a free trial running, a plan that ends at the end of the period (with Undo),
 // or a lower plan booked for the end of the period (with Keep my plan), or a payment that failed.
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { dropPendingChangeAction, undoCancelAction } from "@/lib/billing-actions";
@@ -60,7 +61,15 @@ export function BillingBanner({ billing, currentName, pendingName, currentPrice 
     );
   } else if (billing.status === "past_due") {
     tone = "bg-red-50 text-red-700";
-    content = <span>Your last payment didn&apos;t go through. Update your card from the link below so you keep your plan.</span>;
+    content = (
+      <span>
+        Your last payment didn&apos;t go through.{" "}
+        <Link href="/landlord/settings#subscription" className="font-semibold underline">
+          Update your card under Settings
+        </Link>{" "}
+        so you keep your plan.
+      </span>
+    );
   } else if (billing.status === "trialing" && billing.trialEndsAt) {
     content = (
       <span>

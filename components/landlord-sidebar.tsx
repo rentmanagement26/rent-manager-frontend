@@ -1,10 +1,7 @@
 "use client";
 
-// The landlord's menu entries and the card at the bottom, on top of the shared sidebar. The card is "Upgrade to Pro" on the free plan, and a
-// "Your plan" summary with a Manage subscription link once the landlord is on a paid plan.
-import Link from "next/link";
+// The landlord's menu entries, on top of the shared sidebar. Plan details live under Settings and the plan badge is in the top bar.
 import { AppSidebar, type SidebarItem } from "@/components/app-sidebar";
-import type { SidebarPlan } from "@/lib/sidebar-plan";
 
 // Where each entry goes, which paths count as "on this page", and the icon drawing.
 const NAV_ITEMS: SidebarItem[] = [
@@ -46,60 +43,6 @@ const NAV_ITEMS: SidebarItem[] = [
   },
 ];
 
-// The footer card for a landlord on a paid plan: the plan name, how much of the first limit is used, and a link to manage the subscription.
-function YourPlanCard({ plan }: { plan: SidebarPlan }) {
-  const share = plan.usage && plan.usage.limit > 0 ? Math.min(100, (plan.usage.used / plan.usage.limit) * 100) : 0;
-  return (
-    <div className="m-3 p-4 rounded-xl bg-heading shadow-lg shadow-heading/20">
-      <p className="text-xs font-semibold text-accent-tint flex items-center gap-1.5">
-        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2.5 6l3 2 4.5-5 4.5 5 3-2-1.5 9h-12L2.5 6z" />
-        </svg>
-        Your plan
-      </p>
-      <p className="mt-1 font-head text-xl font-extrabold text-white">{plan.name}</p>
-      {plan.usage && (
-        <div className="mt-2">
-          <p className="text-[11px] text-white/60">
-            {plan.usage.label}: {plan.usage.used} of {plan.usage.limit}
-          </p>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/15">
-            <div className="h-full rounded-full bg-accent" style={{ width: `${share}%` }} />
-          </div>
-        </div>
-      )}
-      <Link
-        href="/landlord/billing"
-        className="mt-3 block text-center w-full px-3 py-2 text-xs font-semibold text-white border border-white/30 hover:bg-white/10 rounded-full transition"
-      >
-        Manage subscription
-      </Link>
-    </div>
-  );
-}
-
-// The footer card for a landlord on the free plan.
-function UpgradeCard() {
-  return (
-    <div className="m-3 p-4 rounded-xl bg-heading shadow-lg shadow-heading/20">
-      <p className="text-xs font-semibold text-accent-tint flex items-center gap-1.5">
-        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2.5 6l3 2 4.5-5 4.5 5 3-2-1.5 9h-12L2.5 6z" />
-        </svg>
-        Upgrade to Pro
-      </p>
-      <p className="text-[11px] text-white/60 mt-1 leading-relaxed">Unlock unlimited properties and priority support.</p>
-      <Link
-        href="/landlord/billing"
-        className="mt-3 block text-center w-full px-3 py-2 text-xs font-semibold text-white bg-accent hover:bg-accent-dark rounded-full transition"
-      >
-        View plans
-      </Link>
-    </div>
-  );
-}
-
-// `plan` is null when it could not be read (then the free-plan card is shown).
-export function LandlordSidebar({ plan }: { plan: SidebarPlan | null }) {
-  return <AppSidebar homeHref="/landlord" items={NAV_ITEMS} footer={plan?.paid ? <YourPlanCard plan={plan} /> : <UpgradeCard />} />;
+export function LandlordSidebar() {
+  return <AppSidebar homeHref="/landlord" items={NAV_ITEMS} />;
 }

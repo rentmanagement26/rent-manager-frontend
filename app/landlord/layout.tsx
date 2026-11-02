@@ -6,25 +6,25 @@ import { SidebarProvider } from "@/lib/sidebar-context";
 import { MenuToggleButton } from "@/components/menu-toggle-button";
 import { AccountMenu } from "@/components/account-menu";
 import SiteFooter from "@/components/site-footer";
-import { getSidebarPlan } from "@/lib/sidebar-plan";
+import { getHeaderPlan } from "@/lib/header-plan";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAuth(["Admin", "Landlord"]);
   const role = session.role || "Landlord";
-  // The plan card at the bottom of the sidebar depends on the plan; a failure just shows the free-plan card.
-  const plan = await getSidebarPlan(session.backendToken);
+  // The plan badge in the top bar (Pro, Max or Free); a failure just shows the plain role label.
+  const plan = await getHeaderPlan(session.backendToken);
 
   return (
     <SidebarProvider>
       <PageHeaderProvider>
         <div className="flex min-h-screen flex-col lg:grid lg:grid-cols-[256px_1fr] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:h-screen lg:overflow-hidden bg-slate-50 text-slate-900">
-          <LandlordSidebar plan={plan} />
+          <LandlordSidebar />
 
           <div className="hidden lg:flex lg:col-start-2 lg:row-start-1 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-8">
             <div className="min-w-0 flex-1">
               <PageHeaderSlot />
             </div>
-            <AccountMenu email={session.email} role={role} />
+            <AccountMenu email={session.email} role={role} plan={plan} />
           </div>
 
           <main className="flex flex-1 flex-col lg:block lg:min-h-0 lg:overflow-y-auto px-8 pb-8 lg:pt-8 lg:col-start-2 lg:row-start-2">
@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   <PageHeaderSlot />
                 </div>
                 <div className="flex items-center gap-3">
-                  <AccountMenu email={session.email} role={role} />
+                  <AccountMenu email={session.email} role={role} plan={plan} />
                   <MenuToggleButton />
                 </div>
               </div>
