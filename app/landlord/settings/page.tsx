@@ -46,12 +46,18 @@ export default async function SettingsPage() {
         {subscription && summary ? (
           <>
             {billing && <BillingBanner billing={billing} currentName={subscription.packageName ?? "your plan"} pendingName={summary.pendingName} currentPrice={summary.currentPrice} />}
-            <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} />
-            <Link href="/landlord/billing" className="inline-block rounded-xl border border-default bg-white px-4 py-2 text-sm font-semibold text-heading hover:border-accent hover:text-accent-dark">
-              {paying ? "Change plan" : "See plans"}
-            </Link>
-            {paying && billing && (
-              <ManageSubscription currentName={subscription.packageName ?? "your plan"} refundWindowDays={billing.refundWindowDays} cancelAtPeriodEnd={billing.cancelAtPeriodEnd} />
+            {paying && billing ? (
+              // One "Manage subscription" button under the plan card holds Change plan, Update card and Cancel plan or refund.
+              <ManageSubscription currentName={subscription.packageName ?? "your plan"} refundWindowDays={billing.refundWindowDays} cancelAtPeriodEnd={billing.cancelAtPeriodEnd}>
+                <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} />
+              </ManageSubscription>
+            ) : (
+              <>
+                <PlanSummaryCard subscription={subscription} billing={billing} summary={summary} />
+                <Link href="/landlord/billing" className="inline-block rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark">
+                  See plans
+                </Link>
+              </>
             )}
           </>
         ) : (
