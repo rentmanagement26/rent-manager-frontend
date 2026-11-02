@@ -32,6 +32,14 @@ Codex and Claude use this file as the project handoff, across both computers.
   privacy), check and advise on compliance with Canadian Federal law (PIPEDA, CASL), Ontario RTA /
   LTB regulations, and Manitoba Residential Tenancies Act / RTB regulations.
 
+## 2026-11-02 (live test) — Claude (Windows) Stripe billing tested live; trial and per-customer price decisions
+
+- **Live result**: pay-with-Stripe worked end to end on the live site (Azure backend, Stripe test mode): Stripe webhook destination added (`checkout.session.completed` and the three `customer.subscription.*` events), both delivered 200, the plan changed to Pro and the admin console shows the landlord on Pro ("Upgraded Basic v1 to Pro v1 by system"). The admin Plans page shows the Billing link button on Pro and Max only.
+- **Stripe settings changed (test mode, by the agent)**: both payment links now have a 30-day free trial and redirect to `/landlord/billing?checkout=done` (the link ids and URLs did not change). Max's live checkout reads "30 days free, then CA$49.00 per month".
+- **Backend gap found and fixed by the backend team**: `customer.subscription.created` arriving before the checkout event was marked applied and its renewal date lost; the backend now answers 409 for a fresh `created` event with no billing row so Stripe retries. Landlord 18's own event is still marked applied (needs its `AppliedAt` cleared and a resend after deploy), so that landlord has no renewal date yet.
+- **Open decisions** (owner asked for both): (1) trial only once per landlord, on the first paid plan, none when switching between paid plans; (2) an admin giving one customer a different price. Recommended answer to both: the backend creates the Stripe Checkout Session itself (instead of fixed payment links), choosing trial or no trial and the price per landlord; see the backend note. The admin Billing link popup would then change to a Stripe price id per plan.
+- **Not tested**: switching plans while on a paid plan, cancelling, a failed payment, the old test subscription `sub_1UXNm...` still active in Stripe (cancel by hand).
+
 ## 2026-11-02 — Claude (Windows) Stripe billing wired: checkout on the landlord Billing page, billing link in admin (mock-up approved first)
 
 - **Synced**: frontend and backend (`e18ba35`) both up to date. New backend since the last audit: Stripe Payment Links billing (`0499930`), refresh-token 30 s grace (`e18ba35`, no frontend change), SMTP sender (config only).
