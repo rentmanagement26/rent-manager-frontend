@@ -5,9 +5,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { changePlanAction, checkoutAction, previewPlanChangeAction } from "@/lib/billing-actions";
+import { offerText } from "@/lib/billing-offer";
 import { limitText } from "@/lib/format-time";
 import { goToSessionExpired } from "@/lib/session-expired-client";
-import type { AvailablePlan, PlanChangePreview } from "@/lib/types";
+import type { AvailablePlan, MyPriceOverride, PlanChangePreview } from "@/lib/types";
 
 const money = (value: number) => `$${value.toFixed(2)}/mo`;
 
@@ -15,9 +16,12 @@ interface Props {
   plans: AvailablePlan[];
   // The landlord's current monthly price; null when they have no plan yet.
   currentPrice: number | null;
+  // Free trial days a paid checkout would start (null when the landlord already used their trial), and any custom price.
+  trialDays: number | null;
+  override: MyPriceOverride | null;
 }
 
-export function BillingPlans({ plans, currentPrice }: Props) {
+export function BillingPlans({ plans, currentPrice, trialDays, override }: Props) {
   const router = useRouter();
   // The plan being previewed, its preview (null while loading), and any error.
   const [picked, setPicked] = useState<{ plan: AvailablePlan; preview: PlanChangePreview | null } | null>(null);
@@ -83,6 +87,9 @@ export function BillingPlans({ plans, currentPrice }: Props) {
                     {plan.name} <span className="font-normal text-muted">{money(plan.monthlyPrice)}</span>
                   </p>
                   <p className="text-xs text-muted">{plan.limits.map((l) => limitText(l.value, l.displayName)).join(" · ")}</p>
+                  {!plan.isCurrent && plan.monthlyPrice > 0 && offerText(plan.monthlyPrice, trialDays, override) && (
+                    <p className="text-xs font-semibold text-accent">{offerText(plan.monthlyPrice, trialDays, override)}</p>
+                  )}
                 </div>
                 {plan.isCurrent ? (
                   <span className="text-xs font-semibold text-muted">Current plan</span>

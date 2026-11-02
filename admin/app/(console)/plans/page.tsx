@@ -2,8 +2,8 @@ import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AddPlanButton, PlanCardActions } from "@/components/console/plan-editor";
-import { BillingLinkButton } from "@/components/console/billing-link-button";
 import { PlanVersionsButton } from "@/components/console/plan-versions";
+import { StripePriceButton } from "@/components/console/stripe-price-button";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
 import { getCatalog } from "@/lib/catalog-api";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
@@ -65,7 +65,7 @@ function PlanCard({ plan, catalog }: { plan: AdminPackage; catalog: Catalog | nu
         )}
       </div>
       <PlanVersionsButton packageId={plan.packageId} planName={plan.name} canManage={!!catalog} />
-      {catalog && plan.monthlyPrice > 0 && <BillingLinkButton packageId={plan.packageId} planName={plan.name} />}
+      {catalog && plan.monthlyPrice > 0 && <StripePriceButton packageId={plan.packageId} planName={plan.name} />}
       {catalog && <PlanCardActions plan={plan} catalog={catalog} />}
     </article>
   );

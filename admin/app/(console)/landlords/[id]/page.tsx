@@ -6,6 +6,7 @@ import { ChangePlanButton } from "@/components/console/change-plan";
 import { LandlordAccount } from "@/components/console/landlord-account";
 import { OverridesManager } from "@/components/console/overrides-manager";
 import { PlanChangesCard } from "@/components/console/plan-changes-card";
+import { PriceOverridesManager } from "@/components/console/price-overrides-manager";
 import { ProposalStatus } from "@/components/console/proposal-status";
 import { ProposalWatcher } from "@/components/console/proposal-watcher";
 import { Notice, Pill, cardClass } from "@/components/console/ui";
@@ -14,6 +15,7 @@ import { getCatalog } from "@/lib/catalog-api";
 import { formatPrice, formatWhen, initials } from "@/lib/format";
 import { getOverrides } from "@/lib/override-api";
 import { getPermissions, PERMISSIONS } from "@/lib/permissions";
+import { getPriceOverrides } from "@/lib/price-api";
 import { getAwaitingProposals } from "@/lib/proposal-api";
 import { getLandlordHistory, getLandlordSubscription, getPackages } from "@/lib/subscription-api";
 
@@ -38,11 +40,12 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
   if (!Number.isInteger(landlordProfileId) || landlordProfileId <= 0) notFound();
 
   // Load everything at once instead of one after another, so the page opens faster.
-  const [detail, history, packages, overrideList, catalog, { can }] = await Promise.all([
+  const [detail, history, packages, overrideList, priceList, catalog, { can }] = await Promise.all([
     getLandlordSubscription(session.backendToken, landlordProfileId),
     getLandlordHistory(session.backendToken, landlordProfileId),
     getPackages(session.backendToken), // the plan catalog, needed by the "Change plan" popup
     getOverrides(session.backendToken, landlordProfileId), // every override, including expired and removed ones
+    getPriceOverrides(session.backendToken, landlordProfileId), // custom prices given to this landlord
     getCatalog(session.backendToken), // the limit and feature lists for the "Add override" popup
     getPermissions(session), // what this admin may do, to decide which buttons to show
   ]);
@@ -201,6 +204,16 @@ export default async function LandlordDetailPage({ params }: { params: Promise<{
               : "Couldn't load overrides right now. Refresh to try again."}
           </Notice>
         </section>
+      )}
+
+      {/* Custom price: a different monthly price for this landlord. Shown when the list loaded; buttons need billing.price_override. */}
+      {priceList.status === "ok" && (
+        <PriceOverridesManager
+          landlordProfileId={landlord.landlordProfileId}
+          landlordName={displayName}
+          prices={priceList.data}
+          canGrant={can(PERMISSIONS.priceOverride)}
+        />
       )}
 
       {/* 4. Plan history, newest first */}

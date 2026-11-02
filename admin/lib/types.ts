@@ -424,6 +424,35 @@ export interface LandlordOverride {
   revokedReason: string | null;
 }
 
+// ---- Plan prices in Stripe and custom prices per landlord ---------------------------------------------------
+
+// GET /admin/packages/{id}/billing-link: how a plan is sold in Stripe. Fields are null when not set.
+export interface PackageBilling {
+  stripePriceId: string | null;
+  paymentLinkUrl: string | null;
+  stripePaymentLinkId: string | null;
+  updatedAt: string | null;
+}
+
+// One custom price given to a landlord (GET /admin/landlords/{id}/price-overrides). `status` is offered (not used yet),
+// in_use (on their subscription) or revoked.
+export interface PriceOverride {
+  id: number;
+  kind: "fixed_amount" | "percent_off";
+  monthlyAmount: number | null;
+  percentOff: number | null;
+  months: number | null;
+  status: "offered" | "in_use" | "revoked";
+  reasonCode: string;
+  note: string;
+  createdAt: string;
+  createdBy: string | null;
+  appliedAt: string | null;
+  revokedAt: string | null;
+  revokedBy: string | null;
+  revokedReason: string | null;
+}
+
 // ---- Customers (landlords, tenants and contractors; GET /api/v1/admin/customers) ---------------------------
 
 export type CustomerRole = "Landlord" | "Tenant" | "Contractor";

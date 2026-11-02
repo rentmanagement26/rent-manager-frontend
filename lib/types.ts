@@ -281,6 +281,19 @@ export interface MyBilling {
   status: string | null; // from Stripe: trialing, active, past_due...
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  // True when paying for a plan now would start a free trial of `trialDays` days.
+  trialEligible: boolean;
+  trialDays: number;
+  // A custom price an admin gave this landlord, or null.
+  priceOverride: MyPriceOverride | null;
+}
+
+// A custom price: a fixed monthly amount or a percent off, for `months` months or (null) for as long as they stay.
+export interface MyPriceOverride {
+  kind: "fixed_amount" | "percent_off";
+  monthlyAmount: number | null;
+  percentOff: number | null;
+  months: number | null;
 }
 
 // One plan the landlord can choose (newest terms only).

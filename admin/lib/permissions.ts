@@ -11,6 +11,7 @@ export const PERMISSIONS = {
   catalogManage: "catalog.manage",
   overridesGrant: "overrides.grant",
   overridesRevoke: "overrides.revoke",
+  priceOverride: "billing.price_override",
   subscriptionsChange: "subscriptions.change",
   subscriptionsOverride: "subscriptions.override",
   customersManage: "customers.manage",

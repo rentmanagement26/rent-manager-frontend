@@ -46,6 +46,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
     <div className="space-y-5">
       <PageHeader title="Billing" description="See your plan and change it." />
 
+      {checkout === "cancelled" && (
+        <div className="max-w-xl rounded-2xl border border-default bg-subtle p-4 text-sm text-body">You didn&apos;t complete the payment. Your plan hasn&apos;t changed.</div>
+      )}
+
       {failed || !subscription ? (
         <div className="max-w-xl rounded-2xl border border-default bg-white p-6 text-sm text-muted shadow-sm">
           We couldn&apos;t load your plan right now. Refresh the page to try again.
@@ -86,7 +90,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           {/* Stripe sends the landlord back with ?checkout=done; wait for the webhook to change the plan. */}
           <CheckoutWatcher waiting={checkout === "done" && !billing?.hasStripeSubscription} />
 
-          <BillingPlans plans={plans} currentPrice={subscription.hasPlan ? subscription.monthlyPrice : null} />
+          <BillingPlans
+            plans={plans}
+            currentPrice={subscription.hasPlan ? subscription.monthlyPrice : null}
+            trialDays={billing?.trialEligible ? billing.trialDays : null}
+            override={billing?.priceOverride ?? null}
+          />
         </>
       )}
     </div>

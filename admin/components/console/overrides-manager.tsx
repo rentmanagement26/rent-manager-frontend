@@ -16,7 +16,7 @@ import type { ActionFailure, Catalog, LandlordOverride } from "@/lib/types";
 type Result = { ok: true } | ActionFailure;
 
 // Runs a save, then reports success to the parent or shows the failure. Sends an expired session to sign-in.
-function useSubmit(onDone: () => void) {
+export function useSubmit(onDone: () => void) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,7 +37,7 @@ function useSubmit(onDone: () => void) {
 }
 
 // Cancel / Save buttons with the error message above them.
-function Footer({
+export function Footer({
   error,
   submitting,
   canSubmit,

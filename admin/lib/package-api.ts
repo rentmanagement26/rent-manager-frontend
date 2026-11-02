@@ -57,11 +57,3 @@ export function setTermsEndDate(token: string, packageId: number, versionId: num
 export function clearTermsEndDate(token: string, packageId: number, versionId: number, note: string) {
   return send<TermsEndResult>("POST", `${PACKAGES}/${packageId}/versions/${versionId}/end-date/cancel`, token, { Note: note });
 }
-
-// Sets the Stripe Payment Link for a paid plan. Both fields are required: Stripe's events carry the plink_ id, not the address.
-export function setBillingLink(token: string, packageId: number, paymentLinkUrl: string, stripePaymentLinkId: string) {
-  return send<null>("PUT", `${PACKAGES}/${packageId}/billing-link`, token, {
-    PaymentLinkUrl: paymentLinkUrl,
-    StripePaymentLinkId: stripePaymentLinkId,
-  });
-}
