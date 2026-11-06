@@ -168,3 +168,26 @@ export interface MaintenanceSettings {
   contractorSees: { name: string; phone: string; isFallback: boolean };
   updatedAt: string | null;
 }
+
+// What the "new request" form needs for one unit: its label, and the names of the people who rent it now (empty when nobody does).
+export interface LandlordRequestForm {
+  unitId: number;
+  placeLabel: string;
+  propertyId: number;
+  propertyName: string;
+  hasActiveTenancy: boolean;
+  tenants: string[];
+}
+
+// What the landlord sends to create a request. A unit request has unitId; a common-area request has propertyId and location "CommonArea".
+export interface CreateRequestInput {
+  unitId: number | null;
+  propertyId: number | null;
+  category: string;
+  location: string;
+  commonAreaLocation: string | null;
+  description: string;
+  urgency: string;
+  title: string | null;
+  shareWithTenants: boolean;
+}

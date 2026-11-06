@@ -1,6 +1,8 @@
 // Backend calls for the landlord's maintenance screens. Used only on the server (pages and server actions).
 import type {
+  CreateRequestInput,
   LandlordListFilters,
+  LandlordRequestForm,
   LandlordPage,
   LandlordRequestDetail,
   LandlordSummary,
@@ -31,6 +33,16 @@ export function listRequests(token: string, filters: LandlordListFilters) {
 // The request page. Opening an open request for the first time marks it Seen and tells the tenants.
 export function getRequest(token: string, id: number): Promise<LandlordRequestDetail | null> {
   return orNull(call<LandlordRequestDetail>(token, "GET", `/requests/${id}`));
+}
+
+// What the new-request form needs for a unit (its label and who rents it now).
+export function getRequestForm(token: string, unitId: number): Promise<LandlordRequestForm | null> {
+  return orNull(call<LandlordRequestForm>(token, "GET", `/requests/form?unitId=${unitId}`));
+}
+
+// Creates a request for a unit or a common area. A unit's tenants see it (and are told) when shareWithTenants is true.
+export function createRequest(token: string, input: CreateRequestInput) {
+  return call<{ id: number; number: string; sharedWithTenants: boolean }>(token, "POST", "/requests", input);
 }
 
 export function setUrgency(token: string, id: number, urgency: string) {

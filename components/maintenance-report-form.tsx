@@ -7,10 +7,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AccessFields } from "@/components/maintenance-access-fields";
-import { ChoiceChips } from "@/components/choice-chips";
 import { PhotoPicker } from "@/components/maintenance-photo-picker";
+import { PlaceFields } from "@/components/maintenance-place-fields";
 import { reportProblemAction, similarRequestsAction } from "@/lib/maintenance-actions";
-import { CATEGORIES, COMMON_AREAS, LOCATIONS, accessSummary } from "@/lib/maintenance-format";
 import type { AccessInput, ReportForm, SimilarRequest } from "@/lib/maintenance-types";
 import { uploadRequestFiles } from "@/lib/maintenance-upload";
 import { goToSessionExpired } from "@/lib/session-expired-client";
@@ -42,7 +41,6 @@ export function ReportProblemForm({ form }: { form: ReportForm }) {
   const [isEmergency, setIsEmergency] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [access, setAccess] = useState<AccessInput>(() => initialAccess(form));
-  const [editingAccess, setEditingAccess] = useState(false);
   // True once the tenant changed the access details; with nothing remembered and nothing typed, none are sent.
   const [accessTouched, setAccessTouched] = useState(false);
   const [similar, setSimilar] = useState<SimilarRequest[]>([]);
@@ -111,18 +109,14 @@ export function ReportProblemForm({ form }: { form: ReportForm }) {
       <div className={cardClass}>
         <h2 className="mb-4 font-head text-lg font-bold text-heading">What is the problem?</h2>
 
-        <span className={labelClass}>Kind of problem *</span>
-        <ChoiceChips label="Kind of problem" options={CATEGORIES} selected={[category]} onToggle={setCategory} />
-
-        <span className={`${labelClass} mt-5`}>Where in the unit? *</span>
-        <ChoiceChips label="Where in the unit" options={LOCATIONS} selected={[location]} onToggle={setLocation} />
-
-        {location === "CommonArea" && (
-          <>
-            <span className={`${labelClass} mt-5`}>Which part of the building? *</span>
-            <ChoiceChips label="Which part of the building" options={COMMON_AREAS} selected={[commonArea]} onToggle={setCommonArea} />
-          </>
-        )}
+        <PlaceFields
+          category={category}
+          location={location}
+          commonArea={commonArea}
+          onCategory={setCategory}
+          onLocation={setLocation}
+          onCommonArea={setCommonArea}
+        />
 
         {shownSimilar.length > 0 && (
           <div className="mt-4 rounded-lg bg-accent-tint px-3.5 py-3 text-sm text-accent-dark">
@@ -168,44 +162,21 @@ export function ReportProblemForm({ form }: { form: ReportForm }) {
       </div>
 
       <div className={cardClass}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="font-head text-lg font-bold text-heading">
-              Getting into your unit {!hasAccess && <span className="text-sm font-normal text-muted">(optional)</span>}
-            </h2>
-            {!editingAccess && (
-              <p className="mt-1 text-sm text-body">
-                {hasAccess ? (
-                  <>
-                    {form.accessSource !== "None" && !accessTouched && (
-                      <span className="block text-xs text-muted">
-                        {form.accessSource === "YourLastRequest" ? "Same as your last request" : "From a request in your home"}
-                        {form.accessFromNumber ? ` (${form.accessFromNumber})` : ""}
-                      </span>
-                    )}
-                    {accessSummary(access)}
-                  </>
-                ) : (
-                  "Permission to enter, best times, how to reach you, pets. You can skip this; it is remembered for your next request."
-                )}
-              </p>
-            )}
-          </div>
-          <button type="button" onClick={() => setEditingAccess((open) => !open)} className={ghostButton}>
-            {editingAccess ? "Done" : hasAccess ? "Change" : "Add details"}
-          </button>
-        </div>
-        {editingAccess && (
-          <div className="mt-4">
-            <AccessFields
-              value={access}
-              onChange={(next) => {
-                setAccess(next);
-                setAccessTouched(true);
-              }}
-            />
-          </div>
-        )}
+        <h2 className="font-head text-lg font-bold text-heading">
+          Getting into your unit <span className="text-sm font-normal text-muted">(optional)</span>
+        </h2>
+        <p className="mb-4 mt-1 text-sm text-muted">
+          {form.accessSource === "None"
+            ? "Skip it if you like. What you enter is remembered for your next request."
+            : `Filled in from ${form.accessSource === "YourLastRequest" ? "your last request" : "a request in your home"}${form.accessFromNumber ? ` (${form.accessFromNumber})` : ""}. Change anything that is different this time.`}
+        </p>
+        <AccessFields
+          value={access}
+          onChange={(next) => {
+            setAccess(next);
+            setAccessTouched(true);
+          }}
+        />
       </div>
 
       {error && (

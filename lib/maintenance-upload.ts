@@ -1,7 +1,10 @@
 // Browser-side helpers for photos and videos on a request: check a file before upload, and run the three upload steps
 // (get an address, PUT the file to storage, register it).
+import type { ActionResult } from "@/lib/document-actions";
 import { putToStorage } from "@/lib/document-format";
+import { landlordMediaUploadUrlAction, landlordRegisterMediaAction } from "@/lib/landlord-maintenance-actions";
 import { mediaUploadUrlAction, registerMediaAction } from "@/lib/maintenance-actions";
+import type { UploadTarget } from "@/lib/maintenance-types";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 
 export const MAX_FILES = 8;
@@ -23,11 +26,20 @@ export function fileProblem(file: File, chosen: File[]): string {
   return "";
 }
 
+// The two server calls an upload needs. The tenant and the landlord have their own, because the backend paths differ.
+export interface Uploader {
+  getUrl: (requestId: number, extension: string) => Promise<ActionResult<UploadTarget>>;
+  register: (requestId: number, blobPath: string, fileName: string) => Promise<ActionResult<unknown>>;
+}
+
+export const TENANT_UPLOADER: Uploader = { getUrl: mediaUploadUrlAction, register: registerMediaAction };
+export const LANDLORD_UPLOADER: Uploader = { getUrl: landlordMediaUploadUrlAction, register: landlordRegisterMediaAction };
+
 // Uploads each file to the request, one after the other. Returns "" when all arrived, or a sentence saying which one failed.
-export async function uploadRequestFiles(requestId: number, files: File[]): Promise<string> {
+export async function uploadRequestFiles(requestId: number, files: File[], uploader: Uploader = TENANT_UPLOADER): Promise<string> {
   for (const file of files) {
     const extension = file.name.includes(".") ? file.name.split(".").pop()! : "";
-    const target = await mediaUploadUrlAction(requestId, extension);
+    const target = await uploader.getUrl(requestId, extension);
     if (!("ok" in target)) {
       if (target.expired) goToSessionExpired();
       return `${file.name}: ${target.error}`;
@@ -39,7 +51,7 @@ export async function uploadRequestFiles(requestId: number, files: File[]): Prom
       return `${file.name}: ${err instanceof Error ? err.message : "The file could not be uploaded."}`;
     }
 
-    const registered = await registerMediaAction(requestId, target.data.blobPath, file.name);
+    const registered = await uploader.register(requestId, target.data.blobPath, file.name);
     if (!("ok" in registered)) return `${file.name}: ${registered.error}`;
   }
   return "";
