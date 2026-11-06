@@ -63,6 +63,12 @@ describe("breadcrumbTrail", () => {
     expect(backTarget("/landlord/maintenance/12")?.href).toBe("/landlord/maintenance");
   });
 
+  it("puts a contractor's job and quote under Jobs and Quotes", () => {
+    expect(labels("/contractor/jobs")).toEqual([]);
+    expect(backTarget("/contractor/jobs/34")?.href).toBe("/contractor/jobs");
+    expect(backTarget("/contractor/quotes/61")?.href).toBe("/contractor/quotes");
+  });
+
   it("shows the reminder settings under Renewals", () => {
     expect(labels("/landlord/renewals/settings")).toEqual(["Dashboard", "Renewals"]);
   });

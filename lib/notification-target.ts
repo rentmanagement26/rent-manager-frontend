@@ -9,6 +9,8 @@ const PLAN_NOTICE_TYPE = "PlanChangeNotice";
 // The backend's types for "a new maintenance request" (to the landlord) and "a request changed" (to the tenant or landlord).
 const MAINTENANCE_REQUEST_TYPE = "MaintenanceRequestCreated";
 const MAINTENANCE_UPDATED_TYPE = "MaintenanceUpdated";
+// ...and "a job or quote changed" (to a contractor with an account): its data holds a jobId or a quoteId.
+const MAINTENANCE_JOB_TYPE = "MaintenanceJobUpdated";
 
 // Returns the page a notification opens, or null when it is just a message. A plan proposal carries its id in `data`
 // ({ "proposalId": 12, ... }) so it opens that proposal; older ones without it open the list.
@@ -19,6 +21,17 @@ export function notificationHref(item: NotificationItem): string | null {
     if (Number.isInteger(documentId) && documentId > 0) return `/documents/${documentId}`;
   } catch {
     // `data` was not JSON: this is not a document notification.
+  }
+
+  // A contractor's job or quote notification carries a jobId or a quoteId: it opens that page.
+  if (item.type === MAINTENANCE_JOB_TYPE) {
+    try {
+      const data = JSON.parse(item.data ?? "{}");
+      if (Number.isInteger(Number(data.jobId)) && Number(data.jobId) > 0) return `/contractor/jobs/${Number(data.jobId)}`;
+      if (Number.isInteger(Number(data.quoteId)) && Number(data.quoteId) > 0) return `/contractor/quotes/${Number(data.quoteId)}`;
+    } catch {
+      // `data` was not JSON: this is just a message.
+    }
   }
 
   // A maintenance notification carries { "requestId": 12 } (and a jobId or quoteId for contractors). /maintenance/12 sends a tenant or a

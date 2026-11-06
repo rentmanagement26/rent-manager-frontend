@@ -13,7 +13,7 @@ import { LocalMoment } from "@/components/local-moment";
 import { ReasonAction, useRunner } from "@/components/maintenance-request-actions";
 import { AcceptQuoteDialog, EnterQuoteDialog } from "@/components/quote-dialogs";
 import { RequestQuotesDialog } from "@/components/request-quotes-dialog";
-import { cancelQuoteAction, declineQuoteAction, setJobLinkAction, setQuoteLinkAction, takeBackJobAction } from "@/lib/contractor-actions";
+import { cancelQuoteAction, declineQuoteAction, enterJobUpdateAction, setJobLinkAction, setQuoteLinkAction, takeBackJobAction } from "@/lib/contractor-actions";
 import type { ContractorJob, JobUpdateInput, Quote } from "@/lib/contractor-types";
 import { formatCalendarDate } from "@/lib/format-time";
 import type { LandlordPermissions } from "@/lib/landlord-maintenance-types";
@@ -222,7 +222,9 @@ export function ContractorSection({
       {dialog?.kind === "quotes" && <RequestQuotesDialog requestId={requestId} category={category} subtitle={subtitle} onClose={close} />}
       {dialog?.kind === "accept" && <AcceptQuoteDialog requestId={requestId} quote={dialog.quote} onClose={close} />}
       {dialog?.kind === "enter" && <EnterQuoteDialog requestId={requestId} quote={dialog.quote} onClose={close} />}
-      {dialog?.kind === "update" && job && <JobUpdateDialog requestId={requestId} type={dialog.type} contractorName={job.contractor.displayName} onClose={close} />}
+      {dialog?.kind === "update" && job && (
+        <JobUpdateDialog type={dialog.type} subtitle={`Entered for ${job.contractor.displayName}`} onSave={(update) => enterJobUpdateAction(requestId, update)} onClose={close} />
+      )}
       {dialog?.kind === "instructions" && job && <InstructionsDialog requestId={requestId} job={job} onClose={close} />}
     </div>
   );

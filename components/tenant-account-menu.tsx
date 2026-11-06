@@ -10,9 +10,11 @@ interface TenantAccountMenuProps {
   fullName: string;
   email: string;
   role: string;
+  // The portal whose notifications, profile and security pages the menu links to ("/tenant" or "/contractor").
+  portal?: string;
 }
 
-export function TenantAccountMenu({ fullName, email, role }: TenantAccountMenuProps) {
+export function TenantAccountMenu({ fullName, email, role, portal = "/tenant" }: TenantAccountMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,7 +30,7 @@ export function TenantAccountMenu({ fullName, email, role }: TenantAccountMenuPr
 
   return (
     <div className="flex items-center gap-3 sm:gap-4">
-      <NotificationBell viewAllHref="/tenant/notifications" />
+      <NotificationBell viewAllHref={`${portal}/notifications`} />
       <div className="relative" ref={ref}>
         <button
           type="button"
@@ -54,14 +56,14 @@ export function TenantAccountMenu({ fullName, email, role }: TenantAccountMenuPr
               </p>
             </div>
             <Link
-              href="/tenant/profile"
+              href={`${portal}/profile`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
             >
               Profile
             </Link>
             <Link
-              href="/tenant/settings"
+              href={`${portal}/settings`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
             >

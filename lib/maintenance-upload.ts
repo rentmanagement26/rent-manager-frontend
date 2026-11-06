@@ -26,20 +26,17 @@ export function fileProblem(file: File, chosen: File[]): string {
   return "";
 }
 
-// The two server calls an upload needs. The tenant and the landlord have their own, because the backend paths differ.
+// The two server calls an upload needs, already tied to what the file belongs to (a request, a job, a quote or a link).
 export interface Uploader {
-  getUrl: (requestId: number, extension: string) => Promise<ActionResult<UploadTarget>>;
-  register: (requestId: number, blobPath: string, fileName: string) => Promise<ActionResult<unknown>>;
+  getUrl: (extension: string) => Promise<ActionResult<UploadTarget>>;
+  register: (blobPath: string, fileName: string) => Promise<ActionResult<unknown>>;
 }
 
-export const TENANT_UPLOADER: Uploader = { getUrl: mediaUploadUrlAction, register: registerMediaAction };
-export const LANDLORD_UPLOADER: Uploader = { getUrl: landlordMediaUploadUrlAction, register: landlordRegisterMediaAction };
-
-// Uploads each file to the request, one after the other. Returns "" when all arrived, or a sentence saying which one failed.
-export async function uploadRequestFiles(requestId: number, files: File[], uploader: Uploader = TENANT_UPLOADER): Promise<string> {
+// Uploads each file, one after the other. Returns "" when all arrived, or a sentence saying which one failed.
+export async function uploadFiles(files: File[], uploader: Uploader): Promise<string> {
   for (const file of files) {
     const extension = file.name.includes(".") ? file.name.split(".").pop()! : "";
-    const target = await uploader.getUrl(requestId, extension);
+    const target = await uploader.getUrl(extension);
     if (!("ok" in target)) {
       if (target.expired) goToSessionExpired();
       return `${file.name}: ${target.error}`;
@@ -51,8 +48,45 @@ export async function uploadRequestFiles(requestId: number, files: File[], uploa
       return `${file.name}: ${err instanceof Error ? err.message : "The file could not be uploaded."}`;
     }
 
-    const registered = await uploader.register(requestId, target.data.blobPath, file.name);
+    const registered = await uploader.register(target.data.blobPath, file.name);
     if (!("ok" in registered)) return `${file.name}: ${registered.error}`;
   }
+  return "";
+}
+
+// The photos of a maintenance request, by the tenant or by the landlord (their backend paths differ).
+export type RequestUploader = "tenant" | "landlord";
+
+export function uploadRequestFiles(requestId: number, files: File[], by: RequestUploader = "tenant"): Promise<string> {
+  const landlord = by === "landlord";
+  return uploadFiles(files, {
+    getUrl: (extension) => (landlord ? landlordMediaUploadUrlAction : mediaUploadUrlAction)(requestId, extension),
+    register: (blobPath, fileName) => (landlord ? landlordRegisterMediaAction : registerMediaAction)(requestId, blobPath, fileName),
+  });
+}
+
+// What a contractor may attach: photos and one video to a job (10 files), or a PDF and photos to a written quote (3 files, no video).
+export type WorkFileKind = "job" | "quote";
+
+export const WORK_FILE_LIMITS: Record<WorkFileKind, { max: number; video: boolean; pdf: boolean }> = {
+  job: { max: 10, video: true, pdf: false },
+  quote: { max: 3, video: false, pdf: true },
+};
+
+// What the file picker offers for a job or a quote.
+export const workFileAccept = (kind: WorkFileKind) =>
+  [...PHOTO_TYPES, ...(WORK_FILE_LIMITS[kind].video ? VIDEO_TYPES : []), ...(WORK_FILE_LIMITS[kind].pdf ? ["application/pdf"] : [])].join(",");
+
+// A sentence saying why `file` cannot be added to a job or quote that already has `count` files (`hasVideo`: one of them is a video),
+// or "" when it can. The server checks again.
+export function workFileProblem(file: File, kind: WorkFileKind, count: number, hasVideo: boolean): string {
+  const limits = WORK_FILE_LIMITS[kind];
+  const video = isVideo(file);
+  const pdf = file.type === "application/pdf";
+  const allowed = PHOTO_TYPES.includes(file.type) || (video && limits.video) || (pdf && limits.pdf);
+  if (!allowed) return `${file.name}: ${kind === "job" ? "use a JPEG, PNG or WebP photo, or an MP4 or MOV video." : "use a PDF, or a JPEG, PNG or WebP photo."}`;
+  if (count >= limits.max) return `You can add up to ${limits.max} files.`;
+  if (video && hasVideo) return "Only one video can be added.";
+  if (file.size > (video ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES)) return `${file.name} is too large. A photo or PDF can be at most 10 MB and a video 50 MB.`;
   return "";
 }

@@ -1,14 +1,15 @@
 "use client";
 
-// The popup for one update the landlord enters for a contractor who is not in the app (after a phone call): accepted, can't do it, a visit,
-// waiting for parts, parts arrived, a note, or done. The timeline says the landlord entered it for them. Also the small popup to change a job's
-// instructions.
+// The popup for one job update: accepted, can't do it, a visit, waiting for parts, parts arrived, a note, or done. The contractor uses it for
+// their own job; the landlord uses it to enter an update for a contractor who is not in the app (the timeline then says so). Also the small
+// popup to change a job's instructions.
 import { useState } from "react";
 import { BillingDialog, ghostButton, primaryButton } from "@/components/billing-dialog";
 import { ChoiceChips } from "@/components/choice-chips";
 import { useRunner } from "@/components/maintenance-request-actions";
-import { changeInstructionsAction, enterJobUpdateAction } from "@/lib/contractor-actions";
+import { changeInstructionsAction } from "@/lib/contractor-actions";
 import type { ContractorJob, JobUpdateInput } from "@/lib/contractor-types";
+import type { ActionResult } from "@/lib/document-actions";
 
 type UpdateType = JobUpdateInput["type"];
 
@@ -17,16 +18,27 @@ const labelClass = "mb-1.5 mt-3 block text-sm font-semibold text-heading";
 
 // What each update is called, and the note that explains it. `note` and `reason` limits are the backend's.
 const TITLES: Record<UpdateType, { title: string; help: string }> = {
-  accepted: { title: "They accepted the job", help: "Records that the contractor said yes." },
-  declined: { title: "They can't do the job", help: "The request goes back to New and you can assign someone else." },
-  visit: { title: "Set the visit", help: "Your tenants are told the day and time." },
-  waiting_for_parts: { title: "Waiting for parts", help: "Your tenants see the date parts are expected, not the note." },
-  parts_arrived: { title: "Parts arrived", help: "Records that the parts are here." },
-  note: { title: "Add a note", help: "Only you and the contractor see it, unless you tick the box." },
-  done: { title: "Mark the job done", help: "The request becomes Done. Your tenants read the note and can reopen it for 30 days." },
+  accepted: { title: "Accept the job", help: "The landlord is told that the job is accepted." },
+  declined: { title: "Can't do the job", help: "The request goes back to New and the landlord can assign someone else." },
+  visit: { title: "Set the visit", help: "The tenants are told the day and time." },
+  waiting_for_parts: { title: "Waiting for parts", help: "The tenants see the date parts are expected, not the note." },
+  parts_arrived: { title: "Parts arrived", help: "Tells the landlord that the parts are here." },
+  note: { title: "Add a note", help: "Only the landlord and the contractor see it, unless you tick the box." },
+  done: { title: "Mark the job done", help: "The request becomes Done. The tenants read the note and can reopen the request for 30 days." },
 };
 
-export function JobUpdateDialog({ requestId, type, contractorName, onClose }: { requestId: number; type: UpdateType; contractorName: string; onClose: () => void }) {
+export function JobUpdateDialog({
+  type,
+  subtitle,
+  onSave,
+  onClose,
+}: {
+  type: UpdateType;
+  subtitle?: string;
+  // Sends the update (a landlord's or a contractor's server action, already tied to the job) and answers its result.
+  onSave: (update: JobUpdateInput) => Promise<ActionResult<unknown>>;
+  onClose: () => void;
+}) {
   const [text, setText] = useState("");
   const [date, setDate] = useState("");
   const [window, setWindow] = useState("morning");
@@ -46,13 +58,13 @@ export function JobUpdateDialog({ requestId, type, contractorName, onClose }: { 
     if (type === "waiting_for_parts") Object.assign(update, { expectedBy: date, note: text.trim() || null });
     if (type === "note") Object.assign(update, { note: text.trim(), visibleToTenant: visible });
     if (type === "done") update.note = text.trim() || null;
-    if (await run(() => enterJobUpdateAction(requestId, update))) onClose();
+    if (await run(() => onSave(update))) onClose();
   }
 
   const hasText = type === "declined" || type === "waiting_for_parts" || type === "note" || type === "done";
 
   return (
-    <BillingDialog title={title} subtitle={`Entered for ${contractorName}`}>
+    <BillingDialog title={title} subtitle={subtitle}>
       <p className="text-sm text-body">{help}</p>
 
       {type === "visit" && (
@@ -80,7 +92,7 @@ export function JobUpdateDialog({ requestId, type, contractorName, onClose }: { 
       {type === "note" && (
         <label className="mt-3 flex cursor-pointer gap-2 text-sm">
           <input type="checkbox" checked={visible} onChange={(event) => setVisible(event.target.checked)} className="mt-1" />
-          <span className="font-semibold text-heading">Your tenants can read this note</span>
+          <span className="font-semibold text-heading">The tenants can read this note</span>
         </label>
       )}
 

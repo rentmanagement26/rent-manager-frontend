@@ -15,6 +15,14 @@ const isId = (segment: string | undefined) => !!segment && /^\d+$/.test(segment)
 // The crumbs one address segment adds. `previous` is the segment before it, `href` the address up to and including it.
 // A segment that is not a page of its own (for example "units") adds nothing.
 function crumbsFor(base: string, segment: string, previous: string | undefined, href: string): Crumb[] {
+  if (base === "contractor") {
+    if (segment === "jobs") return [{ label: "Jobs", href }];
+    if (segment === "quotes") return [{ label: "Quotes", href }];
+    if (isId(segment) && previous === "jobs") return [{ label: "Job", href }];
+    if (isId(segment) && previous === "quotes") return [{ label: "Quote", href }];
+    return [];
+  }
+
   if (base === "tenant") {
     if (segment === "documents") return [{ label: "Documents", href }];
     if (isId(segment) && previous === "documents") return [{ label: "Document", href }];
@@ -45,7 +53,7 @@ function crumbsFor(base: string, segment: string, previous: string | undefined, 
 export function breadcrumbTrail(pathname: string): Crumb[] {
   const parts = pathname.split("/").filter(Boolean);
   const base = parts[0];
-  if (base !== "landlord" && base !== "tenant") return [];
+  if (base !== "landlord" && base !== "tenant" && base !== "contractor") return [];
 
   const rest = parts.slice(1);
   // Pages reached from the account menu or a button (not from the sidebar) go back to the dashboard.

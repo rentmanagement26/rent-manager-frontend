@@ -48,6 +48,11 @@ describe("notificationHref for maintenance", () => {
     expect(notificationHref(item("MaintenanceRequestCreated", '{"requestId":7}'))).toBe("/maintenance/7");
   });
 
+  it("opens a contractor's job or quote page", () => {
+    expect(notificationHref(item("MaintenanceJobUpdated", '{"requestId":12,"jobId":34}'))).toBe("/contractor/jobs/34");
+    expect(notificationHref(item("MaintenanceJobUpdated", '{"requestId":12,"quoteId":61}'))).toBe("/contractor/quotes/61");
+  });
+
   it("is just a message without a request id", () => {
     expect(notificationHref(item("MaintenanceUpdated", "{}"))).toBeNull();
   });

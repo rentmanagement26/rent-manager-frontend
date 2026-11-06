@@ -11,7 +11,7 @@ import { PlaceFields } from "@/components/maintenance-place-fields";
 import { createRequestAction, requestFormAction } from "@/lib/landlord-maintenance-actions";
 import type { LandlordRequestForm } from "@/lib/landlord-maintenance-types";
 import { LOCATIONS, URGENCIES } from "@/lib/maintenance-format";
-import { LANDLORD_UPLOADER, uploadRequestFiles } from "@/lib/maintenance-upload";
+import { uploadRequestFiles } from "@/lib/maintenance-upload";
 import { goToSessionExpired } from "@/lib/session-expired-client";
 
 // A property with its units, as much as the form needs.
@@ -103,7 +103,7 @@ export function NewRequestForm({ properties, initialUnitId }: { properties: Pick
       return;
     }
 
-    const problem = await uploadRequestFiles(created.data.id, files, LANDLORD_UPLOADER);
+    const problem = await uploadRequestFiles(created.data.id, files, "landlord");
     if (problem) {
       setBusy(false);
       setSavedId(created.data.id);
