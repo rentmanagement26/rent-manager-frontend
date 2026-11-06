@@ -29,7 +29,11 @@ export function useRunner() {
       return true;
     }
     if (result.expired) goToSessionExpired();
-    else setError(result.error);
+    else {
+      setError(result.error);
+      // "changed" and "wrong_state" mean the page is out of date: load it again behind the message.
+      if (result.code === "changed" || result.code === "wrong_state") router.refresh();
+    }
     return false;
   }
   return { busy, error, run };
@@ -74,12 +78,15 @@ export function ReasonAction({
   submitLabel,
   onSubmit,
   maxLength = 300,
+  optional = false,
 }: {
   label: string;
   prompt: string;
   submitLabel: string;
   onSubmit: (reason: string) => Promise<ActionResult<unknown>>;
   maxLength?: number;
+  // True when the backend accepts an empty reason (the box then says so and Send is not blocked).
+  optional?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -89,12 +96,12 @@ export function ReasonAction({
 
   return (
     <div className="w-full rounded-2xl border border-default bg-white p-4 shadow-sm">
-      <label htmlFor="reason" className="mb-1.5 block text-sm font-semibold text-heading">{prompt}</label>
+      <label htmlFor="reason" className="mb-1.5 block text-sm font-semibold text-heading">{prompt}{optional && <span className="font-normal text-muted"> (optional)</span>}</label>
       <textarea id="reason" rows={3} maxLength={maxLength} value={reason} onChange={(event) => setReason(event.target.value)} className={textareaClass} />
       {error && <p role="alert" className="mt-2 text-sm font-medium text-red-700">{error}</p>}
       <div className="mt-3 flex justify-end gap-2">
         <button type="button" disabled={busy} onClick={() => setOpen(false)} className={ghostButton}>Cancel</button>
-        <button type="button" disabled={busy || !reason.trim()} onClick={() => run(() => onSubmit(reason))} className={primaryButton}>
+        <button type="button" disabled={busy || (!optional && !reason.trim())} onClick={() => run(() => onSubmit(reason))} className={primaryButton}>
           {busy ? "Sending…" : submitLabel}
         </button>
       </div>

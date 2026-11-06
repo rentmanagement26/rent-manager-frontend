@@ -61,6 +61,9 @@ export default async function LandlordMaintenancePage({ searchParams }: { search
         description="Requests from your tenants."
         action={
           <div className="flex gap-2">
+            <Link href="/landlord/maintenance/contractors" className="rounded-full border border-default bg-white px-4 py-2 text-sm font-semibold text-heading hover:bg-subtle">
+              Contractors
+            </Link>
             <Link href="/landlord/maintenance/settings" className="rounded-full border border-default bg-white px-4 py-2 text-sm font-semibold text-heading hover:bg-subtle">
               Settings
             </Link>

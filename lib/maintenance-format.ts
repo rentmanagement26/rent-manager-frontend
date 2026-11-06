@@ -148,3 +148,26 @@ export function landlordProgressLine(
       return null;
   }
 }
+
+// Whole cents as Canadian dollars: 48000 -> "$480.00".
+export function formatCents(cents: number): string {
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+}
+
+// "taxes included" or "taxes extra", shown after an amount.
+export function taxWords(mode: string | null): string {
+  return mode === "Included" ? "taxes included" : "taxes extra";
+}
+
+// Dollars typed by a person ("480" or "480.50") as whole cents, or null when it is not a valid amount.
+export function dollarsToCents(text: string): number | null {
+  const value = Number(text.replace(/[$,\s]/g, ""));
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(value * 100);
+}
+
+export const HOW_THEY_WORK: Record<string, { label: string; className: string }> = {
+  InTheApp: { label: "In the app", className: "bg-green-100 text-green-800" },
+  EmailLink: { label: "Email link", className: "bg-brand-green-tint text-brand-green-dark" },
+  PhoneOnly: { label: "Phone only", className: "bg-subtle text-body" },
+};

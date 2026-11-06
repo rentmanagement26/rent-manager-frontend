@@ -57,6 +57,9 @@ describe("breadcrumbTrail", () => {
     expect(labels("/landlord/maintenance/12")).toEqual(["Dashboard", "Maintenance"]);
     expect(labels("/landlord/maintenance/settings")).toEqual(["Dashboard", "Maintenance"]);
     expect(labels("/landlord/maintenance/new")).toEqual(["Dashboard", "Maintenance"]);
+    expect(labels("/landlord/maintenance/contractors")).toEqual(["Dashboard", "Maintenance"]);
+    expect(labels("/landlord/maintenance/contractors/new")).toEqual(["Dashboard", "Maintenance", "Contractors"]);
+    expect(backTarget("/landlord/maintenance/contractors/5")?.href).toBe("/landlord/maintenance/contractors");
     expect(backTarget("/landlord/maintenance/12")?.href).toBe("/landlord/maintenance");
   });
 

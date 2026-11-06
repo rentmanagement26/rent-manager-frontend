@@ -1,5 +1,5 @@
 // Types for the landlord's maintenance screens, as the backend answers them (camelCase JSON, words from fixed lists as names).
-// Contractor jobs and quotes are not typed yet: they come with the contractor screens.
+import type { ContractorJob, Quote } from "@/lib/contractor-types";
 import type { AccessDetails, RequestStatus, UploadTarget } from "@/lib/maintenance-types";
 
 export type { UploadTarget };
@@ -143,8 +143,10 @@ export interface LandlordRequestDetail {
   tenants: RequestPerson[];
   timeline: LandlordTimelineEntry[];
   permissions: LandlordPermissions;
-  // The open contractor job (or the last one); its fields are typed with the contractor screens.
-  job: { status: string } | null;
+  // The open contractor job, or the last one when it explains the request (declined, taken back, or the one that finished it).
+  job: ContractorJob | null;
+  earlierJobs: ContractorJob[];
+  quotes: Quote[];
   quotesOpen: number;
   quotesReceived: number;
 }

@@ -35,6 +35,7 @@ function crumbsFor(base: string, segment: string, previous: string | undefined, 
   if (isId(segment) && previous === "documents") return [{ label: "Lease document", href }];
   if (segment === "renewals") return [{ label: "Renewals", href }];
   if (segment === "maintenance") return [{ label: "Maintenance", href }];
+  if (segment === "contractors") return [{ label: "Contractors", href }];
   if (isId(segment) && previous === "maintenance") return [{ label: "Request", href }];
   if (segment === "plan-proposals") return [{ label: "Plan proposals", href }];
   return [];

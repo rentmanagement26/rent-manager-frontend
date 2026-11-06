@@ -1,8 +1,8 @@
 // The landlord's page for one maintenance request: the problem and photos, access details, tenants, the whole timeline (with who may read
 // each line) and the actions the backend allows. Opening an open request for the first time marks it Seen and tells the tenants.
-// Contractor jobs and quotes are added with the contractor screens.
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ContractorSection } from "@/components/contractor-section";
 import { LandlordCommentBox, LandlordRequestButtons, UrgencyPicker } from "@/components/landlord-request-actions";
 import { LocalMoment } from "@/components/local-moment";
 import { PageHeader } from "@/components/page-header";
@@ -60,7 +60,6 @@ export default async function LandlordRequestPage({ params }: { params: Promise<
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${pill.className}`}>{pill.label}</span>
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${URGENCY_PILL[request.urgency]}`}>{request.urgency}</span>
         {progress && <span className="rounded-lg border border-default bg-white px-3 py-1 text-xs font-semibold text-heading">{progress}</span>}
-        {request.job && <span className="text-xs text-muted">A contractor has this job.</span>}
       </div>
 
       {request.status === "Cancelled" && request.cancelReason && <p className="text-sm text-body">Cancelled: {request.cancelReason}</p>}
@@ -82,12 +81,16 @@ export default async function LandlordRequestPage({ params }: { params: Promise<
             )}
           </section>
 
-          {(permissions.canAssignJob || permissions.canRequestQuotes) && !request.job && (
-            <section className={`${cardClass} border-dashed`}>
-              <h2 className="font-head text-lg font-bold text-heading">Contractor</h2>
-              <p className="mt-1 text-sm text-muted">Assigning a contractor and asking for quotes comes in the next update.</p>
-            </section>
-          )}
+          <ContractorSection
+            requestId={request.id}
+            category={request.category}
+            subtitle={`${request.number} · ${request.title} · ${request.placeLabel}`}
+            job={request.job}
+            quotes={request.quotes}
+            quotesOpen={request.quotesOpen}
+            quotesReceived={request.quotesReceived}
+            permissions={permissions}
+          />
 
           <section className={cardClass}>
             <h2 className="mb-2 font-head text-lg font-bold text-heading">Timeline</h2>
