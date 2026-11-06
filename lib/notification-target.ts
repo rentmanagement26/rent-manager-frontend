@@ -6,6 +6,10 @@ const PLAN_PROPOSAL_TYPE = "PlanProposal";
 // ...and for "your plan is being updated" (PlanChangeNotices.NoticeType).
 const PLAN_NOTICE_TYPE = "PlanChangeNotice";
 
+// The backend's types for "a new maintenance request" (to the landlord) and "a request changed" (to the tenant or landlord).
+const MAINTENANCE_REQUEST_TYPE = "MaintenanceRequestCreated";
+const MAINTENANCE_UPDATED_TYPE = "MaintenanceUpdated";
+
 // Returns the page a notification opens, or null when it is just a message. A plan proposal carries its id in `data`
 // ({ "proposalId": 12, ... }) so it opens that proposal; older ones without it open the list.
 export function notificationHref(item: NotificationItem): string | null {
@@ -15,6 +19,17 @@ export function notificationHref(item: NotificationItem): string | null {
     if (Number.isInteger(documentId) && documentId > 0) return `/documents/${documentId}`;
   } catch {
     // `data` was not JSON: this is not a document notification.
+  }
+
+  // A maintenance notification carries { "requestId": 12 } (and a jobId or quoteId for contractors). /maintenance/12 sends a tenant or a
+  // landlord to their own page for the request.
+  if (item.type === MAINTENANCE_REQUEST_TYPE || item.type === MAINTENANCE_UPDATED_TYPE) {
+    try {
+      const requestId = Number(JSON.parse(item.data ?? "{}").requestId);
+      if (Number.isInteger(requestId) && requestId > 0) return `/maintenance/${requestId}`;
+    } catch {
+      // `data` was not JSON: this is just a message.
+    }
   }
 
   if (item.type === PLAN_NOTICE_TYPE) return "/landlord/plan-proposals";

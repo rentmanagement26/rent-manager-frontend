@@ -45,6 +45,20 @@ describe("breadcrumbTrail", () => {
     expect(labels("/tenant/documents/3/sign")).toEqual(["Dashboard", "Documents", "Document"]);
   });
 
+  it("puts a tenant's maintenance request under Requests", () => {
+    expect(labels("/tenant/requests")).toEqual([]);
+    expect(labels("/tenant/requests/new")).toEqual(["Dashboard", "Requests"]);
+    expect(labels("/tenant/requests/12")).toEqual(["Dashboard", "Requests"]);
+    expect(backTarget("/tenant/requests/12")?.href).toBe("/tenant/requests");
+  });
+
+  it("puts a landlord's maintenance request and settings under Maintenance", () => {
+    expect(labels("/landlord/maintenance")).toEqual([]);
+    expect(labels("/landlord/maintenance/12")).toEqual(["Dashboard", "Maintenance"]);
+    expect(labels("/landlord/maintenance/settings")).toEqual(["Dashboard", "Maintenance"]);
+    expect(backTarget("/landlord/maintenance/12")?.href).toBe("/landlord/maintenance");
+  });
+
   it("shows the reminder settings under Renewals", () => {
     expect(labels("/landlord/renewals/settings")).toEqual(["Dashboard", "Renewals"]);
   });

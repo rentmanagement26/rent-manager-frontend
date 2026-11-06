@@ -18,6 +18,8 @@ function crumbsFor(base: string, segment: string, previous: string | undefined, 
   if (base === "tenant") {
     if (segment === "documents") return [{ label: "Documents", href }];
     if (isId(segment) && previous === "documents") return [{ label: "Document", href }];
+    if (segment === "requests") return [{ label: "Requests", href }];
+    if (isId(segment) && previous === "requests") return [{ label: "Request", href }];
     return [];
   }
 
@@ -32,6 +34,8 @@ function crumbsFor(base: string, segment: string, previous: string | undefined, 
   if (segment === "documents") return previous === undefined ? [{ label: "Leases", href: "/landlord/leases" }] : [];
   if (isId(segment) && previous === "documents") return [{ label: "Lease document", href }];
   if (segment === "renewals") return [{ label: "Renewals", href }];
+  if (segment === "maintenance") return [{ label: "Maintenance", href }];
+  if (isId(segment) && previous === "maintenance") return [{ label: "Request", href }];
   if (segment === "plan-proposals") return [{ label: "Plan proposals", href }];
   return [];
 }
