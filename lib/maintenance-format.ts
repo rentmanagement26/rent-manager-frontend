@@ -107,8 +107,9 @@ export function accessSummary(access: AccessDetails | AccessInput): string {
 }
 
 // Moments in time are shown in the person's own time zone, so they are formatted in the browser (see components/local-moment.tsx).
-export function formatMoment(iso: string): string {
-  return new Date(iso).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+// `timeZone` is only for the server's first draft of the page (UTC), which the browser then replaces with the person's own time.
+export function formatMoment(iso: string, timeZone?: string): string {
+  return new Date(iso).toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone });
 }
 
 export const URGENCIES: Option[] = [
